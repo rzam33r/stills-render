@@ -79,7 +79,7 @@ jobs:
                   if 'picture' in s and not (out / f"{s['picture']}.png").exists(): picture(out / f"{s['picture']}.png", int(s['picture']))
                   if s.get('doodle') and not (out / f"{s['doodle']}.png").exists(): doodle(out / f"{s['doodle']}.png")
           PY
-          for name in north-star rain-short; do
+          for name in north-star rain-short boond-hindi-short; do
             python3 engine/voice.py "examples/$name-plan.json" "example/voice-$name"
             python3 engine/render.py "examples/$name-plan.json" example/pictures "example/voice-$name" "example/$name.mp4" \
               --logo brand/watermark.png --music "$(python3 engine/pick_music.py "examples/$name-plan.json" "$GITHUB_RUN_ID")"
@@ -93,19 +93,19 @@ jobs:
           for s, t in zip(plan['shots'], c['starts']):
               print(f'{t:7.2f}  {s["say"][:60]}')
           PY
-      - name: The Hindi short, with the Azure voice (only when its key is set)
+      - name: The Hindi short with the Azure voice (only when its key is set)
         if: steps.need.outputs.run == 'yes'
         env:
           AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
           AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
         run: |
-          if [ -z "$AZURE_SPEECH_KEY" ]; then echo "No Azure key yet: the Hindi short is skipped."; exit 0; fi
+          if [ -z "$AZURE_SPEECH_KEY" ]; then echo "No Azure key: the Azure voice is not tested."; exit 0; fi
           sudo apt-get install -y -qq libasound2t64 >/dev/null
           pip install -q -r locks/voice-azure.txt
-          python3 engine/voice.py examples/boond-hindi-short-plan.json example/voice-boond
-          python3 engine/render.py examples/boond-hindi-short-plan.json example/pictures example/voice-boond example/boond-hindi-short.mp4 \
-            --logo brand/watermark.png --music "$(python3 engine/pick_music.py examples/boond-hindi-short-plan.json "$GITHUB_RUN_ID")"
-          python3 engine/check_sync.py example/boond-hindi-short.mp4
+          python3 -c "import json; p=json.load(open('examples/boond-hindi-short-plan.json')); p['voice']='hi-IN-MadhurNeural'; json.dump(p, open('/tmp/azure-plan.json','w'), ensure_ascii=False)"
+          python3 engine/voice.py /tmp/azure-plan.json example/voice-azure
+          python3 engine/render.py /tmp/azure-plan.json example/pictures example/voice-azure example/boond-hindi-azure.mp4
+          python3 engine/check_sync.py example/boond-hindi-azure.mp4
       - name: Keep the example film to watch
         if: steps.need.outputs.run == 'yes'
         env:

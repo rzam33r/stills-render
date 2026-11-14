@@ -28,8 +28,8 @@ Optional top level:
               every picture fills the whole frame
   "language"  "en" (default) or "hi"
   "captions"  true for word-by-word subtitles over the pictures (default off)
-  "voice"     a Kokoro voice (English, default am_michael) or an Azure neural
-              voice (Hindi default hi-IN-MadhurNeural)
+  "voice"     a Kokoro voice: English (default am_michael) or Hindi (default
+              hm_omega; also hm_psi, hf_alpha, hf_beta); or an Azure neural voice
   "speed"     0.8 to 1.3, default 1.0
   "music"     a file in music/
   "frame"     "16:9" or "9:16" for the wide layout
@@ -50,7 +50,8 @@ import sys
 PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 VOICES = {'am_michael', 'am_adam', 'am_eric', 'am_liam', 'am_onyx', 'am_puck', 'am_fenrir',
           'af_heart', 'af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'af_nova', 'af_river',
-          'bm_george', 'bm_lewis', 'bm_daniel', 'bm_fable', 'bf_emma', 'bf_isabella', 'bf_alice', 'bf_lily'}
+          'bm_george', 'bm_lewis', 'bm_daniel', 'bm_fable', 'bf_emma', 'bf_isabella', 'bf_alice', 'bf_lily',
+          'hm_omega', 'hm_psi', 'hf_alpha', 'hf_beta'}
 KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt'}
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
        'layout', 'language', 'captions'}
@@ -110,8 +111,12 @@ def check(plan, pictures=None):
     if voice is not None and voice not in VOICES and not AZURE.match(str(voice)):
         errors.append(f'"voice": "{voice}" is neither a Kokoro voice ({", ".join(sorted(VOICES))}) '
                       'nor an Azure neural voice like hi-IN-MadhurNeural')
-    if lang == 'hi' and voice in VOICES:
-        errors.append('a Hindi film needs an Azure Hindi voice (hi-IN-MadhurNeural, hi-IN-SwaraNeural...), not Kokoro')
+    if voice is not None:
+        hindi_voice = str(voice).startswith(('hm_', 'hf_', 'hi-IN-'))
+        if lang == 'hi' and not hindi_voice:
+            errors.append(f'a Hindi film needs a Hindi voice (hm_omega, hm_psi, hf_alpha, hf_beta), not "{voice}"')
+        if lang == 'en' and hindi_voice:
+            errors.append(f'"{voice}" is a Hindi voice; set "language": "hi" or choose an English voice')
     if layout == 'short' and plan.get('frame', '9:16') != '9:16':
         warnings.append('a short film is always 9:16; "frame" is ignored')
     sp = plan.get('speed', 1.0)

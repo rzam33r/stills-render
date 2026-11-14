@@ -13,9 +13,10 @@ Two layouts, chosen in the plan:
 Subtitles are off; a plan can turn them on with `"captions": true` (words
 appear as they are spoken, *marked* words yellow).
 
-Voices: Kokoro (free, on the runner) for English; Azure neural voices for
-Hindi (`hi-IN-MadhurNeural`), which need the secrets `AZURE_SPEECH_KEY` and
-`AZURE_SPEECH_REGION`.
+Voices: Kokoro, free, on the runner: English (`am_michael`) and Hindi
+(`hm_omega`, `hm_psi`, `hf_alpha`, `hf_beta`). Azure neural voices also work
+(`hi-IN-MadhurNeural`) if the secrets `AZURE_SPEECH_KEY` and
+`AZURE_SPEECH_REGION` are added.
 
 ## How a film is made
 
@@ -65,8 +66,8 @@ checks one.
 ## Needed once
 
 Repository secrets: `UPLOAD_TOKEN` and `DRIVE_ENDPOINT_URL` for the Drive
-delivery (the same values as in rose-render-test), and `AZURE_SPEECH_KEY` and
-`AZURE_SPEECH_REGION` for Hindi films.
+delivery (the same values as in rose-render-test). Optional:
+`AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` for Azure voices.
 
 ## Rules carried over from the Rose engine
 

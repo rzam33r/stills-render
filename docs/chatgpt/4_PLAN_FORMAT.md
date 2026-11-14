@@ -13,7 +13,7 @@ Deliver one JSON object. Nothing before or after it in the file.
 | `layout` | no | `"wide"` (default) or `"short"` |
 | `language` | no | `"en"` (default) or `"hi"` |
 | `captions` | no | leave out (no subtitles) |
-| `voice` | no | leave out: English uses `"am_michael"`, Hindi `"hi-IN-MadhurNeural"` |
+| `voice` | no | leave out: English uses `"am_michael"`, Hindi `"hm_omega"` |
 | `speed` | no | 0.8 to 1.3; leave `1.0` |
 
 ## A shot

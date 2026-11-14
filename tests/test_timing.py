@@ -70,6 +70,28 @@ say(ws == [0.1, 0.5, 0.7, 1.1, 1.5, 2.0, 2.4, 2.6, 3.0, 3.4], 'every word has it
 say([w for _, w in narration_words(['Insaan ka baccha 💀'])] == ['Insaan', 'ka', 'baccha 💀'],
     'an emoji rides with the word before it')
 
+# Hindi with Kokoro: word times from the length of each sound.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'engine'))
+import importlib.util
+spec = importlib.util.spec_from_file_location('voice', pathlib.Path(__file__).resolve().parents[1] / 'engine' / 'voice.py')
+try:
+    voice = importlib.util.module_from_spec(spec); spec.loader.exec_module(voice)
+    vocab = {c: 1 for c in 'abcdeiknorstuəɪɾ ,.'}
+    # "ek bund, badal" as phonemes; X is unknown to the voice and dropped.
+    ph = 'ek bXund, badəl'
+    # start marker 4 units, then one unit per kept phoneme char, end marker 2.
+    kept = [c for c in ph if c in vocab]
+    durs = [4] + [2 if c != ' ' else 1 for c in kept] + [2]
+    words = voice.hindi_words('एक बूंद, बादल', ph, durs, vocab)
+    unit = 600 / 24000
+    say([w for w, _, _ in words] == ['एक', 'बूंद,', 'बादल'] and abs(words[0][1] - 4 * unit) < 1e-9
+        and abs(words[1][1] - (4 + 2 + 2 + 1) * unit) < 1e-9,
+        'Hindi word starts come from the sound lengths, words paired in order')
+    words = voice.hindi_words('एक बूंद बादल पानी', 'ek bund badəl', [4] + [2] * 13 + [2], vocab)
+    say(len(words) == 4 and words[3][1] >= words[2][1], 'when espeak joins words, every written word still gets a time')
+except ModuleNotFoundError as e:
+    print(f'skip Hindi sound-length test ({e.name} not installed here)')
+
 say(paragraphs([{}, {}, {'paragraph': True}, {}]) == [[0, 1], [2, 3]], 'paragraph marks split the narration')
 
 print('\nall good' if not bad else f'\n{bad} failing')

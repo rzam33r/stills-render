@@ -46,8 +46,9 @@ Everything in files 1 to 4 holds unless this file says otherwise.
 
 ## Hindi films
 
-- `"language": "hi"`. The voice is Azure's Hindi voice `hi-IN-MadhurNeural`
-  (male); `hi-IN-SwaraNeural` is a female voice.
+- `"language": "hi"`. The voice is Kokoro's Hindi voice `hm_omega` (male)
+  unless the plan names another: `hm_psi` (male), `hf_alpha` or `hf_beta`
+  (female).
 - Write every `say` in Hindi script (Devanagari). Words people say in English
   ("value", "phone") may stay in English letters.
 - Numbers in words, as a person says them ("बीस हज़ार").
@@ -139,7 +140,7 @@ Everything in files 1 to 4 holds unless this file says otherwise.
   "title": "Ek boond ka safar",
   "layout": "short",
   "language": "hi",
-  "voice": "hi-IN-MadhurNeural",
+  "voice": "hm_omega",
   "speed": 1.0,
   "character": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts",
   "style": "Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, tall upright 9:16 frame, no text, no letters, no numbers, no signs, no watermark.",
