@@ -111,17 +111,22 @@ def hindi_words(graphemes, phonemes, pred_dur, vocab):
     durs = [int(d) for d in pred_dur]
     if len(durs) < len(kept) + 2:
         return []
+    # Words are what sits between spaces. Punctuation counts for time but
+    # does not start or end a word: espeak writes some Hindi sounds with a
+    # full stop inside the word ("pəhˈaːr.õ" for पहाड़ों), so only a space
+    # separates words.
     t = durs[0] * FRAME
     spans, cur = [], None
     for ch, d in zip(kept, durs[1:len(kept) + 1]):
-        if ch in NOT_A_WORD:
+        if ch == ' ':
             if cur is not None:
                 spans.append(cur)
                 cur = None
-        elif cur is None:
-            cur = [t, t + d * FRAME]
-        else:
-            cur[1] = t + d * FRAME
+        elif ch not in NOT_A_WORD:
+            if cur is None:
+                cur = [t, t + d * FRAME]
+            else:
+                cur[1] = t + d * FRAME
         t += d * FRAME
     if cur is not None:
         spans.append(cur)

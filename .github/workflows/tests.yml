@@ -72,16 +72,16 @@ jobs:
           import json, pathlib, sys
           sys.path.insert(0, 'tests')
           from test_render import picture, doodle
-          out = pathlib.Path('example/pictures'); out.mkdir(parents=True)
           for name in ('north-star', 'rain-short', 'boond-hindi-short'):
+              out = pathlib.Path(f'example/pictures-{name}'); out.mkdir(parents=True)
               plan = json.loads(pathlib.Path(f'examples/{name}-plan.json').read_text())
               for s in plan['shots']:
-                  if 'picture' in s and not (out / f"{s['picture']}.png").exists(): picture(out / f"{s['picture']}.png", int(s['picture']))
-                  if s.get('doodle') and not (out / f"{s['doodle']}.png").exists(): doodle(out / f"{s['doodle']}.png")
+                  if 'picture' in s: picture(out / f"{s['picture']}.png", int(s['picture']))
+                  if s.get('doodle'): doodle(out / f"{s['doodle']}.png")
           PY
           for name in north-star rain-short boond-hindi-short; do
             python3 engine/voice.py "examples/$name-plan.json" "example/voice-$name"
-            python3 engine/render.py "examples/$name-plan.json" example/pictures "example/voice-$name" "example/$name.mp4" \
+            python3 engine/render.py "examples/$name-plan.json" "example/pictures-$name" "example/voice-$name" "example/$name.mp4" \
               --logo brand/watermark.png --music "$(python3 engine/pick_music.py "examples/$name-plan.json" "$GITHUB_RUN_ID")"
             python3 engine/check_sync.py "example/$name.mp4"
           done
@@ -104,7 +104,7 @@ jobs:
           pip install -q -r locks/voice-azure.txt
           python3 -c "import json; p=json.load(open('examples/boond-hindi-short-plan.json')); p['voice']='hi-IN-MadhurNeural'; json.dump(p, open('/tmp/azure-plan.json','w'), ensure_ascii=False)"
           python3 engine/voice.py /tmp/azure-plan.json example/voice-azure
-          python3 engine/render.py /tmp/azure-plan.json example/pictures example/voice-azure example/boond-hindi-azure.mp4
+          python3 engine/render.py /tmp/azure-plan.json example/pictures-boond-hindi-short example/voice-azure example/boond-hindi-azure.mp4
           python3 engine/check_sync.py example/boond-hindi-azure.mp4
       - name: Keep the example film to watch
         if: steps.need.outputs.run == 'yes'
@@ -113,4 +113,5 @@ jobs:
         run: |
           gh release view film-example >/dev/null 2>&1 || \
             gh release create film-example --title film-example --notes "The example plan, spoken by Kokoro, with stand-in pictures." --prerelease
-          gh release upload film-example example/*.mp4 --clobber
+          for d in example/voice-*; do cp "$d/cuts.json" "example/cuts-${d#example/voice-}.json"; done
+          gh release upload film-example example/*.mp4 example/cuts-*.json --clobber

@@ -89,6 +89,14 @@ try:
         'Hindi word starts come from the sound lengths, words paired in order')
     words = voice.hindi_words('एक बूंद बादल पानी', 'ek bund badəl', [4] + [2] * 13 + [2], vocab)
     say(len(words) == 4 and words[3][1] >= words[2][1], 'when espeak joins words, every written word still gets a time')
+    # espeak writes पहाड़ों as "pəhaːr.õ": the full stop is inside the word.
+    vocab2 = dict(vocab, **{c: 1 for c in 'phaːõ'})
+    ph = 'ek pəhaːr.õ bund'
+    kept = [c for c in ph if c in vocab2]
+    durs = [4] + [1] * len(kept) + [2]
+    words = voice.hindi_words('एक पहाड़ों बूंद', ph, durs, vocab2)
+    say([w for w, _, _ in words] == ['एक', 'पहाड़ों', 'बूंद'] and abs(words[2][1] - (4 + 3 + 9) * unit) < 1e-9,
+        'a full stop inside an espeak word does not split it')
 except ModuleNotFoundError as e:
     print(f'skip Hindi sound-length test ({e.name} not installed here)')
 
