@@ -47,15 +47,14 @@ import pathlib
 import re
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from voices import AZURE, KOKORO_VOICES  # noqa: E402
+
 PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
-VOICES = {'am_michael', 'am_adam', 'am_eric', 'am_liam', 'am_onyx', 'am_puck', 'am_fenrir',
-          'af_heart', 'af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'af_nova', 'af_river',
-          'bm_george', 'bm_lewis', 'bm_daniel', 'bm_fable', 'bf_emma', 'bf_isabella', 'bf_alice', 'bf_lily',
-          'hm_omega', 'hm_psi', 'hf_alpha', 'hf_beta'}
+VOICES = KOKORO_VOICES
 KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt'}
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
        'layout', 'language', 'captions'}
-AZURE = re.compile(r'^[a-z]{2}-[A-Z]{2}-[A-Za-z]+Neural$')
 # Words per shot: (aim low, aim high, warn above, refuse above).
 SHOT_WORDS = {'wide': (6, 12, 16, 24), 'short': (1, 5, 7, 10)}
 

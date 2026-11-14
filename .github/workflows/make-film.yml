@@ -138,10 +138,9 @@ jobs:
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import json, sys
           sys.path.insert(0, 'engine')
-          from voice import DEFAULT_VOICE, is_azure
+          from voices import chosen_voice, is_azure
           plan = json.load(open('story/plan.json', encoding='utf-8-sig'))
-          v = plan.get('voice') or DEFAULT_VOICE.get(plan.get('language', 'en'), 'am_michael')
-          print('engine=' + ('azure' if is_azure(v) else 'kokoro'))
+          print('engine=' + ('azure' if is_azure(chosen_voice(plan)) else 'kokoro'))
           PY
       - name: Install Kokoro (exact versions from locks/voice.txt)
         if: steps.which.outputs.engine == 'kokoro'

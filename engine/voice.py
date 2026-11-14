@@ -33,11 +33,11 @@ import soundfile as sf
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from timing import narration_words, paragraphs, shot_starts, word_starts  # noqa: E402
+from voices import DEFAULT_VOICE, chosen_voice, is_azure  # noqa: E402,F401
 
 RATE = 24000
 LEAD = 0.20       # silence before the first word
 BREATH = 0.45     # silence between paragraphs
-DEFAULT_VOICE = {'en': 'am_michael', 'hi': 'hm_omega'}
 FRAME = 600 / RATE   # one unit of Kokoro's sound lengths, in seconds
 NOT_A_WORD = set(' ;:,.!?—…"()“”«»।॥-\'')
 
@@ -45,10 +45,6 @@ NOT_A_WORD = set(' ;:,.!?—…"()“”«»।॥-\'')
 def spoken_text(say):
     """What the voice reads: the words without the *highlight* marks."""
     return say.replace('*', '').strip()
-
-
-def is_azure(voice):
-    return voice.endswith('Neural') and voice[2:3] == '-'
 
 
 def azure_voice(plan, voice, speed):
@@ -182,7 +178,7 @@ def main(plan_path, out_dir):
     plan = json.loads(pathlib.Path(plan_path).read_text(encoding='utf-8-sig'))
     shots = plan['shots']
     lang = plan.get('language', 'en')
-    voice = plan.get('voice') or DEFAULT_VOICE.get(lang, 'am_michael')
+    voice = chosen_voice(plan)
     speed = float(plan.get('speed') or 1.0)
     out = pathlib.Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
