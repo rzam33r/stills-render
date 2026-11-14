@@ -1,0 +1,216 @@
+name: Make a film
+
+# One button. Give it the story name; it does the rest:
+#   1. takes the uploaded ZIP (plan.json + pictures) and checks the plan
+#   2. speaks the narration and records when every word is said
+#   3. shows each shot's picture from the frame its first word is spoken,
+#      lays the music under the voice, and checks every cut in the film
+#   4. sends the film to the Drive folder (or, when not delivering, keeps it
+#      for 7 days on the story's film-<slug> release)
+#
+# The upload page attaches the ZIP to a release tagged story-<slug> and runs
+# this. Nothing is committed: pictures and films live in releases and
+# artifacts, never in the repository's history.
+#
+# The inputs match the Rose engine's, so the same upload page can call
+# either. frame, build, ignore_plan_errors and keep_pictures are accepted for
+# that reason; frame is used, the others change nothing here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: 'Story name, e.g. ancient-water'
+        required: true
+      deliver:
+        description: 'Send the finished film to the Drive folder'
+        type: boolean
+        required: false
+        default: true
+      frame:
+        description: 'Shape: wide screen, or upright for phones'
+        type: choice
+        options: ['16:9', '9:16']
+        required: false
+        default: '16:9'
+      logo:
+        description: 'The FACT HUBZZZ logo in the top right-hand corner'
+        type: boolean
+        required: false
+        default: true
+      build:
+        description: 'Accepted for the upload page; not used'
+        required: false
+        default: b001
+      ignore_plan_errors:
+        description: 'Make the film even if the plan check finds problems'
+        type: boolean
+        required: false
+        default: false
+      keep_pictures:
+        description: 'Accepted for the upload page; not used'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: make-film-${{ inputs.slug }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the story name
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          if ! [[ "$SLUG" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || [ ${#SLUG} -gt 30 ]; then
+            echo "::error::The story name must be lower-case words joined by hyphens, like ancient-water, at most 30 characters."
+            exit 1
+          fi
+      - name: Take the uploaded ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLUG: ${{ inputs.slug }}
+        run: |
+          mkdir -p /tmp/zip
+          if ! gh release download "story-$SLUG" --pattern '*.zip' --dir /tmp/zip; then
+            echo "::error::No ZIP for '$SLUG': there is no release story-$SLUG with a .zip on it. Upload the story again."
+            exit 1
+          fi
+          python3 engine/unpack.py "$(ls /tmp/zip/*.zip | head -1)" story
+      - name: Drop the uploads of stories nobody came back to
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SLUG: ${{ inputs.slug }}
+        run: tools/tidy_releases.sh --repo "$REPO" --keep "$SLUG" --days 7
+      - name: Check the plan before spending a voice and a render on it
+        env:
+          FRAME: ${{ inputs.frame }}
+          FORCE: ${{ inputs.ignore_plan_errors }}
+        run: |
+          pip install -q -c locks/pictures.txt pillow
+          # The page's choice of shape wins over the plan's.
+          python3 - <<'PY'
+          import json, os, pathlib
+          p = pathlib.Path('story/plan.json')
+          plan = json.loads(p.read_text(encoding='utf-8-sig'))
+          plan['frame'] = os.environ['FRAME']
+          p.write_text(json.dumps(plan, indent=1, ensure_ascii=False))
+          PY
+          set +e
+          python3 engine/check_plan.py story/plan.json --pictures story/pictures | tee /tmp/check.txt
+          ok=${PIPESTATUS[0]}
+          set -e
+          { echo '## Plan check'; echo '```'; cat /tmp/check.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$ok" != 0 ] && [ "$FORCE" != true ]; then
+            echo "::error::The plan has problems (listed above). Fix them in ChatGPT and upload again."
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: story-${{ inputs.slug }}
+          path: story
+          retention-days: 3
+
+  voice:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: story-${{ inputs.slug }}
+          path: story
+      - name: Install the voice (exact versions from locks/voice.txt)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak-ng
+          pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Speak the narration and time every word
+        run: |
+          python3 engine/voice.py story/plan.json voice
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          c = json.load(open('voice/cuts.json'))
+          print(f"## Voice\n\n{c['voice']} at {c['speed']}: {c['audio_seconds']:.1f} s, "
+                f"{len(c['starts'])} shots, {c['words_without_time']} pieces the voice gave no time for.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-${{ inputs.slug }}
+          path: voice
+          retention-days: 3
+
+  render:
+    needs: voice
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: story-${{ inputs.slug }}
+          path: story
+      - uses: actions/download-artifact@v4
+        with:
+          name: voice-${{ inputs.slug }}
+          path: voice
+      - name: Tools
+        run: |
+          command -v ffmpeg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+          pip install -q -c locks/pictures.txt pillow numpy
+      - name: Make the film
+        env:
+          SLUG: ${{ inputs.slug }}
+          LOGO: ${{ inputs.logo }}
+        run: |
+          mkdir -p output
+          MUSIC=$(python3 engine/pick_music.py story/plan.json "$GITHUB_RUN_ID")
+          args=()
+          [ -n "$MUSIC" ] && args+=(--music "$MUSIC")
+          [ "$LOGO" = true ] && args+=(--logo brand/watermark.png)
+          python3 engine/render.py story/plan.json story/pictures voice "output/$SLUG.mp4" "${args[@]}"
+      - name: Check every picture lands on its word
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          python3 engine/check_sync.py "output/$SLUG.mp4" | tee /tmp/sync.txt
+          { echo '## Picture timing'; echo '```'; cat /tmp/sync.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: video-${{ inputs.slug }}
+          path: output/${{ inputs.slug }}.mp4
+          retention-days: 7
+      - name: Keep the film on a release when it is not delivered
+        if: ${{ !inputs.deliver }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLUG: ${{ inputs.slug }}
+        run: |
+          gh release view "film-$SLUG" >/dev/null 2>&1 || \
+            gh release create "film-$SLUG" --title "film-$SLUG" --notes "Not delivered: kept here to watch. Removed after 7 days." --prerelease
+          gh release upload "film-$SLUG" "output/$SLUG.mp4" --clobber
+
+  deliver:
+    needs: render
+    if: ${{ inputs.deliver }}
+    uses: ./.github/workflows/final-video-delivery.yml
+    with:
+      video: output/${{ inputs.slug }}.mp4
+      project: ${{ inputs.slug }}
+      qa_approved: true
+      artifact_run_id: ${{ github.run_id }}
+    secrets:
+      UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
+      DRIVE_ENDPOINT_URL: ${{ secrets.DRIVE_ENDPOINT_URL }}

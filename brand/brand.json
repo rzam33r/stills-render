@@ -1,0 +1,12 @@
+{
+  "name": "Fact Hubzzz",
+  "outro": "outro.mp4",
+  "outro_background": "white",
+  "watermark": "watermark.png",
+  "logo_box": [
+    48,
+    48,
+    370,
+    528
+  ]
+}

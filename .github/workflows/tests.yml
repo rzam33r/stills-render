@@ -1,0 +1,98 @@
+name: Tests
+
+# Runs on every change. The quick checks need no voice: test_render.py makes
+# a film from stand-in pictures and a tone for each word, so where every
+# picture must start is known exactly, and checks the film frame by frame.
+#
+# The voice test runs Kokoro itself on the example plan when the voice or
+# its timing code changes (or by hand), renders it with stand-in pictures,
+# and checks every cut against the words Kokoro reported. Its film is kept
+# on the film-example release to watch.
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  quick:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          command -v ffmpeg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+          pip install -q -c locks/pictures.txt pillow numpy
+          pip install -q pyyaml
+      - name: Shots start on their first word
+        run: python3 tests/test_timing.py
+      - name: The example plan passes the check
+        run: python3 engine/check_plan.py examples/north-star-plan.json
+      - name: A film is cut on the right frames, and cards fit
+        run: python3 tests/test_render.py
+      - name: Every music track has its credit
+        run: python3 tests/test_music.py
+      - name: The workflows keep their rules
+        run: python3 tests/test_workflows.py
+
+  voice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Only when the voice changed, or when run by hand
+        id: need
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || ! git rev-parse -q --verify HEAD~1 >/dev/null || \
+             git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(engine/(voice|timing|render|frames)\.py|locks/voice\.txt|examples/)'; then
+            echo run=yes >> "$GITHUB_OUTPUT"
+          else
+            echo "voice untouched; skipping"; echo run=no >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install the voice
+        if: steps.need.outputs.run == 'yes'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak-ng
+          command -v ffmpeg >/dev/null || sudo apt-get install -y -qq ffmpeg
+          pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install -q -c locks/pictures.txt pillow numpy
+      - name: Speak the example and cut a film on its words
+        if: steps.need.outputs.run == 'yes'
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, 'tests')
+          from test_render import picture, doodle
+          plan = json.loads(pathlib.Path('examples/north-star-plan.json').read_text())
+          out = pathlib.Path('example/pictures'); out.mkdir(parents=True)
+          for s in plan['shots']:
+              if 'picture' in s: picture(out / f"{s['picture']}.png", int(s['picture']))
+              if s.get('doodle'): doodle(out / f"{s['doodle']}.png")
+          PY
+          python3 engine/voice.py examples/north-star-plan.json example/voice
+          python3 engine/render.py examples/north-star-plan.json example/pictures example/voice example/north-star.mp4 \
+            --logo brand/watermark.png --music "$(python3 engine/pick_music.py examples/north-star-plan.json "$GITHUB_RUN_ID")"
+          python3 engine/check_sync.py example/north-star.mp4
+          python3 - <<'PY'
+          import json
+          c = json.load(open('example/voice/cuts.json'))
+          words = json.load(open('example/voice/words.json'))
+          plan = json.load(open('examples/north-star-plan.json'))
+          print('voice', c['voice'], f"{c['audio_seconds']:.1f} s;", c['words_without_time'], 'pieces without a time')
+          for s, t in zip(plan['shots'], c['starts']):
+              print(f'{t:7.2f}  {s["say"][:60]}')
+          PY
+      - name: Keep the example film to watch
+        if: steps.need.outputs.run == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view film-example >/dev/null 2>&1 || \
+            gh release create film-example --title film-example --notes "The example plan, spoken by Kokoro, with stand-in pictures." --prerelease
+          gh release upload film-example example/north-star.mp4 example/voice/cuts.json example/voice/words.json --clobber

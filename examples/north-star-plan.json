@@ -1,0 +1,18 @@
+{
+  "title": "How Did Sailors Find Their Way Before GPS?",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "shots": [
+    {"say": "It's midnight on the open sea, and the coast vanished three days ago.", "picture": "001"},
+    {"say": "No map shows where you are.", "card": "No map.", "doodle": "002"},
+    {"say": "No machine tells you which way is home.", "card": "No machine.", "doodle": "003"},
+    {"say": "One wrong guess, and the water runs out before the land appears.", "picture": "004"},
+    {"say": "And yet, for thousands of years, sailors crossed oceans like this and came back.", "picture": "005"},
+    {"say": "So how did they find their way with nothing but the sky?", "card": "Nothing but the sky.", "doodle": "006"},
+    {"say": "The star that never moves.", "card": "The star that never moves.", "paragraph": true},
+    {"say": "Every star you see at night slowly wheels across the sky.", "picture": "007"},
+    {"say": "Except one. In the north, a single star barely moves at all.", "picture": "008"},
+    {"say": "Find it, and you know which way is north.", "picture": "009"},
+    {"say": "Measure how high it sits above the horizon, and you know how far north you are.", "picture": "010"}
+  ]
+}

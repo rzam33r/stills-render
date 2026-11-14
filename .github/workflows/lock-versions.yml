@@ -1,0 +1,36 @@
+name: Record the versions that make a film
+
+# Run by hand. Installs, on the same system the film runs on, exactly what
+# a film run installs, and prints every version that arrived. Those lists
+# are kept in locks/ and every film installs from them, so a new release of
+# the voice, the cut-out AI or the browser cannot change a film without
+# anyone choosing it. To move to newer versions: run this, read the lists,
+# replace the files in locks/, make a test film.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: voice
+        run: |
+          python3 --version
+          python3 -m venv /tmp/voice
+          /tmp/voice/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          /tmp/voice/bin/pip install -q kokoro soundfile
+          echo "=== voice.txt ==="; /tmp/voice/bin/pip freeze; echo "=== end ==="
+      - name: pictures
+        run: |
+          python3 -m venv /tmp/pics
+          /tmp/pics/bin/pip install -q pillow numpy scipy rembg onnxruntime
+          echo "=== pictures.txt ==="; /tmp/pics/bin/pip freeze; echo "=== end ==="
+      - name: browser
+        run: |
+          mkdir -p /tmp/web && cd /tmp/web && npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright-core playwright >/dev/null
+          echo "=== browser ==="; npm ls --depth=0; echo "=== end ==="

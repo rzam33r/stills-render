@@ -1,0 +1,9 @@
+# Made by a run, never kept in the repository: pictures, ZIPs, voices, films.
+story/
+voice/
+output/
+example/
+*.zip
+*.mp4
+!brand/*.mp4
+__pycache__/
