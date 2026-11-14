@@ -23,20 +23,19 @@ A film is a list of shots, in the order they are seen and heard:
 - "paragraph": true starts a new paragraph: the voice takes a breath first.
 
 Optional top level:
-  "layout"    "wide" (16:9, pictures fill the frame; the default) or "short"
-              (9:16 on black: "hook" line at the top, square picture, subtitles
-              word by word)
+  "layout"    "wide" (16:9, a picture about every 3 seconds; the default) or
+              "short" (9:16 upright, a picture every 2 to 4 words); in both,
+              every picture fills the whole frame
   "language"  "en" (default) or "hi"
-  "hook"      the short layout's fixed top line; *marked* words are yellow
-  "captions"  true/false: subtitles (default: on for short, off for wide)
+  "captions"  true for word-by-word subtitles over the pictures (default off)
   "voice"     a Kokoro voice (English, default am_michael) or an Azure neural
               voice (Hindi default hi-IN-MadhurNeural)
   "speed"     0.8 to 1.3, default 1.0
   "music"     a file in music/
   "frame"     "16:9" or "9:16" for the wide layout
 
-In "say", *asterisks* mark words to show in yellow in the subtitles; the
-voice does not read them.
+In "say", *asterisks* mark words to show in yellow when subtitles are on;
+the voice does not read them.
 
     python3 engine/check_plan.py plan.json [--pictures DIR]
 
@@ -54,7 +53,7 @@ VOICES = {'am_michael', 'am_adam', 'am_eric', 'am_liam', 'am_onyx', 'am_puck', '
           'bm_george', 'bm_lewis', 'bm_daniel', 'bm_fable', 'bf_emma', 'bf_isabella', 'bf_alice', 'bf_lily'}
 KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt'}
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
-       'layout', 'language', 'hook', 'captions'}
+       'layout', 'language', 'captions'}
 AZURE = re.compile(r'^[a-z]{2}-[A-Z]{2}-[A-Za-z]+Neural$')
 # Words per shot: (aim low, aim high, warn above, refuse above).
 SHOT_WORDS = {'wide': (6, 12, 16, 24), 'short': (1, 5, 7, 10)}
@@ -113,12 +112,8 @@ def check(plan, pictures=None):
                       'nor an Azure neural voice like hi-IN-MadhurNeural')
     if lang == 'hi' and voice in VOICES:
         errors.append('a Hindi film needs an Azure Hindi voice (hi-IN-MadhurNeural, hi-IN-SwaraNeural...), not Kokoro')
-    if layout == 'short':
-        hook = plan.get('hook')
-        if not isinstance(hook, str) or not hook.strip():
-            warnings.append('a short film usually has a "hook" line at the top')
-        elif len(hook.replace('*', '')) > 42:
-            warnings.append(f'the hook "{hook}" is long; it wraps past two lines above 40 characters')
+    if layout == 'short' and plan.get('frame', '9:16') != '9:16':
+        warnings.append('a short film is always 9:16; "frame" is ignored')
     sp = plan.get('speed', 1.0)
     if not isinstance(sp, (int, float)) or not 0.8 <= sp <= 1.3:
         errors.append('"speed" must be a number from 0.8 to 1.3')

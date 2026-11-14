@@ -24,11 +24,6 @@ INK = (17, 17, 17)
 
 SIZES = {'16:9': (1920, 1080), '9:16': (1080, 1920)}
 
-# The short layout (9:16): black, the hook line at the top, a square
-# picture, the subtitles under it. Boxes are (left, top, right, bottom).
-SHORT = {'size': (1080, 1920), 'picture': (0, 420, 1080, 1500), 'hook_bottom': 392,
-         'hook_size': 64, 'caption_top': 1560, 'caption_size': 62, 'caption_width': 980}
-
 
 def cover(img, size):
     """Scale a picture to fill the frame, cropping the overflow evenly."""
@@ -120,30 +115,3 @@ def shot_image(shot, find, size, logo=None):
         img = cover(Image.open(find(shot['picture'])), size)
     return with_logo(img, logo, size)
 
-
-def short_frame(shot_img, hook_rows, caption_rows, logo=None, hook_size=None):
-    """One frame of the short layout. shot_img is the square picture (or
-    card); hook_rows and caption_rows come from typeset.lay_out."""
-    from typeset import draw_rows
-    L = SHORT
-    W, H = L['size']
-    img = Image.new('RGB', (W, H), (0, 0, 0))
-    x0, y0, x1, y1 = L['picture']
-    pic = shot_img if shot_img.size == (x1 - x0, y1 - y0) else cover(shot_img, (x1 - x0, y1 - y0))
-    img.paste(with_logo(pic, logo, pic.size), (x0, y0))
-    if hook_rows:
-        hs = hook_size or L['hook_size']
-        lh = round(hs * 1.25)
-        draw_rows(img, hook_rows, hs, W // 2, L['hook_bottom'] - lh * len(hook_rows), heavy=True, line=1.25)
-    if caption_rows:
-        draw_rows(img, caption_rows, L['caption_size'], W // 2, L['caption_top'])
-    return img
-
-
-def square_image(shot, find):
-    """The square picture or card for one shot in the short layout."""
-    side = SHORT['picture'][2] - SHORT['picture'][0]
-    if 'card' in shot:
-        doodle = Image.open(find(shot['doodle'])) if shot.get('doodle') else None
-        return card(shot['card'], (side, side), doodle)
-    return cover(Image.open(find(shot['picture'])), (side, side))

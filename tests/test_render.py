@@ -76,12 +76,16 @@ def fake_voice(plan, out):
     return starts
 
 
-def film_test(name, want_size, keep):
+def film_test(name, want_size, keep, captions=False):
     plan_path = ROOT / 'examples' / name
     plan = json.loads(plan_path.read_text())
-    tag = name.replace('-plan.json', '')
+    tag = name.replace('-plan.json', '') + (' with subtitles' if captions else '')
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
+        if captions:
+            plan['captions'] = True
+            plan_path = tmp / 'plan.json'
+            plan_path.write_text(json.dumps(plan, ensure_ascii=False))
         pics = tmp / 'pictures'
         pics.mkdir()
         for s in plan['shots']:
@@ -116,7 +120,7 @@ def film_test(name, want_size, keep):
         say(r.returncode == 1 and 'should change at frame' in r.stdout, f'{tag}: a picture 3 frames late is caught')
         if keep:
             pathlib.Path(keep).mkdir(parents=True, exist_ok=True)
-            shutil.copy(film, pathlib.Path(keep) / f'{tag}.mp4')
+            shutil.copy(film, pathlib.Path(keep) / f"{tag.replace(' ', '-')}.mp4")
 
 
 def main():
@@ -124,6 +128,7 @@ def main():
     for name, size in (('north-star-plan.json', '1920,1080'), ('rain-short-plan.json', '1080,1920'),
                        ('boond-hindi-short-plan.json', '1080,1920')):
         film_test(name, size, keep)
+    film_test('boond-hindi-short-plan.json', '1080,1920', keep, captions=True)
 
     # Cards: words inside the frame, doodle white gone.
     for text in ('No map.', 'The star that never moves.',

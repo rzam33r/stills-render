@@ -7,9 +7,11 @@ Two layouts, chosen in the plan:
 
 - **wide** (16:9): explainers of several minutes; each picture fills the
   frame, about one every 3 seconds; cards for chapter titles and punchlines.
-- **short** (9:16): on black, a fixed hook line at the top, a square picture
-  changing every 2 to 4 words, and subtitles that appear word by word as they
-  are spoken (*marked* words in yellow). English or Hindi.
+- **short** (9:16): upright, every picture filling the whole frame and
+  changing every 2 to 4 words. English or Hindi.
+
+Subtitles are off; a plan can turn them on with `"captions": true` (words
+appear as they are spoken, *marked* words yellow).
 
 Voices: Kokoro (free, on the runner) for English; Azure neural voices for
 Hindi (`hi-IN-MadhurNeural`), which need the secrets `AZURE_SPEECH_KEY` and
@@ -52,8 +54,8 @@ checks one.
 | `engine/check_plan.py` | checks a plan, in plain words |
 | `engine/voice.py` | speaks the narration, records every word's time |
 | `engine/timing.py` | lines the spoken words up with the shots |
-| `engine/frames.py` | fills the frame with a picture, draws a card, lays out a short |
-| `engine/typeset.py` | sets Hindi, English and emoji text, with yellow highlights |
+| `engine/frames.py` | fills the frame with a picture, or draws a card |
+| `engine/typeset.py` | sets Hindi, English and emoji text for subtitles (when turned on) |
 | `engine/render.py` | makes the film, each shot exactly as many frames as it is on screen |
 | `engine/check_sync.py` | checks, in the finished film, that every cut and subtitle word is on its word |
 | `engine/pick_music.py` | chooses a credited track and prints its credit |

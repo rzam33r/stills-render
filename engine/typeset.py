@@ -165,13 +165,3 @@ def draw_rows(img, rows, size, centre_x, top, colour=WHITE, highlight=YELLOW, he
 def strip_marks(text):
     return re.sub(r'\*', '', text)
 
-
-def fit_hook(text, size, max_width, smallest=50):
-    """The hook on one line if it fits at any size down to smallest, else
-    wrapped at the full size: (rows, size)."""
-    words = words_of(text)
-    for s in range(size, smallest - 1, -2):
-        rows = lay_out(words, s, max_width, heavy=True)
-        if len(rows) == 1:
-            return rows, s
-    return lay_out(words, size, max_width, heavy=True), size

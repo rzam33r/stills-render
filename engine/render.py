@@ -5,15 +5,15 @@
 
 VOICE_DIR is what voice.py wrote (voice.wav and cuts.json).
 
-Two layouts, chosen by the plan's "layout":
-  - "wide" (16:9): every picture fills the frame; no subtitles unless the
-    plan asks for "captions": true.
-  - "short" (9:16): black, the plan's "hook" line at the top, a square
-    picture in the middle, and subtitles under it that appear word by word
-    as each word is spoken, *marked* words in yellow.
+Two layouts, chosen by the plan's "layout"; in both, every picture fills
+the whole frame:
+  - "wide" (16:9): explainers, a picture about every 3 seconds;
+  - "short" (9:16): upright, a picture every 2 to 4 words.
+Subtitles are off unless the plan says "captions": true; then they appear
+word by word near the bottom as each word is spoken, *marked* words yellow.
 
 The film is cut into stretches in which nothing changes (a new picture, or
-a new word in the subtitles, starts a new stretch). Each stretch is encoded
+a new subtitle word, starts a new stretch). Each stretch is encoded
 as exactly as many identical frames as it lasts, and the stretches are
 joined without re-encoding, so every change happens on precisely the frame
 worked out from the voice. The sound is the voice with the music bed under
@@ -33,7 +33,7 @@ from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from check_plan import find_picture  # noqa: E402
-from frames import SHORT, SIZES, shot_image, short_frame, square_image, with_logo  # noqa: E402
+from frames import SIZES, shot_image  # noqa: E402
 
 TAIL = 0.8          # the last picture stays this long after the voice ends
 MUSIC_GAIN = -22    # dB under the voice
@@ -136,13 +136,13 @@ def main(argv):
     shots = plan['shots']
     layout = plan.get('layout', 'wide')
     cuts = json.loads((voice_dir / 'cuts.json').read_text())
-    size = SHORT['size'] if layout == 'short' else SIZES[plan.get('frame', '16:9')]
+    size = SIZES['9:16'] if layout == 'short' else SIZES[plan.get('frame', '16:9')]
     total = max(cuts['audio_seconds'], cuts['speech_end'] + TAIL)
     shot_frames = frame_plan(cuts['starts'], total, fps)
     end = shot_frames[-1][0] + shot_frames[-1][1]
     logo = Image.open(logo_path).convert('RGBA') if logo_path else None
 
-    captions = plan.get('captions', layout == 'short')
+    captions = bool(plan.get('captions', False))
     words = cuts.get('words') or []
     lines = caption_lines(words, shots, 5 if layout == 'short' else 7) if captions and words else []
     # A word appears on the frame it is spoken; a shot's first word appears
@@ -161,35 +161,27 @@ def main(argv):
             raise SystemExit(f'no picture "{name}" in {pic_dir}')
         return p
 
-    hook_rows, hook_size, typeset = None, SHORT['hook_size'], None
-    if layout == 'short' or lines:
+    typeset = None
+    if lines:
         import typeset
         if not typeset.shaping_ok():
             raise SystemExit('Pillow has no Raqm text shaping: Hindi would be drawn wrongly. '
                              'Install libfribidi0 (apt) and use the Pillow wheel from locks/pictures.txt.')
-        if layout == 'short' and plan.get('hook'):
-            hook_rows, hook_size = typeset.fit_hook(plan['hook'], SHORT['hook_size'], SHORT['caption_width'])
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
         base = {}
         for i, s in enumerate(shots):
-            base[i] = square_image(s, find) if layout == 'short' else shot_image(s, find, size, logo)
+            base[i] = shot_image(s, find, size, logo)
         pngs, keys, cache = [], [], {}
         for first, n, (shot, L, shown) in parts:
             key = (shot, L, shown)
             if key not in cache:
-                cap = None
+                img = base[shot]
                 if L is not None and shown:
                     said = ' '.join(words[k]['word'] for k in lines[L][:shown])
-                    cap = typeset.lay_out(typeset.words_of(said), SHORT['caption_size'] if layout == 'short' else 56,
-                                          SHORT['caption_width'] if layout == 'short' else round(size[0] * 0.8))
-                if layout == 'short':
-                    img = short_frame(base[shot], hook_rows, cap, logo, hook_size)
-                else:
-                    img = base[shot].copy()
-                    if cap:
-                        img = with_caption_wide(img, cap, typeset)
+                    rows = typeset.lay_out(typeset.words_of(said), caption_size(size), round(size[0] * 0.86))
+                    img = with_caption(img, rows, typeset)
                 h = hashlib.sha1(img.tobytes()).hexdigest()[:16]
                 png = tmp / f'{h}.png'
                 if not png.exists():
@@ -214,9 +206,8 @@ def main(argv):
     pic_keys = [hashlib.sha1(base[i].tobytes()).hexdigest()[:16] for i in range(len(shots))]
     (out.with_suffix('.cuts.json')).write_text(json.dumps({
         'fps': fps, 'frames': shot_frames, 'pictures': pic_keys, 'starts': cuts['starts'],
-        'picture_box': list(SHORT['picture']) if layout == 'short' else [0, 0, size[0], size[1]],
-        'caption_box': ([0, SHORT['caption_top'] - 20, size[0], size[1]] if layout == 'short'
-                        else [0, round(size[1] * 0.80), size[0], size[1]]) if lines else None,
+        'picture_box': [0, 0, size[0], size[1]],
+        'caption_box': caption_box(size) if lines else None,
         'word_frames': sorted(set(word_frames)) if lines else [],
         'size': list(size)}, indent=0))
     print(f'{out.name}: {layout}, {len(shots)} shots, {len(parts)} stretches, {end} frames, {end / fps:.1f} s'
@@ -225,18 +216,27 @@ def main(argv):
     return 0
 
 
-def with_caption_wide(img, rows, typeset):
-    """Subtitles on a wide picture: white on a dark band near the bottom."""
-    from PIL import ImageDraw
+def caption_size(size):
+    return round(min(size) * 0.058)
+
+
+def caption_box(size):
+    W, H = size
+    return [0, round(H * (0.70 if H > W else 0.74)), W, round(H * 0.97)]
+
+
+def with_caption(img, rows, typeset):
+    """Subtitles over the picture: white (key words yellow) on a soft dark
+    band, low in the frame."""
     W, H = img.size
-    size = 56
+    size = caption_size(img.size)
     lh = round(size * 1.32)
-    top = H - round(H * 0.06) - lh * len(rows)
-    band = Image.new('RGBA', (W, lh * len(rows) + 40), (0, 0, 0, 140))
+    bottom = round(H * (0.80 if H > W else 0.93))
+    top = bottom - lh * len(rows)
     out = img.convert('RGBA')
-    out.alpha_composite(band, (0, top - 20))
+    out.alpha_composite(Image.new('RGBA', (W, lh * len(rows) + 2 * size // 2), (0, 0, 0, 120)), (0, top - size // 2))
     out = out.convert('RGB')
-    typeset.draw_rows(out, rows, size, W // 2, top)
+    typeset.draw_rows(out, rows, size, W // 2, top, stroke=max(2, size // 20))
     return out
 
 
