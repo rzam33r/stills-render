@@ -97,6 +97,9 @@ def check(plan, pictures=None):
             warnings.append(f'unknown top-level key "{k}" is ignored')
     if not str(plan.get('title', '')).strip():
         errors.append('no "title"')
+    elif not re.search(r'[A-Za-z0-9]', str(plan['title'])):
+        warnings.append('the "title" has no English letters, so the film gets a date for a name; '
+                        'write titles in English letters (Hinglish is fine)')
     shots = plan.get('shots')
     if not isinstance(shots, list) or not shots:
         return errors + ['no "shots" list'], warnings

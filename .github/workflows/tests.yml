@@ -40,6 +40,8 @@ jobs:
         run: python3 tests/test_workflows.py
       - name: The ChatGPT instructions agree with the engine
         run: python3 tests/test_docs.py
+      - name: The upload page's check is the tested one, and it works
+        run: python3 tests/test_lovable.py
 
   voice:
     runs-on: ubuntu-24.04

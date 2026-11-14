@@ -6,7 +6,7 @@ Deliver one JSON object. Nothing before or after it in the file.
 
 | key | required | what |
 |---|---|---|
-| `title` | yes | the film's title |
+| `title` | yes | the film's title, in English letters (Hinglish for a Hindi film); it names the film in Drive |
 | `character` | yes | the lead character's description, pasted into every prompt that shows them |
 | `style` | yes | the style block, ending every picture prompt |
 | `shots` | yes | the shots, in order |
