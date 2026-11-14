@@ -113,5 +113,8 @@ jobs:
         run: |
           gh release view film-example >/dev/null 2>&1 || \
             gh release create film-example --title film-example --notes "The example plan, spoken by Kokoro, with stand-in pictures." --prerelease
-          for d in example/voice-*; do cp "$d/cuts.json" "example/cuts-${d#example/voice-}.json"; done
-          gh release upload film-example example/*.mp4 example/cuts-*.json --clobber
+          for d in example/voice-*; do
+            cp "$d/cuts.json" "example/cuts-${d#example/voice-}.json"
+            ffmpeg -v error -y -i "$d/voice.wav" -c:a flac "example/voice-${d#example/voice-}.flac"
+          done
+          gh release upload film-example example/*.mp4 example/cuts-*.json example/voice-*.flac --clobber
