@@ -1,0 +1,61 @@
+name: Upload the example story
+
+# Puts the example plan (examples/north-star-plan.json) with stand-in
+# pictures on a story-<slug> release, exactly as the upload page would, so
+# "Make a film" can be tested end to end, Drive delivery included, without
+# anyone making pictures. Then starts "Make a film" for it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: 'Story name for the test'
+        required: false
+        default: north-star-test
+      deliver:
+        description: 'Send the test film to the Drive folder'
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stand-in pictures and the ZIP
+        run: |
+          pip install -q -c locks/pictures.txt pillow numpy
+          python3 - <<'PY'
+          import json, pathlib, sys, zipfile
+          sys.path.insert(0, 'tests')
+          from test_render import picture, doodle
+          plan = json.loads(pathlib.Path('examples/north-star-plan.json').read_text())
+          d = pathlib.Path('/tmp/pics'); d.mkdir()
+          for s in plan['shots']:
+              if 'picture' in s: picture(d / f"{s['picture']}.png", int(s['picture']))
+              if s.get('doodle'): doodle(d / f"{s['doodle']}.png")
+          with zipfile.ZipFile('/tmp/story.zip', 'w') as z:
+              z.write('examples/north-star-plan.json', 'plan.json')
+              for p in sorted(d.iterdir()): z.write(p, p.name)
+          print('zip with', len(list(d.iterdir())), 'pictures')
+          PY
+      - name: Put it on the story release, as the upload page does
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLUG: ${{ inputs.slug }}
+        run: |
+          gh release view "story-$SLUG" >/dev/null 2>&1 || \
+            gh release create "story-$SLUG" --title "story-$SLUG" --notes "Example story with stand-in pictures." --prerelease
+          gh release upload "story-$SLUG" /tmp/story.zip --clobber
+      - name: Make the film
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLUG: ${{ inputs.slug }}
+          DELIVER: ${{ inputs.deliver }}
+        run: gh workflow run make-film.yml -f slug="$SLUG" -f deliver="$DELIVER"
