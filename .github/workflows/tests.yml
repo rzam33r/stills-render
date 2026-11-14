@@ -25,6 +25,7 @@ jobs:
       - name: Tools
         run: |
           command -v ffmpeg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+          dpkg -s libfribidi0 >/dev/null 2>&1 || { sudo apt-get update -qq && sudo apt-get install -y -qq libfribidi0; }
           pip install -q -c locks/pictures.txt pillow numpy
           pip install -q pyyaml
       - name: Shots start on their first word
@@ -51,7 +52,7 @@ jobs:
         id: need
         run: |
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || ! git rev-parse -q --verify HEAD~1 >/dev/null || \
-             git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(engine/(voice|timing|render|frames)\.py|locks/voice\.txt|examples/)'; then
+             git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(engine/(voice|timing|render|frames|typeset|check_sync)\.py|locks/voice|examples/)'; then
             echo run=yes >> "$GITHUB_OUTPUT"
           else
             echo "voice untouched; skipping"; echo run=no >> "$GITHUB_OUTPUT"
@@ -60,7 +61,7 @@ jobs:
         if: steps.need.outputs.run == 'yes'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq espeak-ng
+          sudo apt-get install -y -qq espeak-ng libfribidi0
           command -v ffmpeg >/dev/null || sudo apt-get install -y -qq ffmpeg
           pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
           pip install -q -c locks/pictures.txt pillow numpy
@@ -71,25 +72,40 @@ jobs:
           import json, pathlib, sys
           sys.path.insert(0, 'tests')
           from test_render import picture, doodle
-          plan = json.loads(pathlib.Path('examples/north-star-plan.json').read_text())
           out = pathlib.Path('example/pictures'); out.mkdir(parents=True)
-          for s in plan['shots']:
-              if 'picture' in s: picture(out / f"{s['picture']}.png", int(s['picture']))
-              if s.get('doodle'): doodle(out / f"{s['doodle']}.png")
+          for name in ('north-star', 'rain-short', 'boond-hindi-short'):
+              plan = json.loads(pathlib.Path(f'examples/{name}-plan.json').read_text())
+              for s in plan['shots']:
+                  if 'picture' in s and not (out / f"{s['picture']}.png").exists(): picture(out / f"{s['picture']}.png", int(s['picture']))
+                  if s.get('doodle') and not (out / f"{s['doodle']}.png").exists(): doodle(out / f"{s['doodle']}.png")
           PY
-          python3 engine/voice.py examples/north-star-plan.json example/voice
-          python3 engine/render.py examples/north-star-plan.json example/pictures example/voice example/north-star.mp4 \
-            --logo brand/watermark.png --music "$(python3 engine/pick_music.py examples/north-star-plan.json "$GITHUB_RUN_ID")"
-          python3 engine/check_sync.py example/north-star.mp4
+          for name in north-star rain-short; do
+            python3 engine/voice.py "examples/$name-plan.json" "example/voice-$name"
+            python3 engine/render.py "examples/$name-plan.json" example/pictures "example/voice-$name" "example/$name.mp4" \
+              --logo brand/watermark.png --music "$(python3 engine/pick_music.py "examples/$name-plan.json" "$GITHUB_RUN_ID")"
+            python3 engine/check_sync.py "example/$name.mp4"
+          done
           python3 - <<'PY'
           import json
-          c = json.load(open('example/voice/cuts.json'))
-          words = json.load(open('example/voice/words.json'))
+          c = json.load(open('example/voice-north-star/cuts.json'))
           plan = json.load(open('examples/north-star-plan.json'))
           print('voice', c['voice'], f"{c['audio_seconds']:.1f} s;", c['words_without_time'], 'pieces without a time')
           for s, t in zip(plan['shots'], c['starts']):
               print(f'{t:7.2f}  {s["say"][:60]}')
           PY
+      - name: The Hindi short, with the Azure voice (only when its key is set)
+        if: steps.need.outputs.run == 'yes'
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+        run: |
+          if [ -z "$AZURE_SPEECH_KEY" ]; then echo "No Azure key yet: the Hindi short is skipped."; exit 0; fi
+          sudo apt-get install -y -qq libasound2t64 >/dev/null
+          pip install -q -r locks/voice-azure.txt
+          python3 engine/voice.py examples/boond-hindi-short-plan.json example/voice-boond
+          python3 engine/render.py examples/boond-hindi-short-plan.json example/pictures example/voice-boond example/boond-hindi-short.mp4 \
+            --logo brand/watermark.png --music "$(python3 engine/pick_music.py examples/boond-hindi-short-plan.json "$GITHUB_RUN_ID")"
+          python3 engine/check_sync.py example/boond-hindi-short.mp4
       - name: Keep the example film to watch
         if: steps.need.outputs.run == 'yes'
         env:
@@ -97,4 +113,4 @@ jobs:
         run: |
           gh release view film-example >/dev/null 2>&1 || \
             gh release create film-example --title film-example --notes "The example plan, spoken by Kokoro, with stand-in pictures." --prerelease
-          gh release upload film-example example/north-star.mp4 example/voice/cuts.json example/voice/words.json --clobber
+          gh release upload film-example example/*.mp4 --clobber

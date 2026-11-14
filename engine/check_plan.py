@@ -22,9 +22,21 @@ A film is a list of shots, in the order they are seen and heard:
   under it.
 - "paragraph": true starts a new paragraph: the voice takes a breath first.
 
-Optional top level: "voice" (a Kokoro voice, default am_michael), "speed"
-(0.8 to 1.3, default 1.0), "music" (a file in music/), "frame" ("16:9" or
-"9:16").
+Optional top level:
+  "layout"    "wide" (16:9, pictures fill the frame; the default) or "short"
+              (9:16 on black: "hook" line at the top, square picture, subtitles
+              word by word)
+  "language"  "en" (default) or "hi"
+  "hook"      the short layout's fixed top line; *marked* words are yellow
+  "captions"  true/false: subtitles (default: on for short, off for wide)
+  "voice"     a Kokoro voice (English, default am_michael) or an Azure neural
+              voice (Hindi default hi-IN-MadhurNeural)
+  "speed"     0.8 to 1.3, default 1.0
+  "music"     a file in music/
+  "frame"     "16:9" or "9:16" for the wide layout
+
+In "say", *asterisks* mark words to show in yellow in the subtitles; the
+voice does not read them.
 
     python3 engine/check_plan.py plan.json [--pictures DIR]
 
@@ -36,20 +48,31 @@ import pathlib
 import re
 import sys
 
-WORD = re.compile(r"[A-Za-z0-9]+(?:['’][A-Za-z]+)?")
 PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 VOICES = {'am_michael', 'am_adam', 'am_eric', 'am_liam', 'am_onyx', 'am_puck', 'am_fenrir',
           'af_heart', 'af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'af_nova', 'af_river',
           'bm_george', 'bm_lewis', 'bm_daniel', 'bm_fable', 'bf_emma', 'bf_isabella', 'bf_alice', 'bf_lily'}
 KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt'}
-TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description'}
+TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
+       'layout', 'language', 'hook', 'captions'}
+AZURE = re.compile(r'^[a-z]{2}-[A-Z]{2}-[A-Za-z]+Neural$')
+# Words per shot: (aim low, aim high, warn above, refuse above).
+SHOT_WORDS = {'wide': (6, 12, 16, 24), 'short': (1, 5, 7, 10)}
 
 # How fast the voice speaks, for the length estimate: words per second.
 WPS = 2.75
 
 
 def words(text):
-    return WORD.findall(text or '')
+    """The words of a line, any script: what sits between spaces and has a
+    letter or digit in it (Hindi vowel signs count as part of the word)."""
+    import unicodedata
+    out = []
+    for w in (text or '').replace('*', ' ').split():
+        core = ''.join(c for c in w if unicodedata.category(c)[0] in 'LMN')
+        if core:
+            out.append(core)
+    return out
 
 
 def find_picture(folder, name):
@@ -77,8 +100,25 @@ def check(plan, pictures=None):
     shots = plan.get('shots')
     if not isinstance(shots, list) or not shots:
         return errors + ['no "shots" list'], warnings
-    if plan.get('voice') is not None and plan['voice'] not in VOICES:
-        errors.append(f'"voice": "{plan["voice"]}" is not a Kokoro voice this engine knows ({", ".join(sorted(VOICES))})')
+    layout = plan.get('layout', 'wide')
+    lang = plan.get('language', 'en')
+    if layout not in SHOT_WORDS:
+        errors.append('"layout" must be "wide" or "short"')
+        layout = 'wide'
+    if lang not in ('en', 'hi'):
+        errors.append('"language" must be "en" or "hi"')
+    voice = plan.get('voice')
+    if voice is not None and voice not in VOICES and not AZURE.match(str(voice)):
+        errors.append(f'"voice": "{voice}" is neither a Kokoro voice ({", ".join(sorted(VOICES))}) '
+                      'nor an Azure neural voice like hi-IN-MadhurNeural')
+    if lang == 'hi' and voice in VOICES:
+        errors.append('a Hindi film needs an Azure Hindi voice (hi-IN-MadhurNeural, hi-IN-SwaraNeural...), not Kokoro')
+    if layout == 'short':
+        hook = plan.get('hook')
+        if not isinstance(hook, str) or not hook.strip():
+            warnings.append('a short film usually has a "hook" line at the top')
+        elif len(hook.replace('*', '')) > 42:
+            warnings.append(f'the hook "{hook}" is long; it wraps past two lines above 40 characters')
     sp = plan.get('speed', 1.0)
     if not isinstance(sp, (int, float)) or not 0.8 <= sp <= 1.3:
         errors.append('"speed" must be a number from 0.8 to 1.3')
@@ -103,12 +143,15 @@ def check(plan, pictures=None):
         total += len(w)
         snippet = ' '.join(w[:6])
         where = f'shot {i} ("{snippet}…")'
-        if len(w) > 24:
-            errors.append(f'{where}: {len(w)} words is about {len(w) / WPS:.0f} s on one picture; split it (aim for 6 to 12 words)')
-        elif len(w) > 16:
-            warnings.append(f'{where}: {len(w)} words, about {len(w) / WPS:.0f} s on one picture; 6 to 12 keeps the pictures moving')
-        elif len(w) < 3 and i != len(shots):
+        lo, hi, warn, refuse = SHOT_WORDS[layout]
+        if len(w) > refuse:
+            errors.append(f'{where}: {len(w)} words is about {len(w) / WPS:.0f} s on one picture; split it (aim for {lo} to {hi} words)')
+        elif len(w) > warn:
+            warnings.append(f'{where}: {len(w)} words, about {len(w) / WPS:.0f} s on one picture; {lo} to {hi} keeps the pictures moving')
+        elif len(w) < 3 and layout == 'wide' and i != len(shots):
             warnings.append(f'{where}: {len(w)} word(s) is under a second on screen')
+        if say.count('*') % 2:
+            warnings.append(f'{where}: an odd number of * marks; a highlight is not closed')
         has_pic, has_card = 'picture' in s, 'card' in s
         if has_pic == has_card:
             errors.append(f'{where}: give exactly one of "picture" or "card"')

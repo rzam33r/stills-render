@@ -37,6 +37,13 @@ errors, warnings = check(ex)
 say(not errors and len(warnings) == 1, 'the example passes the plan check cleanly' + ('' if not errors else f': {errors}'))
 named = set(re.findall(r'^\| `([a-z_]+)` \|', fmt, re.M))
 say(named <= KEYS | TOP, 'every key in the format table is known to the plan check' + f' (unknown: {sorted(named - KEYS - TOP)})' * bool(named - KEYS - TOP))
+shorts = (DOCS / '5_SHORTS.md').read_text()
+blocks = [json.loads(b) for b in re.findall(r'```json\n(.*?)\n```', shorts, re.S)]
+want = [json.loads((ROOT / 'examples' / n).read_text()) for n in ('rain-short-plan.json', 'boond-hindi-short-plan.json')]
+say(blocks == want, '5_SHORTS.md shows the English and Hindi short examples exactly')
+for b in want:
+    e, w = check(b)
+    say(not e and len(w) == 1, f'the {b["language"]} short example passes the plan check cleanly' + ('' if not e else f': {e}'))
 n = len((DOCS / 'PROJECT_INSTRUCTIONS.md').read_text(encoding='utf-8'))
 say(n < 8000, f'PROJECT_INSTRUCTIONS.md is {n} characters, under 8,000')
 prompts = [s['prompt'] for s in ex['shots'] if 'prompt' in s]

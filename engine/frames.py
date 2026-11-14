@@ -13,10 +13,21 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 HERE = pathlib.Path(__file__).resolve().parent.parent
 FONT = HERE / 'fonts' / 'CaveatBrush-Regular.ttf'
+# Hindi cards: Kalam, a hand-lettered face drawn for Devanagari.
+FONT_DEVA = HERE / 'fonts' / 'Kalam-Bold.ttf'
+
+
+def _is_deva(text):
+    return any(0x0900 <= ord(c) <= 0x097F for c in text)
 PAPER = (255, 255, 255)
 INK = (17, 17, 17)
 
 SIZES = {'16:9': (1920, 1080), '9:16': (1080, 1920)}
+
+# The short layout (9:16): black, the hook line at the top, a square
+# picture, the subtitles under it. Boxes are (left, top, right, bottom).
+SHORT = {'size': (1080, 1920), 'picture': (0, 420, 1080, 1500), 'hook_bottom': 392,
+         'hook_size': 64, 'caption_top': 1560, 'caption_size': 62, 'caption_width': 980}
 
 
 def cover(img, size):
@@ -33,18 +44,21 @@ def cover(img, size):
 
 def _fit_text(text, box_w, box_h, biggest, smallest=40):
     """The largest font and line wrap that fit the box."""
+    deva = _is_deva(text)
     for size in range(biggest, smallest - 1, -4):
-        font = ImageFont.truetype(str(FONT), size)
+        font = (ImageFont.truetype(str(FONT_DEVA), round(size * 0.8), layout_engine=ImageFont.Layout.RAQM)
+                if deva else ImageFont.truetype(str(FONT), size))
         # Try fewer, longer lines first: a card reads best on 1 to 3 lines.
         for width in range(len(text), 0, -1):
             lines = textwrap.wrap(text, width=width, break_long_words=False) or [text]
             if len(lines) > 4:
                 break
             widths = [font.getbbox(l)[2] - font.getbbox(l)[0] for l in lines]
-            line_h = round(size * 1.12)
+            line_h = round(size * (1.3 if deva else 1.12))
             if max(widths) <= box_w and line_h * len(lines) <= box_h:
                 return font, lines, line_h
-    font = ImageFont.truetype(str(FONT), smallest)
+    font = (ImageFont.truetype(str(FONT_DEVA), round(smallest * 0.8), layout_engine=ImageFont.Layout.RAQM)
+            if deva else ImageFont.truetype(str(FONT), smallest))
     return font, textwrap.wrap(text, width=28), round(smallest * 1.12)
 
 
@@ -53,7 +67,9 @@ def card(text, size, doodle=None):
     W, H = size
     img = Image.new('RGB', size, PAPER)
     d = ImageDraw.Draw(img)
-    text = ' '.join(text.split()).upper()
+    text = ' '.join(text.replace('*', '').split())
+    if not _is_deva(text):
+        text = text.upper()
     tall = H > W
     box_w = round(W * (0.84 if tall else 0.78))
     if doodle is not None:
@@ -103,3 +119,31 @@ def shot_image(shot, find, size, logo=None):
     else:
         img = cover(Image.open(find(shot['picture'])), size)
     return with_logo(img, logo, size)
+
+
+def short_frame(shot_img, hook_rows, caption_rows, logo=None, hook_size=None):
+    """One frame of the short layout. shot_img is the square picture (or
+    card); hook_rows and caption_rows come from typeset.lay_out."""
+    from typeset import draw_rows
+    L = SHORT
+    W, H = L['size']
+    img = Image.new('RGB', (W, H), (0, 0, 0))
+    x0, y0, x1, y1 = L['picture']
+    pic = shot_img if shot_img.size == (x1 - x0, y1 - y0) else cover(shot_img, (x1 - x0, y1 - y0))
+    img.paste(with_logo(pic, logo, pic.size), (x0, y0))
+    if hook_rows:
+        hs = hook_size or L['hook_size']
+        lh = round(hs * 1.25)
+        draw_rows(img, hook_rows, hs, W // 2, L['hook_bottom'] - lh * len(hook_rows), heavy=True, line=1.25)
+    if caption_rows:
+        draw_rows(img, caption_rows, L['caption_size'], W // 2, L['caption_top'])
+    return img
+
+
+def square_image(shot, find):
+    """The square picture or card for one shot in the short layout."""
+    side = SHORT['picture'][2] - SHORT['picture'][0]
+    if 'card' in shot:
+        doodle = Image.open(find(shot['doodle'])) if shot.get('doodle') else None
+        return card(shot['card'], (side, side), doodle)
+    return cover(Image.open(find(shot['picture'])), (side, side))

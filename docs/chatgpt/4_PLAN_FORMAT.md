@@ -10,14 +10,18 @@ Deliver one JSON object. Nothing before or after it in the file.
 | `character` | yes | the lead character's description, pasted into every prompt that shows them |
 | `style` | yes | the style block, ending every picture prompt |
 | `shots` | yes | the shots, in order |
-| `voice` | no | Kokoro voice; leave `"am_michael"` |
+| `layout` | no | `"wide"` (default) or `"short"` |
+| `language` | no | `"en"` (default) or `"hi"` |
+| `hook` | short films | the fixed top line, 2 to 6 words, one *marked* word, one emoji |
+| `captions` | no | `true`/`false`; subtitles default to on for short, off for wide |
+| `voice` | no | leave out: English uses `"am_michael"`, Hindi `"hi-IN-MadhurNeural"` |
 | `speed` | no | 0.8 to 1.3; leave `1.0` |
 
 ## A shot
 
 | key | when | what |
 |---|---|---|
-| `say` | always | the exact words spoken while this shot is on screen |
+| `say` | always | the exact words spoken while this shot is on screen; *asterisks* mark yellow subtitle words |
 | `picture` | picture shots | the picture's number: `"001"`, `"002"`… (the file will be 001.png) |
 | `prompt` | picture shots | the Flow prompt for that picture |
 | `card` | card shots | the short line the engine draws (at most 8 words) |
@@ -31,7 +35,8 @@ the order pictures and doodles first appear, with no gaps.
 ## The ZIP
 
 `plan.json` plus every picture, named by its number: `001.png`, `002.png`…
-(`.jpg` and `.webp` also work). Flow pictures at 16:9, at least 1280 × 720.
+(`.jpg` and `.webp` also work). WIDE: Flow pictures at 16:9, at least
+1280 × 720. SHORT: square 1:1, at least 1024 × 1024.
 
 ## Complete example
 

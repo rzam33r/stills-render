@@ -24,6 +24,11 @@ jobs:
           /tmp/voice/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cpu
           /tmp/voice/bin/pip install -q kokoro soundfile
           echo "=== voice.txt ==="; /tmp/voice/bin/pip freeze; echo "=== end ==="
+      - name: azure voice
+        run: |
+          python3 -m venv /tmp/azure
+          /tmp/azure/bin/pip install -q azure-cognitiveservices-speech
+          echo "=== voice-azure.txt ==="; /tmp/azure/bin/pip freeze; echo "=== end ==="
       - name: pictures
         run: |
           python3 -m venv /tmp/pics

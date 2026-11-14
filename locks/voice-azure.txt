@@ -1,0 +1,11 @@
+# Every version a film installs for the Azure neural voice (Hindi and other
+# Azure voices), resolved for Python 3.12 on linux x86_64 on 15 Nov 2026.
+# Films install exactly these. To move on: replace this list, make a test film.
+azure-cognitiveservices-speech==1.53.0
+azure-core==1.41.0
+certifi==2026.10.23
+charset-normalizer==3.5.2
+idna==3.20
+requests==2.34.2
+typing_extensions==4.16.0
+urllib3==2.8.0

@@ -1,0 +1,73 @@
+{
+  "title": "Where Does Rain Come From?",
+  "layout": "short",
+  "language": "en",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "hook": "Where does *rain* come from? 🌧️",
+  "character": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts",
+  "style": "Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark.",
+  "shots": [
+    {
+      "say": "A single drop",
+      "picture": "001",
+      "prompt": "Close-up of a single shining water drop rising from the surface of a blue sea, sunlight sparkling. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "leaves the *sea*,",
+      "picture": "002",
+      "prompt": "Wide view of a calm blue sea under a hot sun with faint wisps of mist rising from the water. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "rises as mist,",
+      "picture": "003",
+      "prompt": "Many tiny water drops floating upward as soft white mist over the sea, towards the sky. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "becomes a *cloud*,",
+      "picture": "004",
+      "prompt": "A big fluffy white cloud forming in a bright blue sky above the sea. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "and falls",
+      "picture": "005",
+      "prompt": "A dark grey rain cloud over green mountains, the first raindrops starting to fall. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "on the mountains.",
+      "picture": "006",
+      "prompt": "Rain falling on steep green mountains, a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts standing under a big leaf like an umbrella, smiling. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "It runs down as a *river*,",
+      "picture": "007",
+      "prompt": "A sparkling river winding down from the mountains through a green valley. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "waters the fields,",
+      "picture": "008",
+      "prompt": "Green rice fields being watered by a small canal from the river, a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts splashing barefoot in the water, laughing. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "and finds its way",
+      "picture": "009",
+      "prompt": "The river widening as it flows past a small village towards the coast. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "back to the *sea*.",
+      "picture": "010",
+      "prompt": "A river mouth meeting the open blue sea at sunset, waves gently rolling in. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "*Water* never runs out.",
+      "card": "Water never runs out.",
+      "doodle": "011",
+      "doodle_prompt": "Minimal black ink doodle icon of a water drop with a circular arrow around it, thick simple lines, centred on a pure white background, square, no text, no letters, no shading."
+    },
+    {
+      "say": "It only changes shape.",
+      "picture": "012",
+      "prompt": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts looking up in wonder at a sky with a cloud, a raindrop and a snowflake floating side by side. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    }
+  ]
+}

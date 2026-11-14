@@ -1,8 +1,19 @@
 # stills-render
 
-Narrated explainer films made of still pictures, FACT HUBZZZ style: a new
-picture for every idea, each one appearing on the exact frame its first word
-is spoken.
+Narrated films made of still pictures, FACT HUBZZZ style: a new picture for
+every idea, each one appearing on the exact frame its first word is spoken.
+
+Two layouts, chosen in the plan:
+
+- **wide** (16:9): explainers of several minutes; each picture fills the
+  frame, about one every 3 seconds; cards for chapter titles and punchlines.
+- **short** (9:16): on black, a fixed hook line at the top, a square picture
+  changing every 2 to 4 words, and subtitles that appear word by word as they
+  are spoken (*marked* words in yellow). English or Hindi.
+
+Voices: Kokoro (free, on the runner) for English; Azure neural voices for
+Hindi (`hi-IN-MadhurNeural`), which need the secrets `AZURE_SPEECH_KEY` and
+`AZURE_SPEECH_REGION`.
 
 ## How a film is made
 
@@ -41,17 +52,19 @@ checks one.
 | `engine/check_plan.py` | checks a plan, in plain words |
 | `engine/voice.py` | speaks the narration, records every word's time |
 | `engine/timing.py` | lines the spoken words up with the shots |
-| `engine/frames.py` | fills the frame with a picture, or draws a card |
+| `engine/frames.py` | fills the frame with a picture, draws a card, lays out a short |
+| `engine/typeset.py` | sets Hindi, English and emoji text, with yellow highlights |
 | `engine/render.py` | makes the film, each shot exactly as many frames as it is on screen |
-| `engine/check_sync.py` | checks, in the finished film, that every cut is on its word |
+| `engine/check_sync.py` | checks, in the finished film, that every cut and subtitle word is on its word |
 | `engine/pick_music.py` | chooses a credited track and prints its credit |
 | `music/` | tracks and their credits (CC BY only) |
 | `locks/` | exact versions of everything a film installs |
 
 ## Needed once
 
-Two repository secrets for the Drive delivery, the same values as in
-rose-render-test: `UPLOAD_TOKEN` and `DRIVE_ENDPOINT_URL`.
+Repository secrets: `UPLOAD_TOKEN` and `DRIVE_ENDPOINT_URL` for the Drive
+delivery (the same values as in rose-render-test), and `AZURE_SPEECH_KEY` and
+`AZURE_SPEECH_REGION` for Hindi films.
 
 ## Rules carried over from the Rose engine
 

@@ -1,0 +1,63 @@
+{
+  "title": "Ek boond ka safar",
+  "layout": "short",
+  "language": "hi",
+  "voice": "hi-IN-MadhurNeural",
+  "speed": 1.0,
+  "hook": "*Ek boond* ka safar 💧",
+  "character": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts",
+  "style": "Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark.",
+  "shots": [
+    {
+      "say": "समंदर से उठी",
+      "picture": "001",
+      "prompt": "Close-up of a single shining water drop rising from the surface of a blue sea, sunlight sparkling. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "एक *बूंद*,",
+      "picture": "002",
+      "prompt": "Wide view of a calm blue sea under a hot sun with faint wisps of mist rising from the water. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "*बादल* बनी,",
+      "picture": "003",
+      "prompt": "A big fluffy white cloud forming in a bright blue sky above the sea. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "पहाड़ों पर बरसी,",
+      "picture": "004",
+      "prompt": "Rain falling on steep green mountains, a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts standing under a big leaf like an umbrella, smiling. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "*नदी* बनकर बही,",
+      "picture": "005",
+      "prompt": "A sparkling river winding down from the mountains through a green valley. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "खेतों को सींचा,",
+      "picture": "006",
+      "prompt": "Green rice fields being watered by a small canal from the river, a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts splashing barefoot in the water, laughing. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "और फिर",
+      "picture": "007",
+      "prompt": "The river widening as it flows past a small village towards the coast. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "वापस *समंदर* में मिल गई।",
+      "picture": "008",
+      "prompt": "A river mouth meeting the open blue sea at sunset, waves gently rolling in. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    },
+    {
+      "say": "*पानी* कभी खत्म नहीं होता,",
+      "card": "पानी कभी खत्म नहीं होता",
+      "doodle": "009",
+      "doodle_prompt": "Minimal black ink doodle icon of a water drop with a circular arrow around it, thick simple lines, centred on a pure white background, square, no text, no letters, no shading."
+    },
+    {
+      "say": "बस रूप बदलता है।",
+      "picture": "010",
+      "prompt": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts looking up in wonder at a sky with a cloud, a raindrop and a snowflake floating side by side. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, square 1:1 frame, no text, no letters, no numbers, no signs, no watermark."
+    }
+  ]
+}

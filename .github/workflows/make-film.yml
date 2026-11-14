@@ -132,12 +132,34 @@ jobs:
         with:
           name: story-${{ inputs.slug }}
           path: story
-      - name: Install the voice (exact versions from locks/voice.txt)
+      - name: Which voice
+        id: which
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, sys
+          sys.path.insert(0, 'engine')
+          from voice import DEFAULT_VOICE, is_azure
+          plan = json.load(open('story/plan.json', encoding='utf-8-sig'))
+          v = plan.get('voice') or DEFAULT_VOICE.get(plan.get('language', 'en'), 'am_michael')
+          print('engine=' + ('azure' if is_azure(v) else 'kokoro'))
+          PY
+      - name: Install Kokoro (exact versions from locks/voice.txt)
+        if: steps.which.outputs.engine == 'kokoro'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq espeak-ng
           pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Install the Azure voice (exact version from locks/voice-azure.txt)
+        if: steps.which.outputs.engine == 'azure'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libasound2t64 ca-certificates libssl3t64
+          pip install -q -r locks/voice-azure.txt
+          pip install -q -c locks/voice.txt numpy soundfile
       - name: Speak the narration and time every word
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
         run: |
           python3 engine/voice.py story/plan.json voice
           python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
@@ -169,6 +191,8 @@ jobs:
       - name: Tools
         run: |
           command -v ffmpeg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+          # Hindi text shaping (Raqm) needs FriBiDi on the system.
+          dpkg -s libfribidi0 >/dev/null 2>&1 || { sudo apt-get update -qq && sudo apt-get install -y -qq libfribidi0; }
           pip install -q -c locks/pictures.txt pillow numpy
       - name: Make the film
         env:

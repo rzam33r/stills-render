@@ -5,12 +5,19 @@
 
 VOICE_DIR is what voice.py wrote (voice.wav and cuts.json).
 
-Every shot is encoded as its own run of identical frames, exactly as many
-as it is on screen, and the runs are joined without re-encoding, so a cut
-happens on precisely the frame worked out from the voice; nothing is
-rounded twice. The sound is the voice with the music bed under it, the
-bed pushed down whenever the voice speaks, and the whole mix brought to
--14 LUFS, YouTube's loudness.
+Two layouts, chosen by the plan's "layout":
+  - "wide" (16:9): every picture fills the frame; no subtitles unless the
+    plan asks for "captions": true.
+  - "short" (9:16): black, the plan's "hook" line at the top, a square
+    picture in the middle, and subtitles under it that appear word by word
+    as each word is spoken, *marked* words in yellow.
+
+The film is cut into stretches in which nothing changes (a new picture, or
+a new word in the subtitles, starts a new stretch). Each stretch is encoded
+as exactly as many identical frames as it lasts, and the stretches are
+joined without re-encoding, so every change happens on precisely the frame
+worked out from the voice. The sound is the voice with the music bed under
+it, pushed down whenever the voice speaks, brought to -14 LUFS.
 """
 import concurrent.futures
 import hashlib
@@ -26,10 +33,11 @@ from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from check_plan import find_picture  # noqa: E402
-from frames import SIZES, shot_image  # noqa: E402
+from frames import SHORT, SIZES, shot_image, short_frame, square_image, with_logo  # noqa: E402
 
 TAIL = 0.8          # the last picture stays this long after the voice ends
 MUSIC_GAIN = -22    # dB under the voice
+LINE_ENDS = tuple(',.?!;:।…')
 
 
 def frame_plan(starts, total_seconds, fps):
@@ -40,6 +48,49 @@ def frame_plan(starts, total_seconds, fps):
         firsts[i] = max(firsts[i], firsts[i - 1] + 1)
     end = max(math.ceil(total_seconds * fps), firsts[-1] + 1)
     return [(f, (firsts[i + 1] if i + 1 < len(firsts) else end) - f) for i, f in enumerate(firsts)]
+
+
+def caption_lines(words, shots, max_words):
+    """Group the narration's words into subtitle lines: a line ends at a
+    comma, full stop, question mark or danda, at max_words, or where a new
+    paragraph begins. Returns [[word index, ...], ...]."""
+    lines, cur = [], []
+    for k, w in enumerate(words):
+        new_par = shots[w['shot']].get('paragraph') and k and words[k - 1]['shot'] != w['shot']
+        if cur and (len(cur) >= max_words or new_par or words[cur[-1]]['word'].rstrip('*"\'”’').endswith(LINE_ENDS)):
+            lines.append(cur)
+            cur = []
+        cur.append(k)
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def stretches(shot_frames, word_frames, lines, end):
+    """[(first frame, frame count, (shot, line, words shown))]: the film
+    split wherever the picture or the subtitle changes."""
+    marks = {0, end} | {f for f, _ in shot_frames} | {f for f in word_frames if 0 <= f < end}
+    marks = sorted(m for m in marks if m <= end)
+    line_of = {}
+    for L, line in enumerate(lines):
+        for k in line:
+            line_of[k] = L
+    out = []
+    shot_firsts = [f for f, _ in shot_frames]
+    for a, b in zip(marks, marks[1:]):
+        shot = max(i for i, f in enumerate(shot_firsts) if f <= a)
+        said = [k for k, f in enumerate(word_frames) if f <= a]
+        if said and lines:
+            L = line_of[said[-1]]
+            shown = sum(1 for k in lines[L] if word_frames[k] <= a)
+            state = (shot, L, shown)
+        else:
+            state = (shot, None, 0)
+        if out and out[-1][2] == state:
+            out[-1] = (out[-1][0], out[-1][1] + b - a, state)
+        else:
+            out.append((a, b - a, state))
+    return out
 
 
 def run(cmd):
@@ -83,11 +134,26 @@ def main(argv):
 
     plan = json.loads(plan_path.read_text(encoding='utf-8-sig'))
     shots = plan['shots']
+    layout = plan.get('layout', 'wide')
     cuts = json.loads((voice_dir / 'cuts.json').read_text())
-    size = SIZES[plan.get('frame', '16:9')]
+    size = SHORT['size'] if layout == 'short' else SIZES[plan.get('frame', '16:9')]
     total = max(cuts['audio_seconds'], cuts['speech_end'] + TAIL)
-    plan_frames = frame_plan(cuts['starts'], total, fps)
+    shot_frames = frame_plan(cuts['starts'], total, fps)
+    end = shot_frames[-1][0] + shot_frames[-1][1]
     logo = Image.open(logo_path).convert('RGBA') if logo_path else None
+
+    captions = plan.get('captions', layout == 'short')
+    words = cuts.get('words') or []
+    lines = caption_lines(words, shots, 5 if layout == 'short' else 7) if captions and words else []
+    # A word appears on the frame it is spoken; a shot's first word appears
+    # with its picture.
+    word_frames = [round(w['start'] * fps) for w in words] if lines else []
+    for k, w in enumerate(words if lines else []):
+        first = shot_frames[w['shot']][0]
+        if k == 0 or words[k - 1]['shot'] != w['shot']:
+            word_frames[k] = first
+        word_frames[k] = max(word_frames[k], first)
+    parts = stretches(shot_frames, word_frames, lines, end)
 
     def find(name):
         p = find_picture(pic_dir, name)
@@ -95,37 +161,83 @@ def main(argv):
             raise SystemExit(f'no picture "{name}" in {pic_dir}')
         return p
 
+    hook_rows, hook_size, typeset = None, SHORT['hook_size'], None
+    if layout == 'short' or lines:
+        import typeset
+        if not typeset.shaping_ok():
+            raise SystemExit('Pillow has no Raqm text shaping: Hindi would be drawn wrongly. '
+                             'Install libfribidi0 (apt) and use the Pillow wheel from locks/pictures.txt.')
+        if layout == 'short' and plan.get('hook'):
+            hook_rows, hook_size = typeset.fit_hook(plan['hook'], SHORT['hook_size'], SHORT['caption_width'])
+
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
-        pngs, keys = [], []
+        base = {}
         for i, s in enumerate(shots):
-            img = shot_image(s, find, size, logo)
-            key = hashlib.sha1(img.tobytes()).hexdigest()[:16]
-            png = tmp / f'{key}.png'
-            if not png.exists():
-                img.save(png)
-            pngs.append(png)
-            keys.append(key)
-        segs = [tmp / f'seg{i:04d}.mp4' for i in range(len(shots))]
+            base[i] = square_image(s, find) if layout == 'short' else shot_image(s, find, size, logo)
+        pngs, keys, cache = [], [], {}
+        for first, n, (shot, L, shown) in parts:
+            key = (shot, L, shown)
+            if key not in cache:
+                cap = None
+                if L is not None and shown:
+                    said = ' '.join(words[k]['word'] for k in lines[L][:shown])
+                    cap = typeset.lay_out(typeset.words_of(said), SHORT['caption_size'] if layout == 'short' else 56,
+                                          SHORT['caption_width'] if layout == 'short' else round(size[0] * 0.8))
+                if layout == 'short':
+                    img = short_frame(base[shot], hook_rows, cap, logo, hook_size)
+                else:
+                    img = base[shot].copy()
+                    if cap:
+                        img = with_caption_wide(img, cap, typeset)
+                h = hashlib.sha1(img.tobytes()).hexdigest()[:16]
+                png = tmp / f'{h}.png'
+                if not png.exists():
+                    img.save(png)
+                cache[key] = png
+            pngs.append(cache[key])
+        segs = [tmp / f'seg{i:05d}.mp4' for i in range(len(parts))]
         with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as pool:
             list(pool.map(lambda a: encode_segment(*a),
-                          [(pngs[i], plan_frames[i][1], fps, segs[i]) for i in range(len(shots))]))
+                          [(pngs[i], parts[i][1], fps, segs[i]) for i in range(len(parts))]))
         (tmp / 'list.txt').write_text(''.join(f"file '{p}'\n" for p in segs))
         video = tmp / 'video.mp4'
         run(['ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', str(tmp / 'list.txt'),
              '-c', 'copy', str(video)])
         sound = tmp / 'sound.m4a'
-        frames_total = sum(n for _, n in plan_frames)
-        mix_audio(voice_dir / 'voice.wav', music, frames_total / fps, sound)
+        mix_audio(voice_dir / 'voice.wav', music, end / fps, sound)
         run(['ffmpeg', '-v', 'error', '-y', '-i', str(video), '-i', str(sound), '-map', '0:v', '-map', '1:a',
              '-c', 'copy', '-movflags', '+faststart', '-shortest', str(out)])
 
-    # What the sync check needs: each shot's first frame and what it shows.
+    # What the sync check needs: where each shot and each subtitle word
+    # starts, what each shot shows, and where on screen to look.
+    pic_keys = [hashlib.sha1(base[i].tobytes()).hexdigest()[:16] for i in range(len(shots))]
     (out.with_suffix('.cuts.json')).write_text(json.dumps({
-        'fps': fps, 'frames': plan_frames, 'pictures': keys, 'starts': cuts['starts']}, indent=0))
-    print(f'{out.name}: {len(shots)} shots, {frames_total} frames, {frames_total / fps:.1f} s'
+        'fps': fps, 'frames': shot_frames, 'pictures': pic_keys, 'starts': cuts['starts'],
+        'picture_box': list(SHORT['picture']) if layout == 'short' else [0, 0, size[0], size[1]],
+        'caption_box': ([0, SHORT['caption_top'] - 20, size[0], size[1]] if layout == 'short'
+                        else [0, round(size[1] * 0.80), size[0], size[1]]) if lines else None,
+        'word_frames': sorted(set(word_frames)) if lines else [],
+        'size': list(size)}, indent=0))
+    print(f'{out.name}: {layout}, {len(shots)} shots, {len(parts)} stretches, {end} frames, {end / fps:.1f} s'
+          + (f', {len(lines)} subtitle lines' if lines else '')
           + (f', music {pathlib.Path(music).name}' if music else ''))
     return 0
+
+
+def with_caption_wide(img, rows, typeset):
+    """Subtitles on a wide picture: white on a dark band near the bottom."""
+    from PIL import ImageDraw
+    W, H = img.size
+    size = 56
+    lh = round(size * 1.32)
+    top = H - round(H * 0.06) - lh * len(rows)
+    band = Image.new('RGBA', (W, lh * len(rows) + 40), (0, 0, 0, 140))
+    out = img.convert('RGBA')
+    out.alpha_composite(band, (0, top - 20))
+    out = out.convert('RGB')
+    typeset.draw_rows(out, rows, size, W // 2, top)
+    return out
 
 
 if __name__ == '__main__':

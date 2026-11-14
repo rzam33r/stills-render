@@ -12,13 +12,14 @@ compare equal. Where the voice changes or skips a word, the alignment steps
 over the difference instead of drifting.
 """
 import difflib
-import re
-
-ALNUM = re.compile(r'[a-z0-9]+')
+import unicodedata
 
 
 def norm(text):
-    return ''.join(ALNUM.findall((text or '').lower()))
+    """A word reduced to its letters, marks and digits, in lower case: works
+    for any script, so Hindi's vowel signs are kept and "*word*" (the
+    highlight mark) or punctuation are dropped."""
+    return ''.join(c for c in (text or '').lower() if unicodedata.category(c)[0] in 'LMN')
 
 
 def paragraphs(shots):
@@ -52,6 +53,47 @@ def spoken_words(tokens):
             words.append((text, start, end))
         glue = ws is not None and ws == ''
     return [(norm(w), s, e) for w, s, e in words if norm(w)]
+
+
+def narration_words(says):
+    """Every word of the narration: [(shot index, word as written), ...].
+    A word is what sits between spaces; something with no letters or digits
+    (a dash, an emoji) rides with the word before it."""
+    out = []
+    for i, say in enumerate(says):
+        for w in (say or '').split():
+            if norm(w) or not out or out[-1][0] != i:
+                out.append((i, w))
+            else:
+                out[-1] = (i, out[-1][1] + ' ' + w)
+    return out
+
+
+def word_starts(says, tokens):
+    """When each narration word starts: a list parallel to
+    narration_words(says). Words the voice did not say, or said
+    differently, take the time of the nearest word before them that it did."""
+    words = narration_words(says)
+    nar = [norm(w) for _, w in words]
+    spoken = spoken_words(tokens)
+    heard = [w for w, _, _ in spoken]
+    where = [None] * len(nar)
+    sm = difflib.SequenceMatcher(None, nar, heard, autojunk=False)
+    for a, b, size in sm.get_matching_blocks():
+        for d in range(size):
+            where[a + d] = b + d
+    times = []
+    for k, w in enumerate(where):
+        t = spoken[w][1] if w is not None else None
+        if t is None and w is not None and w > 0:
+            t = spoken[w - 1][2]
+        times.append(t)
+    last = 0.0
+    for k in range(len(times)):
+        if times[k] is None:
+            times[k] = last
+        last = times[k]
+    return times
 
 
 def shot_starts(says, tokens, gap=1 / 30):

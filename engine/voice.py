@@ -12,6 +12,14 @@ The narration is spoken one paragraph at a time, each paragraph as one piece,
 so sentences flow into each other the way a narrator reads them; a short
 breath separates paragraphs. Kokoro reports when it says each word, and
 timing.py turns that into the moment each shot's first word begins.
+
+Two voices:
+  - Kokoro (free, on the runner) for English: voices like am_michael.
+  - Azure neural voices for Hindi (and any voice named like hi-IN-MadhurNeural
+    or en-US-AndrewNeural). Azure reports the time of every word too. It
+    needs the repository secrets AZURE_SPEECH_KEY and AZURE_SPEECH_REGION.
+
+The plan picks with "language" ("en" or "hi") and optionally "voice".
 """
 import json
 import pathlib
@@ -21,23 +29,73 @@ import numpy as np
 import soundfile as sf
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from timing import paragraphs, shot_starts  # noqa: E402
+from timing import narration_words, paragraphs, shot_starts, word_starts  # noqa: E402
 
 RATE = 24000
 LEAD = 0.20       # silence before the first word
 BREATH = 0.45     # silence between paragraphs
+DEFAULT_VOICE = {'en': 'am_michael', 'hi': 'hi-IN-MadhurNeural'}
 
 
-def main(plan_path, out_dir):
+def spoken_text(say):
+    """What the voice reads: the words without the *highlight* marks."""
+    return say.replace('*', '').strip()
+
+
+def is_azure(voice):
+    return voice.endswith('Neural') and voice[2:3] == '-'
+
+
+def azure_voice(plan, voice, speed):
+    """Speak with an Azure neural voice; returns (samples, tokens)."""
+    import os
+    from xml.sax.saxutils import escape
+    try:
+        import azure.cognitiveservices.speech as sdk
+    except ImportError:
+        raise SystemExit('The Azure voice library is not installed (locks/voice-azure.txt).')
+    key, region = os.environ.get('AZURE_SPEECH_KEY'), os.environ.get('AZURE_SPEECH_REGION')
+    if not key or not region:
+        raise SystemExit('The voice ' + voice + ' needs an Azure Speech key: add the repository secrets '
+                         'AZURE_SPEECH_KEY and AZURE_SPEECH_REGION (Settings > Secrets and variables > Actions).')
+    shots = plan['shots']
+    lang = voice[:5]
+    rate = f'{round((speed - 1) * 100):+d}%'
+    parts = []
+    for p, group in enumerate(paragraphs(shots)):
+        if p:
+            parts.append(f'<break time="{int(BREATH * 1000)}ms"/>')
+        parts.append(escape(' '.join(spoken_text(shots[i]['say']) for i in group)))
+    ssml = (f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="{lang}">'
+            f'<voice name="{voice}"><prosody rate="{rate}">{"".join(parts)}</prosody></voice></speak>')
+    cfg = sdk.SpeechConfig(subscription=key, region=region)
+    cfg.set_speech_synthesis_output_format(sdk.SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm)
+    synth = sdk.SpeechSynthesizer(speech_config=cfg, audio_config=None)
+    tokens = []
+
+    def on_word(evt):
+        if evt.boundary_type == sdk.SpeechSynthesisBoundaryType.Word:
+            start = evt.audio_offset / 1e7
+            tokens.append((evt.text, LEAD + start, LEAD + start + evt.duration.total_seconds(), ' '))
+
+    synth.synthesis_word_boundary.connect(on_word)
+    result = synth.speak_ssml_async(ssml).get()
+    if result.reason != sdk.ResultReason.SynthesizingAudioCompleted:
+        d = result.cancellation_details
+        raise SystemExit(f'Azure did not speak the narration: {d.reason} {d.error_details}')
+    import io
+    audio, rate_hz = sf.read(io.BytesIO(result.audio_data), dtype='float32')
+    if rate_hz != RATE:
+        raise SystemExit(f'Azure returned {rate_hz} Hz audio, expected {RATE}')
+    audio = np.concatenate([np.zeros(int(LEAD * RATE), dtype=np.float32), audio])
+    return audio, tokens, 0
+
+
+def kokoro_voice(plan, voice, speed):
+    """Speak with Kokoro; returns (samples, tokens, pieces without a time)."""
     from kokoro import KPipeline
 
-    plan = json.loads(pathlib.Path(plan_path).read_text(encoding='utf-8-sig'))
     shots = plan['shots']
-    voice = plan.get('voice') or 'am_michael'
-    speed = float(plan.get('speed') or 1.0)
-    out = pathlib.Path(out_dir)
-    out.mkdir(parents=True, exist_ok=True)
-
     pipe = KPipeline(lang_code='b' if voice[:1] == 'b' else 'a')
     audio = [np.zeros(int(LEAD * RATE), dtype=np.float32)]
     at = LEAD
@@ -47,7 +105,7 @@ def main(plan_path, out_dir):
         if p:
             audio.append(np.zeros(int(BREATH * RATE), dtype=np.float32))
             at += BREATH
-        text = ' '.join(shots[i]['say'].strip() for i in group)
+        text = ' '.join(spoken_text(shots[i]['say']) for i in group)
         for r in pipe(text, voice=voice, speed=speed, split_pattern=None):
             if r.audio is None:
                 continue
@@ -61,17 +119,31 @@ def main(plan_path, out_dir):
                                getattr(t, 'whitespace', None)))
             audio.append(a)
             at += len(a) / RATE
-    wav = np.concatenate(audio)
+    return np.concatenate(audio), tokens, missing
+
+
+def main(plan_path, out_dir):
+    plan = json.loads(pathlib.Path(plan_path).read_text(encoding='utf-8-sig'))
+    shots = plan['shots']
+    lang = plan.get('language', 'en')
+    voice = plan.get('voice') or DEFAULT_VOICE.get(lang, 'am_michael')
+    speed = float(plan.get('speed') or 1.0)
+    out = pathlib.Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    wav, tokens, missing = (azure_voice if is_azure(voice) else kokoro_voice)(plan, voice, speed)
     sf.write(out / 'voice.wav', wav, RATE)
 
-    starts = shot_starts([s['say'] for s in shots], tokens)
+    says = [s['say'] for s in shots]
+    starts = shot_starts(says, tokens)
+    words = [{'shot': i, 'word': w, 'start': s}
+             for (i, w), s in zip(narration_words(says), word_starts(says, tokens))]
     spoken = [t for t in tokens if t[1] is not None and any(c.isalnum() for c in t[0])]
-    speech_end = max((t[2] or t[1]) for t in spoken) if spoken else at
+    speech_end = max((t[2] or t[1]) for t in spoken) if spoken else len(wav) / RATE
     (out / 'words.json').write_text(json.dumps(
         [{'text': t[0], 'start': t[1], 'end': t[2]} for t in tokens], indent=0))
     (out / 'cuts.json').write_text(json.dumps({
         'starts': starts, 'speech_end': speech_end, 'audio_seconds': len(wav) / RATE,
-        'voice': voice, 'speed': speed, 'words_without_time': missing}, indent=1))
+        'voice': voice, 'speed': speed, 'words_without_time': missing, 'words': words}, indent=1, ensure_ascii=False))
     n_words = sum(1 for t in spoken)
     print(f'voice {voice} at {speed}: {len(wav) / RATE:.1f} s, {n_words} words timed, '
           f'{missing} pieces without a time, {len(shots)} shots')

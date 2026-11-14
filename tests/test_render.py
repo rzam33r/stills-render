@@ -25,7 +25,7 @@ from PIL import Image, ImageDraw
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'engine'))
 from frames import card  # noqa: E402
-from timing import shot_starts  # noqa: E402
+from timing import narration_words, shot_starts, word_starts  # noqa: E402
 
 bad = 0
 
@@ -57,7 +57,7 @@ def fake_voice(plan, out):
     the tokens the real voice would report; cuts.json from them."""
     rate, t, tokens, chunks = 24000, 0.2, [], [np.zeros(int(0.2 * 24000), np.float32)]
     for s in plan['shots']:
-        for w in s['say'].split():
+        for w in s['say'].replace('*', '').split():
             dur = 0.32
             tone = 0.3 * np.sin(2 * math.pi * 220 * np.arange(int(dur * rate)) / rate).astype(np.float32)
             tokens.append((w, t, t + dur, ' '))
@@ -68,14 +68,18 @@ def fake_voice(plan, out):
     with wave.open(str(out / 'voice.wav'), 'wb') as f:
         f.setnchannels(1); f.setsampwidth(2); f.setframerate(rate)
         f.writeframes((audio * 32767).astype('<i2').tobytes())
-    starts = shot_starts([s['say'] for s in plan['shots']], tokens)
-    (out / 'cuts.json').write_text(json.dumps({'starts': starts, 'speech_end': t, 'audio_seconds': len(audio) / rate}))
+    says = [s['say'] for s in plan['shots']]
+    starts = shot_starts(says, tokens)
+    words = [{'shot': i, 'word': w, 'start': s} for (i, w), s in zip(narration_words(says), word_starts(says, tokens))]
+    (out / 'cuts.json').write_text(json.dumps({'starts': starts, 'speech_end': t, 'audio_seconds': len(audio) / rate,
+                                               'words': words}, ensure_ascii=False))
     return starts
 
 
-def main():
-    keep = sys.argv[sys.argv.index('--keep') + 1] if '--keep' in sys.argv else None
-    plan = json.loads((ROOT / 'examples' / 'north-star-plan.json').read_text())
+def film_test(name, want_size, keep):
+    plan_path = ROOT / 'examples' / name
+    plan = json.loads(plan_path.read_text())
+    tag = name.replace('-plan.json', '')
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
         pics = tmp / 'pictures'
@@ -85,35 +89,41 @@ def main():
                 picture(pics / f"{s['picture']}.png", int(s['picture']))
             if s.get('doodle'):
                 doodle(pics / f"{s['doodle']}.jpg")
-        r = subprocess.run([sys.executable, str(ROOT / 'engine' / 'check_plan.py'), str(ROOT / 'examples' / 'north-star-plan.json'),
+        r = subprocess.run([sys.executable, str(ROOT / 'engine' / 'check_plan.py'), str(plan_path),
                             '--pictures', str(pics)], capture_output=True, text=True)
-        say(r.returncode == 0, 'the example plan passes with its pictures present')
-        starts = fake_voice(plan, tmp / 'voice')
+        say(r.returncode == 0, f'{tag}: the plan passes with its pictures present')
+        fake_voice(plan, tmp / 'voice')
         film = tmp / 'film.mp4'
         music = sorted((ROOT / 'music').glob('*.mp3'))[0]
-        r = subprocess.run([sys.executable, str(ROOT / 'engine' / 'render.py'), str(ROOT / 'examples' / 'north-star-plan.json'),
+        r = subprocess.run([sys.executable, str(ROOT / 'engine' / 'render.py'), str(plan_path),
                             str(pics), str(tmp / 'voice'), str(film), '--logo', str(ROOT / 'brand' / 'watermark.png'),
                             '--music', str(music)], capture_output=True, text=True)
-        print('     ' + (r.stdout.strip() or r.stderr.strip()[-400:]))
-        say(r.returncode == 0 and film.exists(), 'the film renders')
+        print('     ' + (r.stdout.strip() or r.stderr.strip()[-600:]))
+        say(r.returncode == 0 and film.exists(), f'{tag}: the film renders')
+        if not film.exists():
+            return
         r = subprocess.run([sys.executable, str(ROOT / 'engine' / 'check_sync.py'), str(film)], capture_output=True, text=True)
         print('     ' + r.stdout.strip().replace('\n', '\n     '))
-        say(r.returncode == 0, 'every picture change is on its first word\'s frame')
-
+        say(r.returncode == 0, f'{tag}: every picture (and subtitle word) changes on its word\'s frame')
         probe = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries',
                                 'stream=width,height,r_frame_rate', '-of', 'csv=p=0', str(film)],
                                capture_output=True, text=True).stdout.strip()
-        say(probe == '1920,1080,30/1', f'1920x1080 at 30 fps ({probe})')
-
-        # The checker must notice a late picture.
+        say(probe == f'{want_size},30/1', f'{tag}: {want_size.replace(",", "x")} at 30 fps ({probe})')
         info = json.loads(film.with_suffix('.cuts.json').read_text())
         info['frames'][4][0] += 3
         film.with_suffix('.cuts.json').write_text(json.dumps(info))
         r = subprocess.run([sys.executable, str(ROOT / 'engine' / 'check_sync.py'), str(film)], capture_output=True, text=True)
-        say(r.returncode == 1 and 'should change at frame' in r.stdout, 'a picture 3 frames late is caught')
+        say(r.returncode == 1 and 'should change at frame' in r.stdout, f'{tag}: a picture 3 frames late is caught')
         if keep:
             pathlib.Path(keep).mkdir(parents=True, exist_ok=True)
-            shutil.copy(film, pathlib.Path(keep) / 'film.mp4')
+            shutil.copy(film, pathlib.Path(keep) / f'{tag}.mp4')
+
+
+def main():
+    keep = sys.argv[sys.argv.index('--keep') + 1] if '--keep' in sys.argv else None
+    for name, size in (('north-star-plan.json', '1920,1080'), ('rain-short-plan.json', '1080,1920'),
+                       ('boond-hindi-short-plan.json', '1080,1920')):
+        film_test(name, size, keep)
 
     # Cards: words inside the frame, doodle white gone.
     for text in ('No map.', 'The star that never moves.',

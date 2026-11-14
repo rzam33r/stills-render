@@ -60,6 +60,16 @@ t = toks('A@0 b@0.1 C@0.5 D@0.5 e@0.7')
 s = shot_starts(says, t)
 say(all(b - a >= 1 / 30 - 1e-9 for a, b in zip(s, s[1:])), 'shot starts are at least one frame apart')
 
+# Hindi: vowel signs are part of the word, punctuation (danda) is not.
+says = ['कुत्ते का बच्चा कुत्ता बना,', '*शेर* का बच्चा शेर बना।']
+t = toks('कुत्ते@0.1 का@0.5 बच्चा@0.7 कुत्ता@1.1 बना@1.5 शेर@2.0 का@2.4 बच्चा@2.6 शेर@3.0 बना@3.4')
+say(shot_starts(says, t) == [0.0, 2.0], 'Hindi words line up, highlight marks and danda ignored')
+from timing import word_starts, narration_words  # noqa: E402
+ws = word_starts(says, t)
+say(ws == [0.1, 0.5, 0.7, 1.1, 1.5, 2.0, 2.4, 2.6, 3.0, 3.4], 'every word has its own start, for subtitles')
+say([w for _, w in narration_words(['Insaan ka baccha 💀'])] == ['Insaan', 'ka', 'baccha 💀'],
+    'an emoji rides with the word before it')
+
 say(paragraphs([{}, {}, {'paragraph': True}, {}]) == [[0, 1], [2, 3]], 'paragraph marks split the narration')
 
 print('\nall good' if not bad else f'\n{bad} failing')
