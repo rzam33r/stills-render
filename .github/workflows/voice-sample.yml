@@ -1,0 +1,60 @@
+name: Voice samples
+
+# Speaks a plan's narration with several Kokoro voices, so a voice can be
+# judged by ear before a film depends on it. The samples go on the
+# voice-samples release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: 'Plan whose narration to speak'
+        required: false
+        default: examples/boond-hindi-short-plan.json
+      voices:
+        description: 'Kokoro voices, separated by spaces'
+        required: false
+        default: 'hm_omega hm_psi hf_alpha hf_beta'
+
+permissions:
+  contents: write
+
+jobs:
+  speak:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Kokoro (exact versions from locks/voice.txt)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak-ng
+          pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Speak it in each voice
+        env:
+          PLAN: ${{ inputs.plan }}
+          VOICES: ${{ inputs.voices }}
+        run: |
+          mkdir -p samples
+          python3 - <<'PY'
+          import json, os, numpy as np, soundfile as sf
+          from kokoro import KPipeline
+          plan = json.load(open(os.environ['PLAN'], encoding='utf-8-sig'))
+          text = ' '.join(s['say'].replace('*', '') for s in plan['shots'])
+          print(text)
+          pipes = {}
+          for v in os.environ['VOICES'].split():
+              code = v[0]
+              pipes.setdefault(code, KPipeline(lang_code=code))
+              parts = [np.asarray(r.audio, dtype=np.float32) for r in pipes[code](text, voice=v, speed=1.0) if r.audio is not None]
+              sf.write(f'samples/kokoro-{v}.wav', np.concatenate(parts), 24000)
+              print(v, round(sum(len(p) for p in parts) / 24000, 1), 's')
+          PY
+          for f in samples/*.wav; do ffmpeg -v error -y -i "$f" -c:a aac -b:a 128k "${f%.wav}.m4a"; done
+      - name: Put the samples on the voice-samples release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view voice-samples >/dev/null 2>&1 || \
+            gh release create voice-samples --title voice-samples --notes "Voices to judge by ear." --prerelease
+          gh release upload voice-samples samples/*.m4a --clobber
