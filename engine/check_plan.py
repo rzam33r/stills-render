@@ -41,7 +41,7 @@ PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 VOICES = {'am_michael', 'am_adam', 'am_eric', 'am_liam', 'am_onyx', 'am_puck', 'am_fenrir',
           'af_heart', 'af_bella', 'af_nicole', 'af_sarah', 'af_sky', 'af_nova', 'af_river',
           'bm_george', 'bm_lewis', 'bm_daniel', 'bm_fable', 'bf_emma', 'bf_isabella', 'bf_alice', 'bf_lily'}
-KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt'}
+KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt'}
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description'}
 
 # How fast the voice speaks, for the length estimate: words per second.
@@ -119,6 +119,10 @@ def check(plan, pictures=None):
                 errors.append(f'{where}: "card" must be the short line to show')
             elif len(card) > 70 or len(words(card)) > 10:
                 errors.append(f'{where}: card "{card}" is too long for a card (at most 10 words)')
+        if has_pic and not str(s.get('prompt', '')).strip():
+            warnings.append(f'{where}: picture with no "prompt" for Flow')
+        if s.get('doodle') is not None and not str(s.get('doodle_prompt', '')).strip():
+            warnings.append(f'{where}: doodle with no "doodle_prompt" for Flow')
         names = [('picture', s.get('picture'))] if has_pic else []
         if s.get('doodle') is not None:
             if has_pic:
@@ -133,6 +137,11 @@ def check(plan, pictures=None):
             used.setdefault(name, i)
             if pictures is not None and find_picture(pictures, name) is None:
                 errors.append(f'{where}: no picture "{name}" (looked for {name}.png, .jpg, .jpeg, .webp)')
+    nums = [n for n in used if re.fullmatch(r'\d{3}', n)]
+    if nums and len(nums) == len(used):
+        seq = [int(n) for n in sorted(used, key=lambda n: used[n])]
+        if seq != list(range(1, len(seq) + 1)):
+            warnings.append('pictures are not numbered 001, 002, 003... in the order they appear')
     if total:
         warnings.insert(0, f'{len(shots)} shots, {total} words, about {total / WPS / 60:.1f} minutes '
                            f'(a picture every {total / WPS / len(shots):.1f} s)')
