@@ -1,0 +1,51 @@
+# Scores the takes of an earlier "Compare Hindi voices" run again, with the
+# current scoring code, without recording them again.
+name: Score Hindi voices
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'The Compare Hindi voices run whose takes to score'
+        required: true
+      plan:
+        description: 'The plan those takes read'
+        required: true
+        default: 'tests/fixtures/bharat-mein-badhti-mehngai-plan.json'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  score:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: takes
+          pattern: takes-*
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: stats
+          path: .
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Score each take with Whisper large-v3
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg
+          pip install -q faster-whisper soundfile scipy
+          python3 tools/voice_compare/score.py "${{ inputs.plan }}" takes "$GITHUB_STEP_SUMMARY"
+      - name: Put the takes and scores on the voice-compare release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p out
+          for w in takes/*/*.wav; do ffmpeg -v error -y -i "$w" -c:a aac -b:a 128k "out/$(basename "${w%.wav}").m4a"; done
+          cp takes/scores.json stats.json out/
+          gh release view voice-compare >/dev/null 2>&1 || gh release create voice-compare --title "Hindi voice comparison" --notes "Takes, scores and user numbers from the Compare Hindi voices workflow." --latest=false
+          gh release upload voice-compare out/* --clobber

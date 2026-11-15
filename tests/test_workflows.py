@@ -42,8 +42,8 @@ floating = [f'{n}: {job}' for n, w in flows.items() for job, spec in (w.get('job
 say(not floating, 'every job names its Ubuntu' + ('' if not floating else f': {floating}'))
 
 # Workflows that never make a film: lock-versions.yml writes the locks, and
-# voice-compare.yml tries new voice models before one is chosen.
-EXPERIMENTS = {'lock-versions.yml', 'voice-compare.yml'}
+# voice-compare.yml and voice-score.yml try new voice models before one is chosen.
+EXPERIMENTS = {'lock-versions.yml', 'voice-compare.yml', 'voice-score.yml'}
 loose = []
 for n, t in texts.items():
     if n in EXPERIMENTS:
