@@ -18,18 +18,29 @@ plan, out, ref = sys.argv[1:4]
 torch.set_num_threads(4)
 ck = pathlib.Path('/tmp/chatterbox-hi')
 ck.mkdir(exist_ok=True)
+
+
+def put(src, name):
+    """Copy a downloaded file in; Hugging Face's cache files are read-only."""
+    dst = ck / name
+    if dst.exists():
+        dst.chmod(0o644)
+        dst.unlink()
+    shutil.copyfile(src, dst)
+
+
 hi_files = list_repo_files('ResembleAI/Chatterbox-Multilingual-hi')
 print('Hindi pack files:', hi_files)
 for f in ('ve.pt', 'conds.pt', 's3gen.pt', 'grapheme_mtl_merged_expanded_v1.json', 'Cangjie5_TC.json'):
-    shutil.copy(hf_hub_download('ResembleAI/chatterbox', f), ck / f)
+    put(hf_hub_download('ResembleAI/chatterbox', f), f)
 t3 = next(f for f in hi_files if f.startswith('t3') and f.endswith('.safetensors'))
-shutil.copy(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', t3), ck / t3)
+put(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', t3), t3)
 for f in ('grapheme_mtl_merged_expanded_v1.json',):
     if f in hi_files:
-        shutil.copy(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', f), ck / f)
+        put(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', f), f)
 s3 = [f for f in hi_files if f.startswith('s3gen') and f.endswith('.pt')]
 if s3:
-    shutil.copy(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', s3[0]), ck / 's3gen.pt')
+    put(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', s3[0]), 's3gen.pt')
 print('using', t3, 'and', s3[0] if s3 else 's3gen.pt from the main repo')
 
 from chatterbox.mtl_tts import ChatterboxMultilingualTTS  # noqa: E402

@@ -84,7 +84,7 @@ jobs:
       - name: Indic-Mio with MioCodec
         run: |
           pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-          pip install -q transformers accelerate soundfile git+https://github.com/Aratako/MioCodec --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install -q -U jinja2 transformers accelerate soundfile git+https://github.com/Aratako/MioCodec --extra-index-url https://download.pytorch.org/whl/cpu
           cd tools/voice_compare && python3 run_indicmio.py "$GITHUB_WORKSPACE/${{ inputs.plan }}" "$GITHUB_WORKSPACE/takes/indicmio" "$GITHUB_WORKSPACE/ref.wav"
       - uses: actions/upload-artifact@v4
         if: always()
