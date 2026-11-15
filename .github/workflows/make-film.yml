@@ -80,12 +80,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SLUG: ${{ inputs.slug }}
         run: |
-          mkdir -p /tmp/zip
+          mkdir -p /tmp/zip /tmp/plan
           if ! gh release download "story-$SLUG" --pattern '*.zip' --dir /tmp/zip; then
             echo "::error::No ZIP for '$SLUG': there is no release story-$SLUG with a .zip on it. Upload the story again."
             exit 1
           fi
-          python3 engine/unpack.py "$(ls /tmp/zip/*.zip | head -1)" story
+          # A plan pasted on the upload page arrives as its own plan.json and
+          # wins over one inside the ZIP.
+          plan=()
+          if gh release download "story-$SLUG" --pattern 'plan.json' --dir /tmp/plan 2>/dev/null; then
+            plan=(--plan /tmp/plan/plan.json)
+          fi
+          python3 engine/unpack.py "$(ls /tmp/zip/*.zip | head -1)" story "${plan[@]}"
       - name: Drop the uploads of stories nobody came back to
         continue-on-error: true
         env:
@@ -134,13 +140,23 @@ jobs:
           path: story
       - name: Which voice
         id: which
+        env:
+          AZURE_KEY_SET: ${{ secrets.AZURE_SPEECH_KEY != '' }}
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json, sys
+          import json, os, pathlib, sys
           sys.path.insert(0, 'engine')
-          from voices import chosen_voice, is_azure
-          plan = json.load(open('story/plan.json', encoding='utf-8-sig'))
-          print('engine=' + ('azure' if is_azure(chosen_voice(plan)) else 'kokoro'))
+          from voices import voice_engine
+          p = pathlib.Path('story/plan.json')
+          plan = json.loads(p.read_text(encoding='utf-8-sig'))
+          engine, voice, warning = voice_engine(plan, os.environ.get('AZURE_KEY_SET') == 'true')
+          if warning:
+              plan['voice'] = voice
+              p.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding='utf-8')
+              print('::warning::' + warning, file=sys.stderr)
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+                  f.write('## Voice\n\n' + warning + '\n\n')
+          print('engine=' + engine)
           PY
       - name: Install Kokoro (exact versions from locks/voice.txt)
         if: steps.which.outputs.engine == 'kokoro'

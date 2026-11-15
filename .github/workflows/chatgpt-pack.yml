@@ -1,0 +1,50 @@
+# Keeps the ChatGPT project files downloadable at one fixed address, always
+# matching the engine:
+#   https://github.com/rzam33r/stills-render/releases/download/chatgpt-pack/stills-studio-chatgpt-pack.zip
+# On 15 Nov 2026 a pack zipped by hand was a day older than the repository,
+# so ChatGPT still wrote an Azure voice the account cannot use. Now every
+# change to docs/chatgpt/ rebuilds the pack here, and the release notes say
+# which version it is.
+name: ChatGPT pack
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/chatgpt/**', '.github/workflows/chatgpt-pack.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chatgpt-pack
+  cancel-in-progress: false
+
+jobs:
+  pack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zip the project files
+        run: |
+          cd docs/chatgpt
+          zip -X -q ../../stills-studio-chatgpt-pack.zip PROJECT_INSTRUCTIONS.md 1_SCRIPT_RULES.md \
+            2_SHOT_LIST.md 3_FLOW_PROMPTS.md 4_PLAN_FORMAT.md 5_SHORTS.md
+          cd ../..
+          unzip -l stills-studio-chatgpt-pack.zip
+      - name: Publish it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          stamp="$(date -u +%d-%b-%y) (${GITHUB_SHA:0:7})"
+          notes="ChatGPT project files for Stills Studio, version $stamp.
+          
+          Paste PROJECT_INSTRUCTIONS.md into the project's instructions and upload files 1 to 5 to the project, replacing the old ones."
+          if ! gh release view chatgpt-pack >/dev/null 2>&1; then
+            gh release create chatgpt-pack --title "ChatGPT project files" --notes "$notes" --latest=false
+          else
+            gh release edit chatgpt-pack --notes "$notes"
+          fi
+          gh release upload chatgpt-pack stills-studio-chatgpt-pack.zip --clobber
+          echo "## ChatGPT pack $stamp" >> "$GITHUB_STEP_SUMMARY"

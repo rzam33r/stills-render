@@ -8,7 +8,8 @@
 //   stopped with a clear message instead of failing on GitHub.
 //
 // checkStillsUpload(planText, fileNames)
-//   planText: the text of plan.json. fileNames: every file name in the ZIP.
+//   planText: the pasted plan, or the text of plan.json from the ZIP.
+//   fileNames: every file name in the ZIP.
 //   Returns { ok, problems: [..], notes: [..], forChatGPT, slug, frame,
 //   language, voice }.
 
@@ -54,14 +55,29 @@ function checkStillsUpload(planText, fileNames) {
   if (language !== 'en' && language !== 'hi') problems.push('"language" must be "en" or "hi"');
   const voice = plan.voice || STILLS_DEFAULT_VOICE[language] || 'am_michael';
   const hindiVoice = /^(hm_|hf_|hi-IN-)/.test(String(voice));
+  if (/^[a-z]{2}-[A-Z]{2}-[A-Za-z]+Neural$/.test(String(voice)))
+    notes.push(`${voice} is an Azure voice. Without the Azure key the film uses ${STILLS_DEFAULT_VOICE[language] || 'am_michael'} instead.`);
   if (language === 'hi' && !hindiVoice) problems.push(`a Hindi film needs a Hindi voice (hm_omega, hm_psi, hf_alpha, hf_beta), not "${voice}"`);
   if (language === 'en' && hindiVoice) problems.push(`"${voice}" is a Hindi voice; set "language": "hi" or choose an English voice`);
 
-  const have = new Set();
+  // Same matching as engine/unpack.py: a file keeps its name when the plan
+  // uses it; otherwise "1 - Medium shot of a man.jpg" (as Google Flow and
+  // Flow Connect save them) stands for the plan's "001".
+  const wanted = new Set();
+  plan.shots.forEach(s => { if (s && typeof s === 'object') for (const k of ['picture', 'doodle']) if (s[k] != null) wanted.add(String(s[k])); });
+  const have = new Map();
   for (const f of fileNames) {
     const base = String(f).split('/').pop();
+    if (base.startsWith('.') || String(f).includes('__MACOSX')) continue;
     const m = base.match(/^(.+)\.(png|jpe?g|webp)$/i);
-    if (m) have.add(m[1]);
+    if (!m) continue;
+    let name = m[1];
+    const lead = name.trim().match(/^(\d{1,4})(?!\d)/);
+    if (!wanted.has(name) && lead) {
+      for (const w of wanted) if (/^\d+$/.test(w) && Number(w) === Number(lead[1])) { name = w; break; }
+    }
+    if (have.has(name)) problems.push(`two files for picture "${name}": "${have.get(name)}" and "${f}"`);
+    else have.set(name, String(f));
   }
   plan.shots.forEach((s, i) => {
     const n = i + 1;

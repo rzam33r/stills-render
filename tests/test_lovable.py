@@ -2,8 +2,11 @@
 
     python3 tests/test_lovable.py
 
-- The code in docs/lovable/stills-tab-prompt.md is stills-upload-check.js
-  exactly, so pasting the prompt gives Lovable the tested code.
+- The code in docs/lovable/stills-tab-prompt.md and stills-paste-plan-prompt.md
+  is stills-upload-check.js exactly, so pasting either gives Lovable the
+  tested code.
+- Pictures named the way Google Flow saves them ("1 - Medium shot.jpg") are
+  found, and two files for one picture are refused.
 - With node: the three examples pass with their pictures, a missing picture
   is named, an animated (Rose) plan is sent to the other tab, a Hindi film
   with an English voice is refused, filmKind tells the two kinds apart, and
@@ -29,8 +32,9 @@ def say(ok, msg):
 
 code = (LOV / 'stills-upload-check.js').read_text()
 prompt = (LOV / 'stills-tab-prompt.md').read_text()
-m = re.search(r'```javascript\n(.*?)```', prompt, re.S)
-say(bool(m) and m.group(1) == code, 'the prompt carries stills-upload-check.js exactly')
+for name in ('stills-tab-prompt.md', 'stills-paste-plan-prompt.md'):
+    m = re.search(r'```javascript\n(.*?)```', (LOV / name).read_text(), re.S)
+    say(bool(m) and m.group(1) == code, f'{name} carries stills-upload-check.js exactly')
 say('rose-render-test' in prompt and 'make-film.yml' in prompt, 'the prompt names both repositories\' workflows')
 
 node = shutil.which('node')
@@ -59,6 +63,10 @@ out.push({{ name: 'hindi-english-voice', r: checkStillsUpload({json.dumps(json.d
   {json.dumps(['plan.json'] + [f'{s[k]}.jpg' for s in hindi_en['shots'] for k in ('picture', 'doodle') if s.get(k)])}) }});
 out.push({{ name: 'devanagari-title', r: checkStillsUpload({json.dumps(json.dumps(devanagari, ensure_ascii=False))},
   {json.dumps(['plan.json'] + [f'{s[k]}.webp' for s in devanagari['shots'] for k in ('picture', 'doodle') if s.get(k)])}) }});
+const flowPlan = {json.dumps(cases[0]['plan'])};
+const flowNames = JSON.parse(flowPlan).shots.flatMap(s => ['picture', 'doodle'].filter(k => s[k]).map(k => `Flow/${{Number(s[k])}} - Medium shot of a man.jpg`));
+out.push({{ name: 'flow-names', r: checkStillsUpload(flowPlan, flowNames) }});
+out.push({{ name: 'flow-duplicate', r: checkStillsUpload(flowPlan, flowNames.concat(['001.png'])) }});
 out.push({{ name: 'kinds', r: [filmKind({json.dumps(rose)}), filmKind({json.dumps(cases[0]['plan'])}), filmKind('not json')] }});
 console.log(JSON.stringify(out));
 """
@@ -71,6 +79,11 @@ console.log(JSON.stringify(out));
             r = o['r']
             if o['name'] == 'kinds':
                 say(r == ['animated', 'stills', 'unknown'], f'filmKind tells the kinds apart: {r}')
+            elif o['name'] == 'flow-names':
+                say(r['ok'], 'Flow-style picture names are found' + ('' if r['ok'] else f': {r["problems"]}'))
+            elif o['name'] == 'flow-duplicate':
+                say(not r['ok'] and any('two files for picture "001"' in p for p in r['problems']),
+                    'two files for one picture are refused')
             elif o['name'] == 'rose':
                 say(not r['ok'] and 'Animated films' in r['problems'][0], 'an animated plan is sent to the Animated films tab')
             elif o['name'] == 'hindi-english-voice':

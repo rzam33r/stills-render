@@ -25,6 +25,7 @@ HARD RULES
 
 CHECKLIST (report each line as done or not, after plan.json)
 - Words in all "say" fields = words in the approved script (give both counts).
+- "title" uses English letters (Hinglish for a Hindi film). "voice" is left out or a Kokoro voice (hm_omega for Hindi), never a name ending in "Neural".
 - Shots over 12 words: list them (should be none over 16).
 - Cards: count and share of all shots (aim 20 to 30 percent).
 - Pictures: count, numbered without gaps, each with a "prompt".

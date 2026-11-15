@@ -42,6 +42,8 @@ jobs:
         run: python3 tests/test_docs.py
       - name: The upload page's check is the tested one, and it works
         run: python3 tests/test_lovable.py
+      - name: Uploaded ZIPs and plans become a story the engine can make
+        run: python3 tests/test_upload.py
 
   voice:
     runs-on: ubuntu-24.04
