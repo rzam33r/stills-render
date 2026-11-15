@@ -7,6 +7,8 @@
   never a piece Kokoro would cut (510 sounds), with "।" read as a stop.
 - ड़/ढ़ never leave a full stop inside a word, and a consonant before य is
   not doubled.
+- Kokoro's own half second of quiet at each end of a piece is cut away, so
+  sentences are separated by the engine's pause, not 1.2 s of silence.
 - With espeak (the same versions as locks/voice.txt): every line of
   engine/pronounce-hi.tsv changes how the word sounds, never reads a halant
   aloud, and gives f and z where it promises them; the whole script of
@@ -22,6 +24,8 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'engine'))
 from hindi import LONG, fix_sounds, for_voice, load_table, sentences  # noqa: E402
+import numpy as np  # noqa: E402
+from voice import EDGE_AFTER, EDGE_BEFORE, trim_to_words  # noqa: E402
 
 bad = 0
 
@@ -62,6 +66,13 @@ say(fix_sounds('bˈʌr.aː', V) == 'bˈʌɽaː', 'ड़ becomes one flap, not "
 say(fix_sounds('bʌr.aː', set('abr')) == 'bʌɾaː', 'without ɽ in the voice, a plain flap is used')
 say(fix_sounds('kːjˈõ pːjˈaːz', V) == 'kjˈõ pjˈaːz', 'क्यों and प्याज़ lose the doubled consonant')
 say(fix_sounds('bˈʌcːõ', V) == 'bˈʌcːõ', 'a real double consonant (बच्चों) is kept')
+
+a = np.ones(24000 * 3, dtype=np.float32)
+cut, shift = trim_to_words(a, [('x', 0.5, 1.0), ('y', 1.1, 2.0)])
+say(abs(shift - (0.5 - EDGE_BEFORE)) < 1e-6 and abs(len(cut) / 24000 - (2.0 + EDGE_AFTER - shift)) < 1e-3,
+    f'a piece is cut to its words: {shift:.2f} s off the start, {len(cut) / 24000:.2f} s kept of 3')
+same, none = trim_to_words(a, [])
+say(none == 0.0 and len(same) == len(a), 'a piece with no timed words is left whole')
 
 try:
     import espeakng_loader

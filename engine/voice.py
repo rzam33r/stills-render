@@ -172,7 +172,33 @@ def kokoro_voice(plan, voice, speed):
     return np.concatenate(audio), tokens, missing
 
 
-SENTENCE_PAUSE = 0.22   # seconds of quiet after each Hindi sentence
+SENTENCE_PAUSE = 0.35   # seconds of quiet after each Hindi sentence
+COMMA_PAUSE = 0.15      # after a long sentence's comma, where it was split
+EDGE_BEFORE, EDGE_AFTER = 0.05, 0.10   # sound kept around a piece's words
+
+
+def trim_to_words(a, timed, rate=None):
+    """Cut Kokoro's own silence from the start and end of a piece.
+
+    Kokoro pads everything it says with about half a second of quiet at each
+    end; spoken one sentence at a time, that made 1.2-second gaps (the first
+    clear Hindi voice of bharat-mein-badhti-mehngai ran 84 s instead of 63).
+    The piece is cut from just before its first word to just after its last,
+    by Kokoro's own sound lengths. Returns (samples, seconds cut from the
+    start)."""
+    rate = rate or RATE
+    if not timed:
+        return a, 0.0
+    s0 = max(0.0, timed[0][1] - EDGE_BEFORE)
+    e1 = min(len(a) / rate, timed[-1][2] + EDGE_AFTER)
+    if e1 <= s0:
+        return a, 0.0
+    cut = a[int(s0 * rate):int(e1 * rate)].copy()
+    fade = min(len(cut), int(0.01 * rate))
+    if fade:
+        cut[:fade] *= np.linspace(0, 1, fade, dtype=cut.dtype)
+        cut[-fade:] *= np.linspace(1, 0, fade, dtype=cut.dtype)
+    return cut, s0
 
 
 def hindi_voice(pipe, shots, voice, speed):
@@ -211,13 +237,14 @@ def hindi_voice(pipe, shots, voice, speed):
                 k += n
                 if not timed:
                     missing += n
+                a, shift = trim_to_words(a, timed)
                 for w, s, e in timed:
-                    tokens.append((w, at + s, at + e, ' '))
+                    tokens.append((w, at + s - shift, at + e - shift, ' '))
                 audio.append(a)
                 at += len(a) / RATE
-            if piece[-1:] in '।॥.?!':
-                audio.append(np.zeros(int(SENTENCE_PAUSE * RATE), dtype=np.float32))
-                at += SENTENCE_PAUSE
+            pause = SENTENCE_PAUSE if piece[-1:] in '।॥.?!' else COMMA_PAUSE
+            audio.append(np.zeros(int(pause * RATE), dtype=np.float32))
+            at += pause
     return np.concatenate(audio), tokens, missing
 
 

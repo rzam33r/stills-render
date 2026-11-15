@@ -48,7 +48,7 @@ jobs:
         env:
           REQUIRE_ESPEAK: '1'
         run: |
-          pip install -q -c locks/voice.txt phonemizer-fork espeakng-loader
+          pip install -q -c locks/voice.txt phonemizer-fork espeakng-loader soundfile
           python3 tests/test_hindi.py
 
   voice:
