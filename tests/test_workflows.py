@@ -66,7 +66,7 @@ say(not commits, 'no workflow commits pictures, ZIPs or films')
 # --- every Python step has what it imports --------------------------------
 DIST = {'numpy': 'numpy', 'soundfile': 'soundfile', 'PIL': 'pillow', 'yaml': 'pyyaml',
         'kokoro': 'kokoro', 'scipy': 'scipy', 'azure': 'azure-cognitiveservices-speech',
-        'torch': 'torch'}
+        'torch': 'torch', 'phonemizer': 'phonemizer-fork', 'espeakng_loader': 'espeakng-loader'}
 LOCAL = [ROOT / 'engine', ROOT / 'tests', ROOT / 'tools']
 
 

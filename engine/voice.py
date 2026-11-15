@@ -92,7 +92,7 @@ def azure_voice(plan, voice, speed):
     return audio, tokens, 0
 
 
-def hindi_words(graphemes, phonemes, pred_dur, vocab):
+def hindi_words(graphemes, phonemes, pred_dur, vocab, written=None):
     """When each word of a Hindi chunk starts and ends, in seconds from the
     start of the chunk's sound: [(word, start, end)].
 
@@ -102,7 +102,8 @@ def hindi_words(graphemes, phonemes, pred_dur, vocab):
     the moment each word's first sound begins. The phoneme words are then
     paired with the written words; when espeak split or joined a word and
     the counts differ, each written word takes the phoneme word at the same
-    place in the line."""
+    place in the line. `written` is the plan's own words when the voice read
+    respelled ones (hindi.for_voice); the count is the same."""
     kept = [p for p in phonemes if p in vocab]
     durs = [int(d) for d in pred_dur]
     if len(durs) < len(kept) + 2:
@@ -126,7 +127,8 @@ def hindi_words(graphemes, phonemes, pred_dur, vocab):
         t += d * FRAME
     if cur is not None:
         spans.append(cur)
-    written = [w for w in graphemes.split() if any(c.isalnum() for c in w)]
+    said = [w for w in graphemes.split() if any(c.isalnum() for c in w)]
+    written = written if written is not None and len(written) == len(said) else said
     if not written or not spans:
         return []
     out = []
@@ -147,6 +149,8 @@ def kokoro_voice(plan, voice, speed):
     at = LEAD
     tokens = []
     missing = 0
+    if code == 'h':
+        return hindi_voice(pipe, shots, voice, speed)
     for p, group in enumerate(paragraphs(shots)):
         if p:
             audio.append(np.zeros(int(BREATH * RATE), dtype=np.float32))
@@ -156,12 +160,6 @@ def kokoro_voice(plan, voice, speed):
             if r.audio is None:
                 continue
             a = np.asarray(r.audio, dtype=np.float32)
-            if code == 'h':
-                timed = hindi_words(r.graphemes, r.phonemes, r.pred_dur.tolist(), pipe.model.vocab)
-                if not timed:
-                    missing += len(r.graphemes.split())
-                for w, s, e in timed:
-                    tokens.append((w, at + s, at + e, ' '))
             for t in r.tokens or []:
                 s = getattr(t, 'start_ts', None)
                 e = getattr(t, 'end_ts', None)
@@ -171,6 +169,55 @@ def kokoro_voice(plan, voice, speed):
                                getattr(t, 'whitespace', None)))
             audio.append(a)
             at += len(a) / RATE
+    return np.concatenate(audio), tokens, missing
+
+
+SENTENCE_PAUSE = 0.22   # seconds of quiet after each Hindi sentence
+
+
+def hindi_voice(pipe, shots, voice, speed):
+    """Kokoro's Hindi, made clear (engine/hindi.py): one sentence at a time,
+    respelled where espeak gets a word wrong, its sounds mended, and a short
+    pause after each sentence. Returns (samples, tokens, pieces without a
+    time); the tokens carry the plan's own words."""
+    from hindi import fix_sounds, for_voice, load_table, sentences
+
+    table = load_table()
+    vocab = pipe.model.vocab
+    plain_g2p = pipe.g2p
+
+    def g2p(text):
+        ps, extra = plain_g2p(text)
+        return fix_sounds(ps, vocab), extra
+    pipe.g2p = g2p
+
+    audio = [np.zeros(int(LEAD * RATE), dtype=np.float32)]
+    at = LEAD
+    tokens, missing = [], 0
+    for p, group in enumerate(paragraphs(shots)):
+        if p:
+            audio.append(np.zeros(int(BREATH * RATE), dtype=np.float32))
+            at += BREATH
+        text = ' '.join(spoken_text(shots[i]['say']) for i in group)
+        for piece in sentences(text):
+            written = [w for w in piece.split() if any(c.isalnum() for c in w)]
+            k = 0
+            for r in pipe(for_voice(piece, table), voice=voice, speed=speed, split_pattern=None):
+                if r.audio is None:
+                    continue
+                a = np.asarray(r.audio, dtype=np.float32)
+                n = len([w for w in r.graphemes.split() if any(c.isalnum() for c in w)])
+                timed = hindi_words(r.graphemes, r.phonemes, r.pred_dur.tolist(), vocab, written[k:k + n])
+                k += n
+                if not timed:
+                    missing += n
+                for w, s, e in timed:
+                    tokens.append((w, at + s, at + e, ' '))
+                audio.append(a)
+                at += len(a) / RATE
+            if piece[-1:] in '।॥.?!':
+                audio.append(np.zeros(int(SENTENCE_PAUSE * RATE), dtype=np.float32))
+                at += SENTENCE_PAUSE
     return np.concatenate(audio), tokens, missing
 
 

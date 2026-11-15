@@ -44,6 +44,12 @@ jobs:
         run: python3 tests/test_lovable.py
       - name: Uploaded ZIPs and plans become a story the engine can make
         run: python3 tests/test_upload.py
+      - name: Hindi narration stays clear (with espeak, as the voice uses it)
+        env:
+          REQUIRE_ESPEAK: '1'
+        run: |
+          pip install -q -c locks/voice.txt phonemizer-fork espeakng-loader
+          python3 tests/test_hindi.py
 
   voice:
     runs-on: ubuntu-24.04

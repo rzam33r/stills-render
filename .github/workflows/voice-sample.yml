@@ -1,8 +1,10 @@
 name: Voice samples
 
-# Speaks a plan's narration with several Kokoro voices, so a voice can be
-# judged by ear before a film depends on it. The samples go on the
-# voice-samples release.
+# Speaks a plan's narration with several Kokoro voices and speeds, so a
+# voice can be judged by ear before a film depends on it. It runs the film's
+# own voice step (engine/voice.py), never a copy of it, so what you hear is
+# what a film gets. The samples, and the voice files a film is cut from, go
+# on the voice-samples release.
 
 on:
   workflow_dispatch:
@@ -15,6 +17,10 @@ on:
         description: 'Kokoro voices, separated by spaces'
         required: false
         default: 'hm_omega hm_psi hf_alpha hf_beta'
+      speeds:
+        description: 'Speeds, separated by spaces (1.0 is normal)'
+        required: false
+        default: '1.0'
 
 permissions:
   contents: write
@@ -31,31 +37,34 @@ jobs:
           sudo apt-get install -y -qq espeak-ng
           command -v ffmpeg >/dev/null || sudo apt-get install -y -qq ffmpeg
           pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
-      - name: Speak it in each voice
+      - name: Speak it in each voice and speed, with the film's own voice step
         env:
           PLAN: ${{ inputs.plan }}
           VOICES: ${{ inputs.voices }}
+          SPEEDS: ${{ inputs.speeds }}
         run: |
           mkdir -p samples
-          python3 - <<'PY'
-          import json, os, numpy as np, soundfile as sf
-          from kokoro import KPipeline
+          name=$(basename "$PLAN" .json); name=${name%-plan}
+          for v in $VOICES; do
+            for sp in $SPEEDS; do
+              python3 - "$v" "$sp" <<'PY'
+          import json, os, sys
           plan = json.load(open(os.environ['PLAN'], encoding='utf-8-sig'))
-          text = ' '.join(s['say'].replace('*', '') for s in plan['shots'])
-          print(text)
-          pipes = {}
-          for v in os.environ['VOICES'].split():
-              code = v[0]
-              pipes.setdefault(code, KPipeline(lang_code=code))
-              parts = [np.asarray(r.audio, dtype=np.float32) for r in pipes[code](text, voice=v, speed=1.0) if r.audio is not None]
-              sf.write(f'samples/kokoro-{v}.wav', np.concatenate(parts), 24000)
-              print(v, round(sum(len(p) for p in parts) / 24000, 1), 's')
+          plan['voice'], plan['speed'] = sys.argv[1], float(sys.argv[2])
+          json.dump(plan, open('/tmp/sample-plan.json', 'w'), ensure_ascii=False)
           PY
-          for f in samples/*.wav; do ffmpeg -v error -y -i "$f" -c:a aac -b:a 128k "${f%.wav}.m4a"; done
+              out="voice/$name-$v-$sp"
+              python3 engine/voice.py /tmp/sample-plan.json "$out"
+              ffmpeg -v error -y -i "$out/voice.wav" -c:a aac -b:a 128k "samples/$name-$v-$sp.m4a"
+              cp "$out/cuts.json" "samples/$name-$v-$sp-cuts.json"
+              cp "$out/voice.wav" "samples/$name-$v-$sp-voice.wav"
+              python3 -c "import json; c = json.load(open('$out/cuts.json')); print('$v $sp:', round(c['audio_seconds'], 1), 's,', c['words_without_time'], 'words without a time')" | tee -a "$GITHUB_STEP_SUMMARY"
+            done
+          done
       - name: Put the samples on the voice-samples release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view voice-samples >/dev/null 2>&1 || \
             gh release create voice-samples --title voice-samples --notes "Voices to judge by ear." --prerelease
-          gh release upload voice-samples samples/*.m4a --clobber
+          gh release upload voice-samples samples/* --clobber
