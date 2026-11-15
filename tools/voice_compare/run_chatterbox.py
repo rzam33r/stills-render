@@ -39,12 +39,16 @@ for f in ('grapheme_mtl_merged_expanded_v1.json',):
     if f in hi_files:
         put(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', f), f)
 s3 = [f for f in hi_files if f.startswith('s3gen') and f.endswith('.pt')]
-if s3:
-    put(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', s3[0]), 's3gen.pt')
-print('using', t3, 'and', s3[0] if s3 else 's3gen.pt from the main repo')
 
 from chatterbox.mtl_tts import ChatterboxMultilingualTTS  # noqa: E402
 model = ChatterboxMultilingualTTS.from_local(ck, 'cpu', t3_model=t3)
+if s3:
+    # The Hindi pack's V3 decoder lacks two buffers the code computes itself
+    # (the tokenizer's mel filters and window), so load it without them.
+    state = torch.load(hf_hub_download('ResembleAI/Chatterbox-Multilingual-hi', s3[0]), map_location='cpu', weights_only=True)
+    res = model.s3gen.load_state_dict(state, strict=False)
+    print('V3 decoder loaded; missing', res.missing_keys, 'unexpected', res.unexpected_keys)
+print('using', t3, 'and', s3[0] if s3 else 's3gen.pt from the main repo')
 lines = plan_sentences(plan)
 for take, prompt in (('chatterbox-hi-stock', None), ('chatterbox-hi-omega', ref)):
     if prompt:
