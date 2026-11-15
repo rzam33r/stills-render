@@ -10,11 +10,12 @@ Deliver one JSON object. Nothing before or after it in the file.
 | `character` | yes | the lead character's description, pasted into every prompt that shows them |
 | `style` | yes | the style block, ending every picture prompt |
 | `shots` | yes | the shots, in order |
-| `layout` | no | `"wide"` (default) or `"short"` |
+| `layout` | no | `"wide"` (default, normal pace) or `"short"` (fast pace, under 3 minutes, always upright) |
+| `frame` | no | the shape: `"16:9"` (default) or `"9:16"` for an upright film at normal pace (file 6) |
 | `language` | no | `"en"` (default) or `"hi"` |
 | `captions` | no | leave out (no subtitles) |
 | `voice` | no | leave out: English uses `"am_michael"`, Hindi `"hm_omega"` |
-| `speed` | no | 0.8 to 1.3; leave `1.0` |
+| `speed` | no | leave out (0.8 to 1.3; the default is 1.0) |
 
 ## A shot
 
@@ -42,8 +43,6 @@ the order pictures and doodles first appear, with no gaps.
 ```json
 {
   "title": "How Did Sailors Find Their Way Before GPS?",
-  "voice": "am_michael",
-  "speed": 1.0,
   "character": "a simple stick-figure man with a large round white head, two small black dot eyes, simple expressive eyebrows and mouth, a thin black stick body and limbs",
   "style": "Hand-drawn cartoon illustration, ink outlines with soft watercolour colouring, muted natural colours, simple clear composition, wide 16:9 frame, no text, no letters, no numbers, no signs, no watermark.",
   "shots": [

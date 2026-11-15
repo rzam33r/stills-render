@@ -75,7 +75,7 @@ jobs:
   deliver:
     if: ${{ inputs.qa_approved }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 60   # a 45-minute film can be close to 1 GB
     steps:
       - uses: actions/checkout@v4
       - name: Fetch the video from its render artifact

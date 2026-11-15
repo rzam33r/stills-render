@@ -172,7 +172,7 @@ def kokoro_voice(plan, voice, speed):
     return np.concatenate(audio), tokens, missing
 
 
-SENTENCE_PAUSE = 0.35   # seconds of quiet after each Hindi sentence
+SENTENCE_PAUSE = 0.32   # seconds of quiet after each Hindi sentence
 COMMA_PAUSE = 0.15      # after a long sentence's comma, where it was split
 EDGE_BEFORE, EDGE_AFTER = 0.05, 0.10   # sound kept around a piece's words
 
@@ -194,6 +194,18 @@ def trim_to_words(a, timed, rate=None):
     if e1 <= s0:
         return a, 0.0
     cut = a[int(s0 * rate):int(e1 * rate)].copy()
+    # Then to where the sound really starts and stops: Kokoro's last word of
+    # a sentence ends in quiet its sound lengths still count (gaps of 0.8 s
+    # where 0.4 s sounds natural).
+    step = max(1, int(0.01 * rate))
+    if len(cut) > 2 * step:
+        rms = np.sqrt(np.convolve(cut ** 2, np.ones(step) / step, mode='same'))
+        loud = np.flatnonzero(rms > max(0.005, 0.03 * float(np.abs(cut).max())))
+        if len(loud):
+            first = max(0, loud[0] - int(0.03 * rate))
+            last = min(len(cut), loud[-1] + int(0.06 * rate))
+            cut = cut[first:last]
+            s0 += first / rate
     fade = min(len(cut), int(0.01 * rate))
     if fade:
         cut[:fade] *= np.linspace(0, 1, fade, dtype=cut.dtype)

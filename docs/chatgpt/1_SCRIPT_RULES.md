@@ -6,8 +6,9 @@ studying narrated explainers that hold viewers for five minutes.
 
 ## Length and pace
 
-- The voice speaks about 165 to 180 words a minute with almost no pauses.
-- 5 to 6 minutes = 900 to 1,100 words. Never pad to reach a length.
+- The voice says about 165 words a minute in English and about 145 in Hindi.
+- 5 to 6 minutes = 850 to 1,000 words. Films under 3 minutes follow file 5;
+  films of 10 to 45 minutes follow file 6. Never pad to reach a length.
 
 ## Structure
 
@@ -42,6 +43,10 @@ studying narrated explainers that hold viewers for five minutes.
   opening ("They weren't protected by...").
 - Ask a question when the viewer would be asking it.
 - Talk to one viewer as "you".
+- Light humour where it fits: one wry, true-to-life moment a minute in a
+  short film, one or two a chapter in a long one ("The bag is the same. The
+  bill is not."). Never at the cost of a fact, never mocking a group of
+  people.
 
 ## Truth
 

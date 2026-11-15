@@ -1,7 +1,10 @@
-# Keeps the ChatGPT project files and the Antigravity picture workflow
-# downloadable at fixed addresses, always matching the engine:
+# Keeps the ChatGPT project files and the Antigravity project downloadable
+# at fixed addresses, always matching the engine:
 #   https://github.com/rzam33r/stills-render/releases/download/chatgpt-pack/stills-studio-chatgpt-pack.zip
-#   https://github.com/rzam33r/stills-render/releases/download/chatgpt-pack/stills-pictures.md
+#   https://github.com/rzam33r/stills-render/releases/download/chatgpt-pack/FACT-HUBZZZ-Studio.zip
+# Both are built from the same guide files (docs/chatgpt/1_ to 7_), and the
+# Antigravity project carries the engine's own plan check, so the writers
+# and the engine can never disagree.
 # On 15 Nov 2026 a pack zipped by hand was a day older than the repository,
 # so ChatGPT still wrote an Azure voice the account cannot use. Now every
 # change to docs/chatgpt/ rebuilds the pack here, and the release notes say
@@ -11,7 +14,7 @@ name: ChatGPT pack
 on:
   push:
     branches: [main]
-    paths: ['docs/chatgpt/**', 'docs/antigravity/**', '.github/workflows/chatgpt-pack.yml']
+    paths: ['docs/chatgpt/**', 'docs/antigravity/**', 'engine/check_plan.py', 'engine/voices.py', '.github/workflows/chatgpt-pack.yml']
   workflow_dispatch:
 
 permissions:
@@ -27,13 +30,22 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Zip the project files
+      - name: Zip the ChatGPT project files
         run: |
           cd docs/chatgpt
           zip -X -q ../../stills-studio-chatgpt-pack.zip PROJECT_INSTRUCTIONS.md 1_SCRIPT_RULES.md \
-            2_SHOT_LIST.md 3_FLOW_PROMPTS.md 4_PLAN_FORMAT.md 5_SHORTS.md
+            2_SHOT_LIST.md 3_FLOW_PROMPTS.md 4_PLAN_FORMAT.md 5_SHORTS.md 6_LONG_FILMS.md 7_HINDI_VOICE.md
           cd ../..
           unzip -l stills-studio-chatgpt-pack.zip
+      - name: Build the Antigravity project
+        run: |
+          root="/tmp/pack/FACT HUBZZZ Studio"
+          mkdir -p "$root/guide" "$root/tools"
+          cp -r docs/antigravity/studio/. "$root/"
+          cp docs/chatgpt/[1-7]_*.md "$root/guide/"
+          cp engine/check_plan.py engine/voices.py "$root/tools/"
+          (cd /tmp/pack && zip -X -q -r "$GITHUB_WORKSPACE/FACT-HUBZZZ-Studio.zip" "FACT HUBZZZ Studio")
+          unzip -l FACT-HUBZZZ-Studio.zip
       - name: Publish it
         env:
           GH_TOKEN: ${{ github.token }}
@@ -41,12 +53,13 @@ jobs:
           stamp="$(date -u +%d-%b-%y) (${GITHUB_SHA:0:7})"
           notes="ChatGPT project files for Stills Studio, version $stamp.
           
-          Paste PROJECT_INSTRUCTIONS.md into the project's instructions and upload files 1 to 5 to the project, replacing the old ones. stills-pictures.md is the Antigravity workflow /stills-pictures."
+          ChatGPT: paste PROJECT_INSTRUCTIONS.md into the project's instructions and upload files 1 to 7, replacing the old ones. Antigravity: unzip FACT-HUBZZZ-Studio.zip and open the folder (see its README.md)."
           if ! gh release view chatgpt-pack >/dev/null 2>&1; then
             gh release create chatgpt-pack --title "ChatGPT project files" --notes "$notes" --latest=false
           else
             gh release edit chatgpt-pack --notes "$notes"
           fi
-          cp docs/antigravity/stills-pictures.md stills-pictures.md
-          gh release upload chatgpt-pack stills-studio-chatgpt-pack.zip stills-pictures.md --clobber
+          gh release upload chatgpt-pack stills-studio-chatgpt-pack.zip FACT-HUBZZZ-Studio.zip --clobber
+          # The single Antigravity workflow of 15 Nov 2026 is now part of the project.
+          gh release delete-asset chatgpt-pack stills-pictures.md -y 2>/dev/null || true
           echo "## ChatGPT pack $stamp" >> "$GITHUB_STEP_SUMMARY"

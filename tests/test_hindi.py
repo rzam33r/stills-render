@@ -71,6 +71,10 @@ a = np.ones(24000 * 3, dtype=np.float32)
 cut, shift = trim_to_words(a, [('x', 0.5, 1.0), ('y', 1.1, 2.0)])
 say(abs(shift - (0.5 - EDGE_BEFORE)) < 1e-6 and abs(len(cut) / 24000 - (2.0 + EDGE_AFTER - shift)) < 1e-3,
     f'a piece is cut to its words: {shift:.2f} s off the start, {len(cut) / 24000:.2f} s kept of 3')
+quiet_end = np.concatenate([np.zeros(12000), np.ones(24000), np.zeros(36000)]).astype(np.float32)
+cut2, shift2 = trim_to_words(quiet_end, [('x', 0.4, 2.4)])
+say(abs(shift2 - 0.47) < 0.02 and abs(len(cut2) / 24000 - 1.09) < 0.02,
+    f'the quiet Kokoro leaves inside a piece is cut too: {shift2:.2f} s in, {len(cut2) / 24000:.2f} s kept of a 1 s sound')
 same, none = trim_to_words(a, [])
 say(none == 0.0 and len(same) == len(a), 'a piece with no timed words is left whole')
 

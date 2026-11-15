@@ -46,13 +46,10 @@ Everything in files 1 to 4 holds unless this file says otherwise.
 
 ## Hindi films
 
-- `"language": "hi"`. The voice is Kokoro's Hindi voice `hm_omega` (male)
-  unless the plan names another: `hm_psi` (male), `hf_alpha` or `hf_beta`
-  (female).
-- Write every `say` in Hindi script (Devanagari). Words people say in English
-  ("value", "phone") may stay in English letters.
-- Numbers in words, as a person says them ("बीस हज़ार").
-- End sentences with "।" or a question mark.
+- Follow 7_HINDI_VOICE.md: it says how to spell for the voice (the nukta in
+  फ़ and ज़ words), which words it says well, and how long a sentence can be.
+- `"language": "hi"`; leave `"voice"` and `"speed"` out (the voice is
+  Kokoro's `hm_omega`).
 - Flow prompts stay in English. Settings and people should fit the story:
   for an Indian audience, Indian villages, homes, streets and clothing.
 
@@ -63,8 +60,6 @@ Everything in files 1 to 4 holds unless this file says otherwise.
   "title": "Where Does Rain Come From?",
   "layout": "short",
   "language": "en",
-  "voice": "am_michael",
-  "speed": 1.0,
   "character": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts",
   "style": "Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, tall upright 9:16 frame, no text, no letters, no numbers, no signs, no watermark.",
   "shots": [
@@ -140,8 +135,6 @@ Everything in files 1 to 4 holds unless this file says otherwise.
   "title": "Ek boond ka safar",
   "layout": "short",
   "language": "hi",
-  "voice": "hm_omega",
-  "speed": 1.0,
   "character": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts",
   "style": "Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, tall upright 9:16 frame, no text, no letters, no numbers, no signs, no watermark.",
   "shots": [
