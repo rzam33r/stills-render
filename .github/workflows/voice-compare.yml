@@ -1,0 +1,123 @@
+# Compares free Hindi voices on one plan, so the narrator is chosen by
+# evidence: each candidate reads the same script sentence by sentence, a
+# strong recogniser (Whisper large-v3) scores how clearly, the run times how
+# much GitHub CPU each needs, and Hugging Face says how many people use it.
+# An experiment: films never run it, so its installs are not version-locked
+# (tests/test_workflows.py names it as the exception).
+name: Compare Hindi voices
+
+on:
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: 'Plan to read (a path in this repository)'
+        required: true
+        default: 'tests/fixtures/bharat-mein-badhti-mehngai-plan.json'
+
+permissions:
+  contents: write
+
+jobs:
+  users:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: How many people use each model (Hugging Face)
+        run: |
+          python3 tools/voice_compare/stats.py stats.json
+          python3 - >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          rows = json.load(open('stats.json'))
+          print('## Users on Hugging Face\n\n| model | downloads, last 30 days | downloads, all time | likes | licence | gated |\n|---|---|---|---|---|---|')
+          for r in rows:
+              print(f"| {r['id']} | {r.get('downloads_last_30_days')} | {r.get('downloads_all_time')} | {r.get('likes')} | {r.get('licence')} | {r.get('gated')} |")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stats
+          path: stats.json
+
+  kokoro:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Kokoro before and after the Hindi fixes
+        run: |
+          pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
+          cd tools/voice_compare && python3 run_kokoro.py "$GITHUB_WORKSPACE/${{ inputs.plan }}" "$GITHUB_WORKSPACE/takes/kokoro"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: takes-kokoro
+          path: takes/kokoro
+
+  chatterbox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: The reference voice (Kokoro hm_omega, from the voice samples)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download voice-samples --pattern 'bharat-mein-badhti-mehngai-hm_omega-1.0-voice.wav' --output ref.wav
+      - name: Chatterbox Multilingual, Hindi edition
+        run: |
+          pip install -q torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q git+https://github.com/resemble-ai/chatterbox --extra-index-url https://download.pytorch.org/whl/cpu
+          cd tools/voice_compare && python3 run_chatterbox.py "$GITHUB_WORKSPACE/${{ inputs.plan }}" "$GITHUB_WORKSPACE/takes/chatterbox" "$GITHUB_WORKSPACE/ref.wav"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: takes-chatterbox
+          path: takes/chatterbox
+
+  indicmio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: The reference voice (Kokoro hm_omega, from the voice samples)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download voice-samples --pattern 'bharat-mein-badhti-mehngai-hm_omega-1.0-voice.wav' --output ref.wav
+      - name: Indic-Mio with MioCodec
+        run: |
+          pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install -q transformers accelerate soundfile git+https://github.com/Aratako/MioCodec --extra-index-url https://download.pytorch.org/whl/cpu
+          cd tools/voice_compare && python3 run_indicmio.py "$GITHUB_WORKSPACE/${{ inputs.plan }}" "$GITHUB_WORKSPACE/takes/indicmio" "$GITHUB_WORKSPACE/ref.wav"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: takes-indicmio
+          path: takes/indicmio
+
+  score:
+    needs: [users, kokoro, chatterbox, indicmio]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: takes
+          pattern: takes-*
+      - uses: actions/download-artifact@v4
+        with:
+          name: stats
+          path: .
+      - name: Score each take with Whisper large-v3
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg
+          pip install -q faster-whisper
+          python3 tools/voice_compare/score.py "${{ inputs.plan }}" takes "$GITHUB_STEP_SUMMARY"
+      - name: Put the takes and scores on the voice-compare release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p out
+          for w in takes/*/*.wav; do ffmpeg -v error -y -i "$w" -c:a aac -b:a 128k "out/$(basename "${w%.wav}").m4a"; done
+          cp takes/scores.json stats.json out/
+          gh release view voice-compare >/dev/null 2>&1 || gh release create voice-compare --title "Hindi voice comparison" --notes "Takes, scores and user numbers from the Compare Hindi voices workflow." --latest=false
+          gh release upload voice-compare out/* --clobber

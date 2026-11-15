@@ -41,9 +41,12 @@ floating = [f'{n}: {job}' for n, w in flows.items() for job, spec in (w.get('job
             if 'runs-on' in spec and not re.fullmatch(r'ubuntu-\d\d\.\d\d', str(spec['runs-on']))]
 say(not floating, 'every job names its Ubuntu' + ('' if not floating else f': {floating}'))
 
+# Workflows that never make a film: lock-versions.yml writes the locks, and
+# voice-compare.yml tries new voice models before one is chosen.
+EXPERIMENTS = {'lock-versions.yml', 'voice-compare.yml'}
 loose = []
 for n, t in texts.items():
-    if n == 'lock-versions.yml':
+    if n in EXPERIMENTS:
         continue
     for k, line in enumerate(t.splitlines(), 1):
         if re.search(r'\bpip install\b', line) and 'locks/' not in line and 'pyyaml' not in line:
@@ -132,7 +135,7 @@ def needs(code, seen=None):
 
 missing = []
 for n, w in flows.items():
-    if n == 'lock-versions.yml':
+    if n in EXPERIMENTS:
         continue
     for job, spec in (w.get('jobs') or {}).items():
         have = set()
