@@ -1,6 +1,7 @@
-# Keeps the ChatGPT project files downloadable at one fixed address, always
-# matching the engine:
+# Keeps the ChatGPT project files and the Antigravity picture workflow
+# downloadable at fixed addresses, always matching the engine:
 #   https://github.com/rzam33r/stills-render/releases/download/chatgpt-pack/stills-studio-chatgpt-pack.zip
+#   https://github.com/rzam33r/stills-render/releases/download/chatgpt-pack/stills-pictures.md
 # On 15 Nov 2026 a pack zipped by hand was a day older than the repository,
 # so ChatGPT still wrote an Azure voice the account cannot use. Now every
 # change to docs/chatgpt/ rebuilds the pack here, and the release notes say
@@ -10,7 +11,7 @@ name: ChatGPT pack
 on:
   push:
     branches: [main]
-    paths: ['docs/chatgpt/**', '.github/workflows/chatgpt-pack.yml']
+    paths: ['docs/chatgpt/**', 'docs/antigravity/**', '.github/workflows/chatgpt-pack.yml']
   workflow_dispatch:
 
 permissions:
@@ -40,11 +41,12 @@ jobs:
           stamp="$(date -u +%d-%b-%y) (${GITHUB_SHA:0:7})"
           notes="ChatGPT project files for Stills Studio, version $stamp.
           
-          Paste PROJECT_INSTRUCTIONS.md into the project's instructions and upload files 1 to 5 to the project, replacing the old ones."
+          Paste PROJECT_INSTRUCTIONS.md into the project's instructions and upload files 1 to 5 to the project, replacing the old ones. stills-pictures.md is the Antigravity workflow /stills-pictures."
           if ! gh release view chatgpt-pack >/dev/null 2>&1; then
             gh release create chatgpt-pack --title "ChatGPT project files" --notes "$notes" --latest=false
           else
             gh release edit chatgpt-pack --notes "$notes"
           fi
-          gh release upload chatgpt-pack stills-studio-chatgpt-pack.zip --clobber
+          cp docs/antigravity/stills-pictures.md stills-pictures.md
+          gh release upload chatgpt-pack stills-studio-chatgpt-pack.zip stills-pictures.md --clobber
           echo "## ChatGPT pack $stamp" >> "$GITHUB_STEP_SUMMARY"

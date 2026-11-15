@@ -49,5 +49,15 @@ say(n < 8000, f'PROJECT_INSTRUCTIONS.md is {n} characters, under 8,000')
 prompts = [s['prompt'] for s in ex['shots'] if 'prompt' in s]
 say(all(p.endswith(ex['style']) for p in prompts), 'every picture prompt ends with the style block')
 say(all(ex['character'] in p for p in prompts), 'every picture prompt describes the lead the same way')
+# The Antigravity workflow that makes the pictures agrees with the engine.
+ag = (ROOT / 'docs' / 'antigravity' / 'stills-pictures.md').read_text()
+say(all(f'"{k}"' in ag for k in ('picture', 'prompt', 'doodle', 'doodle_prompt', 'layout', 'frame', 'voice'))
+    and {'picture', 'prompt', 'doodle', 'doodle_prompt'} <= KEYS and {'layout', 'frame', 'voice'} <= TOP,
+    'the Antigravity workflow uses only keys the plan check knows')
+say('at most 30 characters' in ag and '`bharat-mein-badhti-mehngai`' in ag,
+    'the Antigravity workflow names the story the way the upload page does')
+say('plan.json first' in ag.replace('**', '') and 'square (1:1)' in ag and '9:16' in ag and '16:9' in ag,
+    'the Antigravity workflow saves the plan first and knows the picture shapes')
+
 print('\nall good' if not bad else f'\n{bad} failing')
 sys.exit(1 if bad else 0)
