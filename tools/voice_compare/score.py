@@ -13,7 +13,10 @@ import re
 import sys
 import unicodedata
 
+import numpy as np
+import soundfile as sf
 from faster_whisper import WhisperModel
+from scipy.signal import resample_poly
 
 plan, takes = sys.argv[1], pathlib.Path(sys.argv[2])
 p = json.loads(pathlib.Path(plan).read_text(encoding='utf-8-sig'))
@@ -42,7 +45,13 @@ rows = []
 for info_path in sorted(takes.glob('*/*.json')):
     info = json.loads(info_path.read_text())
     wav = info_path.with_suffix('.wav')
-    segs, _ = model.transcribe(str(wav), language='hi', beam_size=5, vad_filter=False,
+    a, sr = sf.read(str(wav), dtype='float32')
+    if a.ndim > 1:
+        a = a.mean(axis=1)
+    # Whisper hears 16 kHz; handing it the samples skips its own file reader
+    # (PyAV), whose newest version broke faster-whisper on 15 Nov 2026.
+    a = resample_poly(a, 16000, sr).astype(np.float32) if sr != 16000 else a
+    segs, _ = model.transcribe(a, language='hi', beam_size=5, vad_filter=False,
                                condition_on_previous_text=False)
     heard = ' '.join(s.text.strip() for s in segs)
     info['cer'] = round(cer(script, heard), 3)

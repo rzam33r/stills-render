@@ -110,7 +110,7 @@ jobs:
       - name: Score each take with Whisper large-v3
         run: |
           sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg
-          pip install -q faster-whisper
+          pip install -q faster-whisper soundfile scipy
           python3 tools/voice_compare/score.py "${{ inputs.plan }}" takes "$GITHUB_STEP_SUMMARY"
       - name: Put the takes and scores on the voice-compare release
         env:
