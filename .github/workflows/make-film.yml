@@ -92,9 +92,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SLUG: ${{ inputs.slug }}
         run: |
-          mkdir -p /tmp/zip /tmp/plan
-          if ! gh release download "story-$SLUG" --pattern '*.zip' --dir /tmp/zip; then
-            echo "::error::No ZIP for '$SLUG': there is no release story-$SLUG with a .zip on it. Upload the story again."
+          mkdir -p /tmp/upload /tmp/zip /tmp/plan
+          # The page sends the ZIP in 8 MB pieces with a parts list (a 35 MB
+          # ZIP in one request failed on 16 Nov 2026); older uploads are one ZIP.
+          gh release download "story-$SLUG" --pattern '*.zip' --pattern '*.zip.part*' --pattern '*.parts.json' \
+            --dir /tmp/upload 2>/dev/null || true
+          if ! python3 engine/join_upload.py /tmp/upload /tmp/zip; then
+            echo "::error::The story '$SLUG' did not arrive whole on GitHub (see the line above). Upload it again."
             exit 1
           fi
           # A plan pasted on the upload page arrives as its own plan.json and
