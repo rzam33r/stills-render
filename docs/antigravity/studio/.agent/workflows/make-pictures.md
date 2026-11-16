@@ -11,14 +11,22 @@ For the film I name, or the one being worked on. Its plan is
    (a) create or open a Flow project by name, (b) choose the picture shape,
    (c) save a picture where and as you choose. If (b) is not possible, stop
    and tell me. (On 16 Nov 2026 Roshan's Flow Connect could do (b) only.)
-   For a Bittu & Riya film (the plan has "cast"), also (d): put a Flow
-   character into the prompt as a **real tag**: the character's tag with its
-   little picture in the prompt box, the same as typing @ and choosing it
-   from Flow's list. The text "@Bittu" is not a tag. If Flow Connect cannot
-   do (d), use the browser on the open Flow tab: click in the prompt box,
-   type @, choose the character from the list Flow shows. If neither works,
-   stop and tell me what happened. Never make a picture of Bittu or Riya
-   without their tags.
+   **A Bittu & Riya film (the plan has "cast") is made entirely in your
+   browser, on the Flow page**, never through Flow Connect: a tag exists
+   only in Flow's own prompt box, so a picture made through Flow Connect
+   would lose it. For every picture, in the browser: the shape, the tags,
+   the prompt, making the picture, and downloading it. (On 17 Nov 2026 the
+   browser opened the project and made real tags.) Check in the browser
+   instead of (a) to (c): (d) you can put a Flow character into the prompt
+   as a **real tag**: click in the prompt box, type @, choose the character
+   from Flow's list; its tag with its little picture appears. The text
+   "@Bittu" is not a tag. If it does not work, stop and tell me what
+   happened. Never make a picture of Bittu or Riya without their tags.
+   (e) the picture shape: Flow's shape choice by the prompt box (9:16 or
+   16:9) is part of the request, not a setting; set it before the first
+   picture and check it every 25 pictures. (f) where this browser saves
+   downloads: find its download folder before the first picture (look,
+   change nothing) and tell me where it is.
 
 2. **The Flow project.** Every picture of this film is made in one project
    and in no other:
@@ -78,7 +86,9 @@ For the film I name, or the one being worked on. Its plan is
    Riya. Show them to me next to the cast's Flow characters and say, for each
    person in them: same face, same hair, same clothes: yes or no; in a
    medium shot or close-up also earrings and pendant (Riya), watch
-   (Bittu). Wait for my OK before the rest.
+   (Bittu). Also say each one's file (`films/<story name>/001.jpg`…) and
+   its width × height (taller than wide for 9:16, wider than tall for
+   16:9), read from the file itself. Wait for my OK before the rest.
 
 5. **Check the folder.** Every picture name in the plan has exactly one file.
    Move any other image to `films/<story name>-not-used/`. Report: how many

@@ -90,6 +90,8 @@ mp = flows['make-pictures']
 say('real tag' in mp and 'Never make a picture of Bittu or Riya' in mp and 'Never ask Flow for the' in mp
     and 'first 2 pictures' in mp and 'Never create the project' in mp,
     '/make-pictures really tags Bittu and Riya, checks the tags, stops after 2 pictures the first time, never creates the cast project')
+say('made entirely in your\n   browser' in mp and 'never through Flow Connect' in mp and 'width × height' in mp,
+    'Bittu & Riya pictures are made wholly in the browser, so the tags reach Flow, and checked for name and shape')
 say('`Bittu & Riya`' in rule and 'Never create the `Bittu & Riya` project' in rule, 'the rule keeps Bittu & Riya films in their own Flow project')
 cast_plan = {'title': 'T', 'layout': 'short', 'style': 's', 'cast': 'Bittu & Riya', 'shots': [
     {'say': 'one two three', 'picture': '001', 'prompt': 'Riya laughs as Bittu trips', 'who': ['Riya', 'Bittu']}]}

@@ -26,9 +26,9 @@ upload anything, and do not create or change any file.
    character (Bittu, Riya) into a prompt as a real tag. For any "no", say what
    /make-pictures does instead: for (a) it asks me to open the film's Flow
    project and waits for "ready"; for (c) it moves each new download from the
-   browser's download folder; for (d) it tags them through the browser on
-   the open Flow tab (type @, choose from Flow's list). A "no" for (b) means
-   pictures cannot be made.
+   browser's download folder; for (d), Bittu & Riya films are made entirely
+   in your browser on the Flow page anyway (type @, choose from Flow's
+   list). A "no" for (b) means other films' pictures cannot be made.
 
 4. **Python.** Run `python --version` (or `py --version` on Windows). Say
    whether the plan check in `tools/` can run. It is optional.
