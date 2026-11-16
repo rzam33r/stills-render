@@ -63,7 +63,9 @@ texts = [rule] + list(flows.values()) + [(DOCS / 'PROJECT_INSTRUCTIONS.md').read
 named = {n for t in texts for n in re.findall(r'\b([1-7]_[A-Z_]+\.md)', t)}
 say(named and all((DOCS / n).exists() for n in named), f'every guide file named exists ({len(named)} named)')
 say(all((DOCS / f'{n}').exists() for n in ('6_LONG_FILMS.md', '7_HINDI_VOICE.md')), 'the long-film and Hindi guide files exist')
-keys = {k for t in flows.values() for k in re.findall(r'"([a-z_]+)"', t)} - {'say', 'short', 'wide'}
+# Only the workflows that read plans name plan keys (/check-studio quotes
+# answers like "ready").
+keys = {k for n, t in flows.items() if n != 'check-studio' for k in re.findall(r'"([a-z_]+)"', t)} - {'say', 'short', 'wide'}
 say(keys <= KEYS | TOP | {'say'}, f'the workflows use only plan keys the engine knows: {sorted(keys)}')
 say('`bharat-mein-badhti-mehngai`' in rule and 'at most 30 characters' in rule, 'the story name follows the upload page\'s rule')
 url = 'https://picture-plan-film-forge.lovable.app/stills'
