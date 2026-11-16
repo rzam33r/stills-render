@@ -46,9 +46,15 @@ class Aligner:
         print(f'word timing: {self.name}', flush=True)
         tok = self.proc.tokenizer
         self.vocab = tok.get_vocab()
-        self.blank = tok.pad_token_id if tok.pad_token_id is not None else 0
+        # The CTC blank is the model's pad id, which is not always the
+        # tokenizer's: Vakyansh (from fairseq) uses "<s>" (16 Nov 2026: taking
+        # the tokenizer's made every sentence look unclear).
+        blank = self.model.config.pad_token_id
+        self.blank = blank if blank is not None else (tok.pad_token_id or 0)
         self.delim = self.vocab.get(getattr(tok, 'word_delimiter_token', None) or '|')
         self.id_to_char = {i: c for c, i in self.vocab.items()}
+        self.special = {i for c, i in self.vocab.items() if c.startswith('<') and c.endswith('>') or c in ('[PAD]', '[UNK]')}
+        print(f'word timing: blank is {self.id_to_char.get(self.blank)!r}, word break {self.id_to_char.get(self.delim)!r}', flush=True)
 
     def letters(self, word):
         """The recogniser's ids for a word's letters; letters it does not
@@ -79,7 +85,7 @@ class Aligner:
         ids = lp.argmax(dim=-1).tolist()
         out, last = [], None
         for i in ids:
-            if i != last and i != self.blank:
+            if i != last and i != self.blank and i not in self.special:
                 out.append(' ' if i == self.delim else self.id_to_char.get(i, ''))
             last = i
         return re.sub(r'\s+', ' ', ''.join(out)).strip()

@@ -196,6 +196,12 @@ jobs:
               for pc in json.load(open(d / 'part.json'))['pieces']:
                   print(f"  piece {pc['i']}: take {pc['tries']}, {pc['cer']:.0%} not understood, heard: {pc['heard']}")
           assert c['words_without_time'] == 0, 'every word must have a time'
+          # The recogniser must understand most of every sentence; if not, the
+          # word timing is wrong too (16 Nov 2026: a wrong blank symbol).
+          assert c['worst_piece_error'] < 0.5, f"a sentence was {c['worst_piece_error']:.0%} not understood"
+          words = json.load(open('example/voice/words.json'))
+          gaps = [b['start'] - a['start'] for a, b in zip(words, words[1:]) if a['start'] is not None and b['start'] is not None]
+          assert all(g > 0.04 for g in gaps), 'every word starts after the one before'
           PY
       - name: Keep the Chatterbox example to watch
         if: steps.need.outputs.run == 'yes'
