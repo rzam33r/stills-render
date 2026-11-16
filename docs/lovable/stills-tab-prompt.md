@@ -92,7 +92,7 @@ keep working exactly as it does now.
 //   Returns { ok, problems: [..], notes: [..], forChatGPT, slug, frame,
 //   language, voice }.
 
-const STILLS_DEFAULT_VOICE = { en: 'am_michael', hi: 'hm_omega' };
+const STILLS_DEFAULT_VOICE = { en: 'am_michael', hi: 'chatterbox-hi' };
 
 function parsePlan(planText) {
   return JSON.parse(String(planText).replace(/^﻿/, ''));
@@ -133,10 +133,10 @@ function checkStillsUpload(planText, fileNames) {
   const language = plan.language == null ? 'en' : plan.language;
   if (language !== 'en' && language !== 'hi') problems.push('"language" must be "en" or "hi"');
   const voice = plan.voice || STILLS_DEFAULT_VOICE[language] || 'am_michael';
-  const hindiVoice = /^(hm_|hf_|hi-IN-)/.test(String(voice));
+  const hindiVoice = /^(hm_|hf_|hi-IN-|chatterbox-hi$)/.test(String(voice));
   if (/^[a-z]{2}-[A-Z]{2}-[A-Za-z]+Neural$/.test(String(voice)))
     notes.push(`${voice} is an Azure voice. Without the Azure key the film uses ${STILLS_DEFAULT_VOICE[language] || 'am_michael'} instead.`);
-  if (language === 'hi' && !hindiVoice) problems.push(`a Hindi film needs a Hindi voice (hm_omega, hm_psi, hf_alpha, hf_beta), not "${voice}"`);
+  if (language === 'hi' && !hindiVoice) problems.push(`a Hindi film needs a Hindi voice (leave "voice" out for Chatterbox), not "${voice}"`);
   if (language === 'en' && hindiVoice) problems.push(`"${voice}" is a Hindi voice; set "language": "hi" or choose an English voice`);
 
   // Same matching as engine/unpack.py: a file keeps its name when the plan
@@ -175,6 +175,12 @@ function checkStillsUpload(planText, fileNames) {
   const seconds = Math.round(words / 2.75);
   notes.push(`${plan.shots.length} shots, ${words} words, about ${seconds < 90 ? seconds + ' seconds' : (seconds / 60).toFixed(1) + ' minutes'}`);
   notes.push(`${frame === '9:16' ? 'Upright 9:16' : 'Wide 16:9'} · ${language === 'hi' ? 'Hindi' : 'English'} · voice ${voice}`);
+  if (voice === 'chatterbox-hi') {
+    // Chatterbox needs about 12 minutes of GitHub work per minute of speech;
+    // a long film records parts of up to 12 minutes at the same time.
+    const minutes = Math.ceil(Math.min(seconds, 720) / 60 * 12) + 8;
+    notes.push(`The Hindi voice takes about ${minutes < 90 ? minutes + ' minutes' : (minutes / 60).toFixed(1) + ' hours'} on GitHub; the "Voice recorded" step will look slow.`);
+  }
   return done(problems);
 
   function done(p) {

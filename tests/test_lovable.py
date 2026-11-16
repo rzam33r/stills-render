@@ -32,7 +32,7 @@ def say(ok, msg):
 
 code = (LOV / 'stills-upload-check.js').read_text()
 prompt = (LOV / 'stills-tab-prompt.md').read_text()
-for name in ('stills-tab-prompt.md', 'stills-paste-plan-prompt.md'):
+for name in ('stills-tab-prompt.md', 'stills-paste-plan-prompt.md', 'stills-check-update-prompt.md'):
     m = re.search(r'```javascript\n(.*?)```', (LOV / name).read_text(), re.S)
     say(bool(m) and m.group(1) == code, f'{name} carries stills-upload-check.js exactly')
 say('rose-render-test' in prompt and 'make-film.yml' in prompt, 'the prompt names both repositories\' workflows')

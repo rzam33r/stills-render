@@ -49,7 +49,7 @@ Everything in files 1 to 4 holds unless this file says otherwise.
 - Follow 7_HINDI_VOICE.md: it says how to spell for the voice (the nukta in
   फ़ and ज़ words), which words it says well, and how long a sentence can be.
 - `"language": "hi"`; leave `"voice"` and `"speed"` out (the voice is
-  Kokoro's `hm_omega`).
+  Chatterbox's Hindi voice).
 - Flow prompts stay in English. Settings and people should fit the story:
   for an Indian audience, Indian villages, homes, streets and clothing.
 

@@ -1,14 +1,15 @@
 # 7 — Hindi that the voice says clearly
 
-The Hindi voice reads exactly what is written, letter by letter. These rules
-come from the first Hindi film, where some words came out wrong. The engine
-already fixes the most common ones; writing this way fixes the rest.
+Hindi films are read by Chatterbox's Hindi voice. It reads exactly what is
+written, so how a word is spelled is how it is said. These rules come from
+the first Hindi films; the engine also checks every sentence it records and
+records an unclear one again.
 
 ## Spelling for the voice
 
 - **Nukta for f and z sounds.** Write फ़ when the word is said with f, and ज़
   when it is said with z: फ़ीस, फ़सल, रफ़्तार, सिर्फ़, तरफ़, साफ़, ज़्यादा,
-  ज़रूरत, बाज़ार, रोज़, चीज़, हज़ार. Without the nukta the voice says
+  ज़रूरत, बाज़ार, रोज़, चीज़, हज़ार. Without the nukta the voice may say
   "pheez", "raphtaar", "jyaada".
 - Keep फ without a nukta only where people really say ph: फिर, फल, फूल.
 - **Numbers in words**, as a person says them: सौ, एक सौ दस, बीस हज़ार,
@@ -37,7 +38,11 @@ already fixes the most common ones; writing this way fixes the rest.
 ## In plan.json
 
 - `"language": "hi"`, and leave `"voice"` and `"speed"` out. The engine uses
-  Kokoro's `hm_omega` voice.
+  Chatterbox's Hindi voice (`"chatterbox-hi"`). Naming `"hm_omega"` gives the
+  older Kokoro Hindi voice instead.
+- A Hindi voice takes longer to make: about 12 minutes of GitHub work per
+  minute of narration. A 1-minute short is ready in about 20 minutes; a long
+  film records its parts at the same time and takes 2 to 3 hours.
 - `"title"` in English letters (Hinglish): "Bharat mein badhti mehngai".
 - Every `say` in Devanagari. Flow prompts stay in English.
 

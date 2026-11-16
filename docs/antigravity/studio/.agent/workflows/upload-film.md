@@ -38,6 +38,8 @@ For the film I name, or the one being worked on.
    "Make the film"), once. Never press it twice for the same ZIP.
 
 6. **Watch it** until the last step says "Sent to Google Drive" or a step
-   turns red, checking every minute. Tell me the result and the "Open the
+   turns red: every minute for an English film, every 5 minutes for a Hindi
+   one (its voice takes about 12 minutes per minute of narration, up to 3
+   hours for a long film; the page says how long). Tell me the result and the "Open the
    GitHub run" link. If a step failed, give its name and the message the
    page shows. Do nothing else on the page.

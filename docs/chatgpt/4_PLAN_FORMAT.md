@@ -14,7 +14,7 @@ Deliver one JSON object. Nothing before or after it in the file.
 | `frame` | no | the shape: `"16:9"` (default) or `"9:16"` for an upright film at normal pace (file 6) |
 | `language` | no | `"en"` (default) or `"hi"` |
 | `captions` | no | leave out (no subtitles) |
-| `voice` | no | leave out: English uses `"am_michael"`, Hindi `"hm_omega"` |
+| `voice` | no | leave out: English uses Kokoro's `"am_michael"`, Hindi Chatterbox's `"chatterbox-hi"` |
 | `speed` | no | leave out (0.8 to 1.3; the default is 1.0) |
 
 ## A shot
