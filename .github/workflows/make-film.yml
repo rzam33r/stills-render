@@ -302,6 +302,7 @@ jobs:
         if: needs.prepare.outputs.engine == 'chatterbox'
         run: |
           python3 engine/voice_parts.py story/plan.json voice-parts voice
+          { echo '## Word times against the sound'; echo '```'; python3 engine/check_voice.py story/plan.json voice; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           c = json.load(open('voice/cuts.json'))

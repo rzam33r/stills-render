@@ -184,6 +184,7 @@ jobs:
           python3 engine/voice.py $plan example/parts --part 0 --parts 2
           python3 engine/voice.py $plan example/parts --part 1 --parts 2
           python3 engine/voice_parts.py $plan example/parts example/voice
+          python3 engine/check_voice.py $plan example/voice --strict
           python3 engine/render.py $plan example/pictures example/voice example/boond-hindi-chatterbox.mp4 \
             --logo brand/watermark.png --music "$(python3 engine/pick_music.py $plan "$GITHUB_RUN_ID")"
           python3 engine/check_sync.py example/boond-hindi-chatterbox.mp4

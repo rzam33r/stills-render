@@ -27,6 +27,7 @@ from check_plan import check  # noqa: E402
 from hindi import cer  # noqa: E402
 from voice_parts import BREATH, LEAD, RATE, SENTENCE_PAUSE, join, pieces, split  # noqa: E402
 from voices import voice_engine, voice_parts  # noqa: E402
+import check_voice  # noqa: E402
 
 bad = 0
 
@@ -122,6 +123,20 @@ join(two, tmp + '/parts', tmp + '/voice', 'chatterbox-hi')
 c = json.loads(pathlib.Path(tmp, 'voice', 'cuts.json').read_text())
 gap = c['words'][1]['start'] - c['words'][0]['start']
 say(abs(gap - (0.35 + SENTENCE_PAUSE + BREATH)) < 0.01, f'a new paragraph adds the breath: {gap:.2f} s between their words')
+
+# The word times are where the words are
+tmp = tempfile.mkdtemp()
+fake_parts(bharat, 2, tmp + '/parts')
+join(bharat, tmp + '/parts', tmp + '/voice', 'chatterbox-hi')
+say(check_voice.main(str(ROOT / 'tests' / 'fixtures' / 'bharat-mein-badhti-mehngai-plan.json'), tmp + '/voice', strict=True) == 0,
+    'word times that match the sound pass the sound check')
+w = json.loads(pathlib.Path(tmp, 'voice', 'words.json').read_text())
+for x in w:
+    if x['start'] is not None:
+        x['start'] += 0.3
+pathlib.Path(tmp, 'voice', 'words.json').write_text(json.dumps(w, ensure_ascii=False))
+say(check_voice.main(str(ROOT / 'tests' / 'fixtures' / 'bharat-mein-badhti-mehngai-plan.json'), tmp + '/voice', strict=True) == 1,
+    'word times 300 ms late fail the sound check')
 
 # The recogniser's score
 say(cer('फ़ीस बढ़ती है।', 'फीस बढती है') == 0, 'a missing nukta or full stop is not a mistake')
