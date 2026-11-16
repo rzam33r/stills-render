@@ -19,7 +19,7 @@ upright 9:16 frame" and its pictures are made at 9:16; a wide film says
 
 ## How big the film is
 
-The voice says about 165 words a minute in English and about 145 in Hindi
+The voice says about 165 words a minute in English and about 200 in Hindi
 (with its pauses between sentences).
 
 | length | English words | pictures (a new one every 4 to 5 seconds) |

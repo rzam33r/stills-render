@@ -10,6 +10,7 @@ Deliver one JSON object. Nothing before or after it in the file.
 | `character` | yes, except Bittu & Riya films | the lead character's description, pasted into every prompt that shows them |
 | `style` | yes | the style block, ending every picture prompt |
 | `cast` | Bittu & Riya films | `"Bittu & Riya"`, the Flow project holding the characters; then leave out `character` |
+| `extras` | Bittu & Riya films, if needed | each one-off person's short name and fixed look, pasted after their name in every prompt that shows them |
 | `shots` | yes | the shots, in order |
 | `layout` | no | `"wide"` (default, normal pace) or `"short"` (fast pace, under 3 minutes, always upright) |
 | `frame` | no | the shape: `"16:9"` (default) or `"9:16"` for an upright film at normal pace (file 6) |

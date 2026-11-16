@@ -6,7 +6,7 @@ Everything in files 1 to 4 holds unless this file says otherwise.
 
 ## Length
 
-- About 2.5 spoken words a second.
+- About 2.75 spoken words a second in English, 3.3 in Hindi.
 - Under 60 seconds: 40 to 140 words, 20 to 60 pictures.
 - 1 to 3 minutes: 150 to 450 words, 60 to 180 pictures.
 

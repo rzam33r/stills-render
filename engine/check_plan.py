@@ -55,14 +55,21 @@ PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 VOICES = KOKORO_VOICES | CHATTERBOX_VOICES
 KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt', 'who'}
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
-       'layout', 'language', 'captions', 'cast'}
+       'layout', 'language', 'captions', 'cast', 'extras'}
 # A cast film's characters live in a Flow project; "who" names them per picture.
 CASTS = {'Bittu & Riya': ('Bittu', 'Riya')}
+# The line each prompt carries for each cast member in it (CAST.md, word for word).
+KEEP = {
+    'Bittu': 'Bittu keeps his orange shirt open over his beige T-shirt, blue jeans, white sneakers and wristwatch.',
+    'Riya': 'Riya keeps her long loose wavy hair, never tied up, her red V-neck top, black pants, white sneakers, gold hoop earrings and gold pendant.',
+}
 # Words per shot: (aim low, aim high, warn above, refuse above).
 SHOT_WORDS = {'wide': (6, 12, 16, 24), 'short': (1, 5, 7, 10)}
 
 # How fast the voice speaks, for the length estimate: words per second.
-WPS = 2.75
+# Hindi is Chatterbox: 152 words in 46.4 s and 134 in 39.8 s (Nov 2026).
+WPS_BY_LANGUAGE = {'en': 2.75, 'hi': 3.3}
+WPS = WPS_BY_LANGUAGE['en']
 
 
 def words(text):
@@ -107,6 +114,7 @@ def check(plan, pictures=None):
         return errors + ['no "shots" list'], warnings
     layout = plan.get('layout', 'wide')
     lang = plan.get('language', 'en')
+    wps = WPS_BY_LANGUAGE.get(lang, WPS)
     if layout not in SHOT_WORDS:
         errors.append('"layout" must be "wide" or "short"')
         layout = 'wide'
@@ -140,6 +148,19 @@ def check(plan, pictures=None):
                 warnings.append(f'a "{cast}" film leaves out "character": the Flow characters carry the looks')
             if not any(isinstance(s, dict) and s.get('who') for s in (plan.get('shots') or [])):
                 warnings.append(f'a "{cast}" film with no "who" anywhere: no picture will be tagged')
+    extras = plan.get('extras')
+    if extras is None:
+        extras = {}
+    elif (not isinstance(extras, dict)
+          or not all(isinstance(k, str) and k.strip() and isinstance(v, str) and len(words(v)) >= 4
+                     for k, v in extras.items())):
+        errors.append('"extras" must map each one-off person\'s short name to their look, like '
+                      '{"Ugg": "a tall stone-age man with a bushy black beard and a brown fur wrap"}')
+        extras = {}
+    for k in extras:
+        if k in members:
+            errors.append(f'"extras": {k} is in the cast; the Flow character carries their look')
+    unused = set(extras)
 
     used = {}
     total = 0
@@ -161,9 +182,9 @@ def check(plan, pictures=None):
         where = f'shot {i} ("{snippet}…")'
         lo, hi, warn, refuse = SHOT_WORDS[layout]
         if len(w) > refuse:
-            errors.append(f'{where}: {len(w)} words is about {len(w) / WPS:.0f} s on one picture; split it (aim for {lo} to {hi} words)')
+            errors.append(f'{where}: {len(w)} words is about {len(w) / wps:.0f} s on one picture; split it (aim for {lo} to {hi} words)')
         elif len(w) > warn:
-            warnings.append(f'{where}: {len(w)} words, about {len(w) / WPS:.0f} s on one picture; {lo} to {hi} keeps the pictures moving')
+            warnings.append(f'{where}: {len(w)} words, about {len(w) / wps:.0f} s on one picture; {lo} to {hi} keeps the pictures moving')
         elif len(w) < 3 and layout == 'wide' and i != len(shots):
             warnings.append(f'{where}: {len(w)} word(s) is under a second on screen')
         if say.count('*') % 2:
@@ -194,6 +215,18 @@ def check(plan, pictures=None):
             for m in members:
                 if re.search(rf'\b{re.escape(m)}\b', str(s.get('prompt', ''))) and m not in listed:
                     errors.append(f'{where}: the prompt shows {m} but "who" leaves {m} out, so {m} would not be tagged')
+        prompt = str(s.get('prompt', ''))
+        if has_pic and members and isinstance(s.get('who'), list):
+            for m in s['who']:
+                if m in KEEP and KEEP[m] not in prompt:
+                    warnings.append(f'{where}: the prompt lacks {m}\'s keep-line (CAST.md), word for word')
+        if has_pic:
+            for k, look in extras.items():
+                if re.search(rf'\b{re.escape(k)}\b', prompt):
+                    unused.discard(k)
+                    if look not in prompt:
+                        warnings.append(f'{where}: the prompt shows {k} without their look from "extras", '
+                                        'word for word, so they will look different')
         if has_pic and not str(s.get('prompt', '')).strip():
             warnings.append(f'{where}: picture with no "prompt" for Flow')
         if s.get('doodle') is not None and not str(s.get('doodle_prompt', '')).strip():
@@ -217,9 +250,11 @@ def check(plan, pictures=None):
         seq = [int(n) for n in sorted(used, key=lambda n: used[n])]
         if seq != list(range(1, len(seq) + 1)):
             warnings.append('pictures are not numbered 001, 002, 003... in the order they appear')
+    for k in sorted(unused):
+        warnings.append(f'"extras": {k} is in no picture prompt')
     if total:
-        warnings.insert(0, f'{len(shots)} shots, {total} words, about {total / WPS / 60:.1f} minutes '
-                           f'(a picture every {total / WPS / len(shots):.1f} s)')
+        warnings.insert(0, f'{len(shots)} shots, {total} words, about {total / wps / 60:.1f} minutes '
+                           f'(a picture every {total / wps / len(shots):.1f} s)')
     return errors, warnings
 
 

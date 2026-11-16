@@ -6,7 +6,8 @@ studying narrated explainers that hold viewers for five minutes.
 
 ## Length and pace
 
-- The voice says about 165 words a minute in English and about 145 in Hindi.
+- The voice says about 165 words a minute in English and about 200 in Hindi
+  (Chatterbox, measured on two films in November 2026).
 - 5 to 6 minutes = 850 to 1,000 words. Films under 3 minutes follow file 5;
   films of 10 to 45 minutes follow file 6. Never pad to reach a length.
 

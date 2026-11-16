@@ -23,8 +23,10 @@ For the film I name, or the one being worked on. Its plan is
 2. **The Flow project.** Every picture of this film is made in one project
    and in no other:
    - a Bittu & Riya film: the project named exactly as the plan's "cast",
-     `Bittu & Riya`. Never create it: if it does not exist, stop and tell
-     me. If the tools cannot open it, tell me: "In Flow, open the project
+     `Bittu & Riya`. Open it from its link in `cast/bittu-riya/CAST.md`, in
+     the browser (or with Flow Connect, if it can open a link). If Flow asks
+     me to sign in, stop and ask me to. Never create the project: if the
+     link does not open it, tell me: "In Flow, open the project
      `Bittu & Riya` and say ready." Wait for "ready". Then check its
      Characters include `Bittu` and `Riya`;
    - any other film: the project named exactly the story name. If the tools
@@ -74,8 +76,9 @@ For the film I name, or the one being worked on. Its plan is
    **Bittu & Riya films, first time:** if the film's folder had no pictures
    when this run started, stop after the first 2 pictures that show Bittu or
    Riya. Show them to me next to the cast's Flow characters and say, for each
-   person in them: same face, same hair, same clothes, earrings and pendant
-   (Riya), watch (Bittu): yes or no. Wait for my OK before the rest.
+   person in them: same face, same hair, same clothes: yes or no; in a
+   medium shot or close-up also earrings and pendant (Riya), watch
+   (Bittu). Wait for my OK before the rest.
 
 5. **Check the folder.** Every picture name in the plan has exactly one file.
    Move any other image to `films/<story name>-not-used/`. Report: how many
