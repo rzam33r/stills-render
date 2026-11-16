@@ -55,8 +55,8 @@ AG = ROOT / 'docs' / 'antigravity' / 'studio'
 rule = (AG / '.agent' / 'rules' / 'studio.md').read_text()
 flows = {f.stem: f.read_text() for f in (AG / '.agent' / 'workflows').glob('*.md')}
 say(rule.startswith('---\ntrigger: always_on\n---'), 'the studio rule is always on')
-say(set(flows) == {'new-film', 'make-pictures', 'upload-film', 'fix-plan'}
-    and all(t.startswith('---\ndescription: ') for t in flows.values()), 'the four workflows exist, each with a description')
+say(set(flows) == {'new-film', 'make-pictures', 'upload-film', 'fix-plan', 'check-studio'}
+    and all(t.startswith('---\ndescription: ') for t in flows.values()), 'the five workflows exist, each with a description')
 called = {c for t in flows.values() for c in re.findall(r'(?<![\w/])/([a-z]+(?:-[a-z]+)+)\b', t)}
 say(called <= set(flows), f'every /workflow a workflow calls exists: {sorted(called)}')
 texts = [rule] + list(flows.values()) + [(DOCS / 'PROJECT_INSTRUCTIONS.md').read_text()]

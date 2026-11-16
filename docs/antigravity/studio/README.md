@@ -10,10 +10,12 @@ film and puts it in your Google Drive folder.
    `Documents\FACT HUBZZZ Studio`.
 2. In Antigravity: **File → Open Folder** and choose it.
 3. Make sure Flow Connect is connected (agent panel **…** → MCP servers).
-4. In the agent panel, type `/`. You should see **new-film**,
-   **make-pictures**, **upload-film** and **fix-plan**. If they are not
-   there, open the agent panel's **…** → **Customizations** → **Workflows**
-   and check the workspace workflows are listed.
+4. In the agent panel, type `/`. You should see **check-studio**,
+   **new-film**, **make-pictures**, **upload-film** and **fix-plan**. If they
+   are not there, the folder you opened is not the one holding `.agent`
+   (File → Open Folder → `FACT HUBZZZ Studio`).
+5. Type `/check-studio`. It checks the folder, Flow Connect and the upload
+   page, changes nothing, and tells you what to fix before your first film.
 
 ## Make a film
 
@@ -31,7 +33,7 @@ your OK on the plan it makes the pictures and uploads the film.
 
 ## What is in this folder
 
-- `.agent/` — the studio's rules and the four workflows.
+- `.agent/` — the studio's rules and the five workflows.
 - `guide/` — the writing rules (the same files the ChatGPT project uses).
 - `tools/` — the engine's own plan check (needs Python; optional).
 - `films/` — one folder per film, and its ZIP.
