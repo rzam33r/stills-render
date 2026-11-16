@@ -34,9 +34,29 @@ jobs:
           from huggingface_hub import HfApi
           api = HfApi()
           print('=== models ===')
-          for repo in ('ResembleAI/chatterbox', 'ResembleAI/Chatterbox-Multilingual-hi', 'ai4bharat/indicwav2vec-hindi'):
-              i = api.model_info(repo, expand=['sha', 'cardData', 'gated'])
-              print(repo, i.sha, (i.card_data or {}).get('license'), 'gated' if i.gated else 'open')
+          for repo in ('ResembleAI/chatterbox', 'ResembleAI/Chatterbox-Multilingual-hi', 'ai4bharat/indicwav2vec-hindi',
+                       'Harveenchadha/vakyansh-wav2vec2-hindi-him-4200', 'Harveenchadha/hindi_large_wav2vec2',
+                       'skylord/wav2vec2-large-xlsr-hindi', 'theainerd/Wav2Vec2-large-xlsr-hindi'):
+              try:
+                  i = api.model_info(repo, expand=['sha', 'cardData', 'gated', 'downloadsAllTime'])
+                  print(repo, i.sha, (i.card_data or {}).get('license'), 'gated' if i.gated else 'open', i.downloads_all_time)
+              except Exception as e:
+                  print(repo, 'ERROR', e)
+          print('=== end ===')
+          PY
+          /tmp/cbx/bin/python - <<'PY'
+          from transformers import AutoProcessor, Wav2Vec2ForCTC
+          print('=== aligners ===')
+          for repo in ('Harveenchadha/vakyansh-wav2vec2-hindi-him-4200', 'Harveenchadha/hindi_large_wav2vec2',
+                       'skylord/wav2vec2-large-xlsr-hindi', 'theainerd/Wav2Vec2-large-xlsr-hindi'):
+              try:
+                  proc = AutoProcessor.from_pretrained(repo)
+                  m = Wav2Vec2ForCTC.from_pretrained(repo)
+                  v = proc.tokenizer.get_vocab()
+                  print(repo, 'loads;', len(v), 'symbols; has क', 'क' in v, '| ि', 'ि' in v, '| nukta', '़' in v,
+                        '| delim', getattr(proc.tokenizer, 'word_delimiter_token', None), '| params', sum(p.numel() for p in m.parameters()) // 10**6, 'M')
+              except Exception as e:
+                  print(repo, 'ERROR', str(e)[:200])
           print('=== end ===')
           PY
       - name: azure voice
