@@ -56,6 +56,10 @@ on:
         description: 'For tests: record a Hindi (Chatterbox) voice in this many parts at once (auto = by length)'
         required: false
         default: 'auto'
+      voice:
+        description: 'For tests: use this voice instead of the plan''s (empty = the plan''s)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -111,14 +115,17 @@ jobs:
         env:
           FRAME: ${{ inputs.frame }}
           FORCE: ${{ inputs.ignore_plan_errors }}
+          VOICE: ${{ inputs.voice }}
         run: |
           pip install -q -c locks/pictures.txt pillow
-          # The page's choice of shape wins over the plan's.
+          # The page's choice of shape wins over the plan's; a test may name a voice.
           python3 - <<'PY'
           import json, os, pathlib
           p = pathlib.Path('story/plan.json')
           plan = json.loads(p.read_text(encoding='utf-8-sig'))
           plan['frame'] = os.environ['FRAME']
+          if os.environ.get('VOICE', '').strip():
+              plan['voice'] = os.environ['VOICE'].strip()
           p.write_text(json.dumps(plan, indent=1, ensure_ascii=False))
           PY
           set +e

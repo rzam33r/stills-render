@@ -58,7 +58,7 @@ on = mf.get('on', mf.get(True))
 inputs = set(on['workflow_dispatch']['inputs'])
 page = {'slug', 'build', 'deliver', 'frame', 'ignore_plan_errors', 'logo', 'keep_pictures'}
 # Inputs only tests send; each must have a default so the page never needs it.
-tests_only = {'voice_parts'}
+tests_only = {'voice_parts', 'voice'}
 spec = on['workflow_dispatch']['inputs']
 say(inputs == page | tests_only and all('default' in spec[k] for k in tests_only),
     'make-film accepts the inputs the upload page sends, plus test-only inputs that have defaults')
