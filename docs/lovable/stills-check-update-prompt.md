@@ -1,8 +1,10 @@
-# Lovable prompt — update the still-picture upload check (Hindi voice)
+# Lovable prompt — update the still-picture upload check
 
-Hindi films are now read by Chatterbox's Hindi voice. This updates the
-notes the "Still-picture films" tab shows: the right voice name, and how
-long the Hindi voice takes. Nothing else changes.
+The newest check: Chatterbox is the Hindi voice and the notes say how long
+it takes; a ZIP with no plan (or an empty one) says so plainly instead of
+"plan.json is not valid JSON: Unexpected end of JSON input"; and "Copy for
+ChatGPT" only offers plan mistakes, never ZIP problems such as missing
+pictures (16 Nov 2026).
 
 Copy everything below the line into Lovable's chat, in one message.
 
@@ -11,7 +13,8 @@ Copy everything below the line into Lovable's chat, in one message.
 On the "Still-picture films" tab only, replace the existing
 `checkStillsUpload` code (and `filmKind`, `stillsSlug`) with the code below,
 unchanged. Keep everything else on both tabs exactly as it is. Show every
-`notes` line as before.
+`notes` line as before. Show the "Copy for ChatGPT" button only when the
+result's `forChatGPT` is not empty.
 
 ```javascript
 // Upload checks for the "Still-picture films" tab of the upload page.
@@ -51,12 +54,25 @@ function stillsSlug(title) {
 
 function checkStillsUpload(planText, fileNames) {
   const problems = [], notes = [];
+  // Problems with the ZIP itself (no plan, missing pictures, wrong tab) are
+  // not ChatGPT's to fix; only plan problems go into forChatGPT. On 16 Nov
+  // 2026 an empty ZIP showed "plan.json is not valid JSON: Unexpected end of
+  // JSON input" with a "Copy for ChatGPT" button, though the plan was fine.
+  const zipProblems = new Set();
+  const zipProblem = (msg) => { zipProblems.add(msg); problems.push(msg); };
   let plan, slug = '';
+  if (!String(planText == null ? '' : planText).replace(/^\uFEFF/, '').trim()) {
+    const n = (fileNames || []).filter(f => /\.(png|jpe?g|webp)$/i.test(String(f))).length;
+    zipProblem(`This ZIP has no plan.json, or it is empty (${n} picture${n === 1 ? '' : 's'} found). Check you chose the right ZIP: a film's ZIP holds plan.json and its pictures, usually tens of MB.`);
+    return done(problems);
+  }
   try { plan = parsePlan(planText); }
   catch (e) { return done([`plan.json is not valid JSON: ${e.message}`]); }
   if (!plan || typeof plan !== 'object') return done(['plan.json is not a plan']);
-  if (!Array.isArray(plan.shots) && Array.isArray(plan.scenes))
-    return done(['This is an animated (Rose) film. Use the "Animated films" tab.']);
+  if (!Array.isArray(plan.shots) && Array.isArray(plan.scenes)) {
+    zipProblem('This is an animated (Rose) film. Use the "Animated films" tab.');
+    return done(problems);
+  }
   if (!Array.isArray(plan.shots) || !plan.shots.length)
     return done(['plan.json has no "shots" list']);
   if (!String(plan.title || '').trim()) problems.push('plan.json has no "title"');
@@ -92,7 +108,7 @@ function checkStillsUpload(planText, fileNames) {
     if (!wanted.has(name) && lead) {
       for (const w of wanted) if (/^\d+$/.test(w) && Number(w) === Number(lead[1])) { name = w; break; }
     }
-    if (have.has(name)) problems.push(`two files for picture "${name}": "${have.get(name)}" and "${f}"`);
+    if (have.has(name)) zipProblem(`two files for picture "${name}": "${have.get(name)}" and "${f}"`);
     else have.set(name, String(f));
   }
   plan.shots.forEach((s, i) => {
@@ -103,7 +119,7 @@ function checkStillsUpload(planText, fileNames) {
     if (pic === card) problems.push(`shot ${n}: needs exactly one of "picture" or "card"`);
     for (const key of ['picture', 'doodle']) {
       if (s[key] == null) continue;
-      if (!have.has(String(s[key]))) problems.push(`shot ${n}: picture "${s[key]}" is not in the ZIP (looked for ${s[key]}.png, .jpg, .jpeg, .webp)`);
+      if (!have.has(String(s[key]))) zipProblem(`shot ${n}: picture "${s[key]}" is not in the ZIP (looked for ${s[key]}.png, .jpg, .jpeg, .webp)`);
     }
   });
 
@@ -123,7 +139,7 @@ function checkStillsUpload(planText, fileNames) {
   function done(p) {
     return {
       ok: p.length === 0, problems: p, notes,
-      forChatGPT: p.length ? 'The plan checker rejected this plan. Fix only these, keep everything else, and send the corrected plan.json.\n' + p.map(x => '- ' + x).join('\n') : '',
+      forChatGPT: p.some(x => !zipProblems.has(x)) ? 'The plan checker rejected this plan. Fix only these, keep everything else, and send the corrected plan.json.\n' + p.filter(x => !zipProblems.has(x)).map(x => '- ' + x).join('\n') : '',
       slug: typeof slug === 'string' ? slug : '',
       frame: plan && typeof plan === 'object' ? (plan.layout === 'short' ? '9:16' : (plan.frame === '9:16' ? '9:16' : '16:9')) : '',
       language: plan && typeof plan === 'object' ? (plan.language || 'en') : '',
@@ -135,5 +151,10 @@ function checkStillsUpload(planText, fileNames) {
 if (typeof module !== 'undefined') module.exports = { checkStillsUpload, filmKind, stillsSlug };
 ```
 
-Test: upload a Hindi ZIP whose plan has no "voice". The notes show
-"voice chatterbox-hi" and how long the Hindi voice takes.
+Test it and tell me the result of each:
+- A ZIP with no plan.json: the message says the ZIP has no plan.json, and
+  there is no "Copy for ChatGPT" button.
+- A ZIP missing one picture: the picture is named, and there is no
+  "Copy for ChatGPT" button (ChatGPT cannot make pictures).
+- A Hindi ZIP whose plan has no "voice": the notes show "voice
+  chatterbox-hi" and how long the Hindi voice takes.

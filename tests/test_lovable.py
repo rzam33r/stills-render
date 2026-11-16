@@ -67,6 +67,8 @@ const flowPlan = {json.dumps(cases[0]['plan'])};
 const flowNames = JSON.parse(flowPlan).shots.flatMap(s => ['picture', 'doodle'].filter(k => s[k]).map(k => `Flow/${{Number(s[k])}} - Medium shot of a man.jpg`));
 out.push({{ name: 'flow-names', r: checkStillsUpload(flowPlan, flowNames) }});
 out.push({{ name: 'flow-duplicate', r: checkStillsUpload(flowPlan, flowNames.concat(['001.png'])) }});
+out.push({{ name: 'empty-plan', r: checkStillsUpload('', ['story/']) }});
+out.push({{ name: 'missing-for-chatgpt', r: checkStillsUpload(flowPlan, flowNames.slice(1)) }});
 out.push({{ name: 'kinds', r: [filmKind({json.dumps(rose)}), filmKind({json.dumps(cases[0]['plan'])}), filmKind('not json')] }});
 console.log(JSON.stringify(out));
 """
@@ -84,6 +86,11 @@ console.log(JSON.stringify(out));
             elif o['name'] == 'flow-duplicate':
                 say(not r['ok'] and any('two files for picture "001"' in p for p in r['problems']),
                     'two files for one picture are refused')
+            elif o['name'] == 'empty-plan':
+                say(not r['ok'] and 'has no plan.json' in r['problems'][0] and 'not valid JSON' not in r['problems'][0]
+                    and r['forChatGPT'] == '', 'a ZIP without a plan says so plainly, with nothing for ChatGPT')
+            elif o['name'] == 'missing-for-chatgpt':
+                say(not r['ok'] and r['forChatGPT'] == '', 'a missing picture is not sent to ChatGPT (it cannot make pictures)')
             elif o['name'] == 'rose':
                 say(not r['ok'] and 'Animated films' in r['problems'][0], 'an animated plan is sent to the Animated films tab')
             elif o['name'] == 'hindi-english-voice':
