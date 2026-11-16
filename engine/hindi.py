@@ -106,3 +106,26 @@ def fix_sounds(ps, vocab):
     ps = re.sub(r'r\.', flap, ps)                                          # ड़
     ps = re.sub(rf'([{CONSONANT}]ʰ?)ː(?=[ˈˌ]?j)', r'\1', ps)              # क्यों
     return ps
+
+
+NUKTA, CHANDRABINDU, ANUSVARA = '\u093c', '\u0901', '\u0902'
+
+
+def norm(text):
+    """Letters only, spelled the way a listener hears them: no nukta,
+    chandrabindu as anusvara, no punctuation or spaces."""
+    t = unicodedata.normalize('NFD', str(text)).replace(NUKTA, '').replace(CHANDRABINDU, ANUSVARA)
+    t = unicodedata.normalize('NFC', t)
+    return ''.join(c for c in t if unicodedata.category(c)[0] in 'LMN')
+
+
+def cer(said, heard):
+    """Share of the written letters a listener (or a recogniser) did not hear."""
+    a, b = norm(said), norm(heard)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1] / max(1, len(a))

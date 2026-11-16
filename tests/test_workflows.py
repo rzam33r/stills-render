@@ -57,7 +57,11 @@ mf = flows['make-film.yml']
 on = mf.get('on', mf.get(True))
 inputs = set(on['workflow_dispatch']['inputs'])
 page = {'slug', 'build', 'deliver', 'frame', 'ignore_plan_errors', 'logo', 'keep_pictures'}
-say(inputs == page, 'make-film accepts exactly the inputs the upload page sends')
+# Inputs only tests send; each must have a default so the page never needs it.
+tests_only = {'voice_parts'}
+spec = on['workflow_dispatch']['inputs']
+say(inputs == page | tests_only and all('default' in spec[k] for k in tests_only),
+    'make-film accepts the inputs the upload page sends, plus test-only inputs that have defaults')
 deliver = mf['jobs']['deliver']
 say(deliver.get('uses') == './.github/workflows/final-video-delivery.yml'
     and set(deliver.get('secrets', {})) == {'UPLOAD_TOKEN', 'DRIVE_ENDPOINT_URL'},

@@ -1,0 +1,8 @@
+# Exact model revisions on Hugging Face, so an update there cannot change a
+# film's voice or timing without anyone choosing it. Recorded by
+# lock-versions.yml on 16 Nov 2026.
+# repo                                              revision                                  licence
+ResembleAI/chatterbox                               5bb1f6ee58e50c3b8d408bc82a6d3740c2db6e18  # MIT
+ResembleAI/Chatterbox-Multilingual-hi               82ca71273cc2a9ab19efdf8315f865c1a5af0ee7  # MIT
+Harveenchadha/vakyansh-wav2vec2-hindi-him-4200      e2568c3f7868d8aa3aaabcf28fa100d10d54c170  # MIT (word timing)
+skylord/wav2vec2-large-xlsr-hindi                   c3bd6e40aadcdd3e7abf6a1ccfcef7b10447be75  # Apache-2.0 (word timing, backup)

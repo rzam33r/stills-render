@@ -8,8 +8,9 @@
 - Two files for one picture are refused, naming both.
 - A plan pasted on the upload page (sent as its own plan.json) wins over the
   one in the ZIP; with neither, the error says how to add one.
-- An Azure voice without the Azure key falls back to the language's Kokoro
-  voice with a warning; Kokoro voices and a set key are left alone.
+- An Azure voice without the Azure key falls back to the language's default
+  voice (Chatterbox for Hindi, Kokoro for English) with a warning; Kokoro
+  voices and a set key are left alone.
 """
 import io
 import json
@@ -79,12 +80,12 @@ code, out, pics, _ = run({'1 - a.jpg': b'x'})
 say(code == 1 and 'paste' in out, 'no plan anywhere: the error says how to add one')
 
 e, v, w = voice_engine({'language': 'hi', 'voice': 'hi-IN-MadhurNeural'}, False)
-say((e, v) == ('kokoro', 'hm_omega') and 'AZURE_SPEECH_KEY' in w, 'Azure voice without a key falls back to hm_omega')
+say((e, v) == ('chatterbox', 'chatterbox-hi') and 'AZURE_SPEECH_KEY' in w, 'Hindi Azure voice without a key falls back to Chatterbox')
 e, v, w = voice_engine({'language': 'en', 'voice': 'en-US-AndrewNeural'}, False)
 say((e, v) == ('kokoro', 'am_michael') and w, 'English Azure voice without a key falls back to am_michael')
 say(voice_engine({'language': 'hi', 'voice': 'hi-IN-MadhurNeural'}, True) == ('azure', 'hi-IN-MadhurNeural', ''),
     'with the key, the Azure voice is used')
-say(voice_engine({'language': 'hi'}, False) == ('kokoro', 'hm_omega', ''), 'no voice: the language default')
+say(voice_engine({'language': 'hi'}, False) == ('chatterbox', 'chatterbox-hi', ''), 'no voice: the Hindi default, Chatterbox')
 say(voice_engine({'voice': 'hf_beta', 'language': 'hi'}, False) == ('kokoro', 'hf_beta', ''), 'a Kokoro voice is kept')
 
 print('\nall good' if not bad else f'\n{bad} failed')

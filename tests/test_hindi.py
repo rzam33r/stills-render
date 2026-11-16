@@ -25,7 +25,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'engine'))
 from hindi import LONG, fix_sounds, for_voice, load_table, sentences  # noqa: E402
 import numpy as np  # noqa: E402
-from voice import EDGE_AFTER, EDGE_BEFORE, trim_to_words  # noqa: E402
+from voice_parts import EDGE_AFTER, EDGE_BEFORE, trim_to_words  # noqa: E402
 
 bad = 0
 

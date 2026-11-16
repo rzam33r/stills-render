@@ -28,8 +28,9 @@ Optional top level:
               every picture fills the whole frame
   "language"  "en" (default) or "hi"
   "captions"  true for word-by-word subtitles over the pictures (default off)
-  "voice"     a Kokoro voice: English (default am_michael) or Hindi (default
-              hm_omega; also hm_psi, hf_alpha, hf_beta); or an Azure neural voice
+  "voice"     leave out: English is read by Kokoro (am_michael), Hindi by
+              Chatterbox (chatterbox-hi). Kokoro voices may be named (English,
+              or Hindi hm_omega, hm_psi, hf_alpha, hf_beta); or an Azure voice
   "speed"     0.8 to 1.3, default 1.0
   "music"     a file in music/
   "frame"     "16:9" or "9:16" for the wide layout
@@ -48,10 +49,10 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from voices import AZURE, KOKORO_VOICES  # noqa: E402
+from voices import AZURE, CHATTERBOX_VOICES, KOKORO_VOICES, is_hindi_voice  # noqa: E402
 
 PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
-VOICES = KOKORO_VOICES
+VOICES = KOKORO_VOICES | CHATTERBOX_VOICES
 KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt'}
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
        'layout', 'language', 'captions'}
@@ -114,9 +115,9 @@ def check(plan, pictures=None):
         errors.append(f'"voice": "{voice}" is neither a Kokoro voice ({", ".join(sorted(VOICES))}) '
                       'nor an Azure neural voice like hi-IN-MadhurNeural')
     if voice is not None:
-        hindi_voice = str(voice).startswith(('hm_', 'hf_', 'hi-IN-'))
+        hindi_voice = is_hindi_voice(voice)
         if lang == 'hi' and not hindi_voice:
-            errors.append(f'a Hindi film needs a Hindi voice (hm_omega, hm_psi, hf_alpha, hf_beta), not "{voice}"')
+            errors.append(f'a Hindi film needs a Hindi voice (leave "voice" out for Chatterbox), not "{voice}"')
         if lang == 'en' and hindi_voice:
             errors.append(f'"{voice}" is a Hindi voice; set "language": "hi" or choose an English voice')
     if layout == 'short' and plan.get('frame', '9:16') != '9:16':

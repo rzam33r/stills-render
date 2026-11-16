@@ -52,6 +52,10 @@ on:
         type: boolean
         required: false
         default: false
+      voice_parts:
+        description: 'For tests: record a Hindi (Chatterbox) voice in this many parts at once (auto = by length)'
+        required: false
+        default: 'auto'
 
 permissions:
   contents: write
@@ -65,6 +69,10 @@ jobs:
   prepare:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      engine: ${{ steps.choose.outputs.engine }}
+      parts: ${{ steps.choose.outputs.parts }}
+      more: ${{ steps.choose.outputs.more }}
     steps:
       - uses: actions/checkout@v4
       - name: Check the story name
@@ -122,6 +130,32 @@ jobs:
             echo "::error::The plan has problems (listed above). Fix them in ChatGPT and upload again."
             exit 1
           fi
+      - name: Choose the voice, and how many parts to record at once
+        id: choose
+        env:
+          AZURE_KEY_SET: ${{ secrets.AZURE_SPEECH_KEY != '' }}
+          PARTS: ${{ inputs.voice_parts }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, pathlib, sys
+          sys.path.insert(0, 'engine')
+          from voices import voice_engine, voice_parts
+          p = pathlib.Path('story/plan.json')
+          plan = json.loads(p.read_text(encoding='utf-8-sig'))
+          engine, voice, warning = voice_engine(plan, os.environ.get('AZURE_KEY_SET') == 'true')
+          forced = os.environ.get('PARTS', 'auto')
+          n = voice_parts(plan, engine, None if forced in ('', 'auto') else forced)
+          summary = open(os.environ['GITHUB_STEP_SUMMARY'], 'a')
+          if warning:
+              plan['voice'] = voice
+              p.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding='utf-8')
+              print('::warning::' + warning, file=sys.stderr)
+              summary.write('## Voice\n\n' + warning + '\n\n')
+          summary.write(f'## Voice\n\n{voice} ({engine}), recorded in {n} part(s) at once.\n\n')
+          print('engine=' + engine)
+          print('parts=' + str(n))
+          print('more=' + json.dumps(list(range(1, n))))
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: story-${{ inputs.slug }}
@@ -131,47 +165,37 @@ jobs:
   voice:
     needs: prepare
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: story-${{ inputs.slug }}
           path: story
-      - name: Which voice
-        id: which
-        env:
-          AZURE_KEY_SET: ${{ secrets.AZURE_SPEECH_KEY != '' }}
-        run: |
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json, os, pathlib, sys
-          sys.path.insert(0, 'engine')
-          from voices import voice_engine
-          p = pathlib.Path('story/plan.json')
-          plan = json.loads(p.read_text(encoding='utf-8-sig'))
-          engine, voice, warning = voice_engine(plan, os.environ.get('AZURE_KEY_SET') == 'true')
-          if warning:
-              plan['voice'] = voice
-              p.write_text(json.dumps(plan, indent=1, ensure_ascii=False), encoding='utf-8')
-              print('::warning::' + warning, file=sys.stderr)
-              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
-                  f.write('## Voice\n\n' + warning + '\n\n')
-          print('engine=' + engine)
-          PY
       - name: Install Kokoro (exact versions from locks/voice.txt)
-        if: steps.which.outputs.engine == 'kokoro'
+        if: needs.prepare.outputs.engine == 'kokoro'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq espeak-ng
           pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Install the Azure voice (exact version from locks/voice-azure.txt)
-        if: steps.which.outputs.engine == 'azure'
+        if: needs.prepare.outputs.engine == 'azure'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libasound2t64 ca-certificates libssl3t64
           pip install -q -r locks/voice-azure.txt
           pip install -q -c locks/voice.txt numpy soundfile
+      - name: Install Chatterbox Hindi (exact versions from locks/voice-chatterbox.txt)
+        if: needs.prepare.outputs.engine == 'chatterbox'
+        run: pip install -q -r locks/voice-chatterbox.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Keep the voice models between films
+        if: needs.prepare.outputs.engine == 'chatterbox'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('locks/models.txt') }}
       - name: Speak the narration and time every word
+        if: needs.prepare.outputs.engine != 'chatterbox'
         env:
           AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
           AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
@@ -183,14 +207,64 @@ jobs:
           print(f"## Voice\n\n{c['voice']} at {c['speed']}: {c['audio_seconds']:.1f} s, "
                 f"{len(c['starts'])} shots, {c['words_without_time']} pieces the voice gave no time for.\n")
           PY
+      - name: Speak the first part (Chatterbox Hindi) and find every word
+        if: needs.prepare.outputs.engine == 'chatterbox'
+        env:
+          PARTS: ${{ needs.prepare.outputs.parts }}
+        run: python3 engine/voice.py story/plan.json voice-parts --part 0 --parts "$PARTS"
       - uses: actions/upload-artifact@v4
+        if: needs.prepare.outputs.engine != 'chatterbox'
         with:
           name: voice-${{ inputs.slug }}
           path: voice
           retention-days: 3
+      - uses: actions/upload-artifact@v4
+        if: needs.prepare.outputs.engine == 'chatterbox'
+        with:
+          name: voice-part-${{ inputs.slug }}-0
+          path: voice-parts
+          retention-days: 3
+
+  # A long Hindi film: the other parts, each on its own computer at the same
+  # time (Chatterbox needs about 11 s of work per second of speech, and a
+  # step may run at most 6 hours).
+  voice_more:
+    needs: prepare
+    if: needs.prepare.outputs.more != '[]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: true
+      matrix:
+        part: ${{ fromJSON(needs.prepare.outputs.more) }}
+    name: voice part ${{ matrix.part }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: story-${{ inputs.slug }}
+          path: story
+      - name: Install Chatterbox Hindi (exact versions from locks/voice-chatterbox.txt)
+        run: pip install -q -r locks/voice-chatterbox.txt --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Keep the voice models between films
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('locks/models.txt') }}
+      - name: Speak this part and find every word
+        env:
+          PART: ${{ matrix.part }}
+          PARTS: ${{ needs.prepare.outputs.parts }}
+        run: python3 engine/voice.py story/plan.json voice-parts --part "$PART" --parts "$PARTS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-part-${{ inputs.slug }}-${{ matrix.part }}
+          path: voice-parts
+          retention-days: 3
 
   render:
-    needs: voice
+    needs: [prepare, voice, voice_more]
+    if: ${{ !cancelled() && needs.voice.result == 'success' && (needs.voice_more.result == 'success' || needs.voice_more.result == 'skipped') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 240
     steps:
@@ -200,15 +274,34 @@ jobs:
           name: story-${{ inputs.slug }}
           path: story
       - uses: actions/download-artifact@v4
+        if: needs.prepare.outputs.engine != 'chatterbox'
         with:
           name: voice-${{ inputs.slug }}
           path: voice
+      - uses: actions/download-artifact@v4
+        if: needs.prepare.outputs.engine == 'chatterbox'
+        with:
+          pattern: voice-part-${{ inputs.slug }}-*
+          path: voice-parts
+          merge-multiple: true
       - name: Tools
         run: |
           command -v ffmpeg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
           # Hindi text shaping (Raqm) needs FriBiDi on the system.
           dpkg -s libfribidi0 >/dev/null 2>&1 || { sudo apt-get update -qq && sudo apt-get install -y -qq libfribidi0; }
           pip install -q -c locks/pictures.txt pillow numpy
+          pip install -q -c locks/voice.txt soundfile
+      - name: Join the voice's parts in order
+        if: needs.prepare.outputs.engine == 'chatterbox'
+        run: |
+          python3 engine/voice_parts.py story/plan.json voice-parts voice
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          c = json.load(open('voice/cuts.json'))
+          print(f"## Voice\n\n{c['voice']}: {c['audio_seconds']:.1f} s, {len(c['starts'])} shots, "
+                f"{c['pieces']} sentences, {c['pieces_redone']} recorded again because they were unclear; "
+                f"the least clear sentence was {c['worst_piece_error']:.0%} not understood.\n")
+          PY
       - name: Make the film
         env:
           SLUG: ${{ inputs.slug }}

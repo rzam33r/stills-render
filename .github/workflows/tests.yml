@@ -50,6 +50,8 @@ jobs:
         run: |
           pip install -q -c locks/voice.txt phonemizer-fork espeakng-loader soundfile
           python3 tests/test_hindi.py
+      - name: Hindi narration in parts joins into one voice; each film gets its voice
+        run: python3 tests/test_voice_parts.py
 
   voice:
     runs-on: ubuntu-24.04
@@ -62,7 +64,7 @@ jobs:
         id: need
         run: |
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || ! git rev-parse -q --verify HEAD~1 >/dev/null || \
-             git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(engine/(voice|timing|render|frames|typeset|check_sync)\.py|locks/voice|examples/)'; then
+             git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(engine/(voice|voice_parts|voices|hindi|timing|render|frames|typeset|check_sync)\.py|locks/voice\.txt|examples/)'; then
             echo run=yes >> "$GITHUB_OUTPUT"
           else
             echo "voice untouched; skipping"; echo run=no >> "$GITHUB_OUTPUT"
@@ -89,8 +91,13 @@ jobs:
                   if 'picture' in s: picture(out / f"{s['picture']}.png", int(s['picture']))
                   if s.get('doodle'): doodle(out / f"{s['doodle']}.png")
           PY
+          # Hindi films default to Chatterbox (tested below); this job keeps
+          # Kokoro's Hindi working for plans that name a Kokoro Hindi voice.
+          python3 -c "import json; p=json.load(open('examples/boond-hindi-short-plan.json')); p['voice']='hm_omega'; json.dump(p, open('examples/boond-hindi-short-kokoro.json','w'), ensure_ascii=False)"
           for name in north-star rain-short boond-hindi-short; do
-            python3 engine/voice.py "examples/$name-plan.json" "example/voice-$name"
+            plan="examples/$name-plan.json"
+            [ "$name" = boond-hindi-short ] && plan=examples/boond-hindi-short-kokoro.json
+            python3 engine/voice.py "$plan" "example/voice-$name"
             python3 engine/render.py "examples/$name-plan.json" "example/pictures-$name" "example/voice-$name" "example/$name.mp4" \
               --logo brand/watermark.png --music "$(python3 engine/pick_music.py "examples/$name-plan.json" "$GITHUB_RUN_ID")"
             python3 engine/check_sync.py "example/$name.mp4"
@@ -128,3 +135,74 @@ jobs:
             ffmpeg -v error -y -i "$d/voice.wav" -c:a flac "example/voice-${d#example/voice-}.flac"
           done
           gh release upload film-example example/*.mp4 example/cuts-*.json example/voice-*.flac --clobber
+
+  chatterbox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Only when the Hindi voice changed, or when run by hand
+        id: need
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || ! git rev-parse -q --verify HEAD~1 >/dev/null || \
+             git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(engine/(voice|voice_parts|voices|chatterbox_hi|align_hi|hindi|timing|render|check_sync)\.py|locks/(voice-chatterbox|models)\.txt|examples/boond)'; then
+            echo run=yes >> "$GITHUB_OUTPUT"
+          else
+            echo "Hindi voice untouched; skipping"; echo run=no >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install Chatterbox Hindi (exact versions from locks/voice-chatterbox.txt)
+        if: steps.need.outputs.run == 'yes'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libfribidi0
+          command -v ffmpeg >/dev/null || sudo apt-get install -y -qq ffmpeg
+          pip install -q -r locks/voice-chatterbox.txt --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install -q -c locks/pictures.txt pillow
+      - name: Keep the voice models between runs
+        if: steps.need.outputs.run == 'yes'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('locks/models.txt') }}
+      - name: The Hindi example in two parts, joined, cut on its words
+        if: steps.need.outputs.run == 'yes'
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, 'tests')
+          from test_render import picture, doodle
+          out = pathlib.Path('example/pictures'); out.mkdir(parents=True)
+          plan = json.loads(pathlib.Path('examples/boond-hindi-short-plan.json').read_text())
+          for s in plan['shots']:
+              if 'picture' in s: picture(out / f"{s['picture']}.png", int(s['picture']))
+              if s.get('doodle'): doodle(out / f"{s['doodle']}.png")
+          PY
+          plan=examples/boond-hindi-short-plan.json
+          # The same two steps a long film runs on two computers at once.
+          python3 engine/voice.py $plan example/parts --part 0 --parts 2
+          python3 engine/voice.py $plan example/parts --part 1 --parts 2
+          python3 engine/voice_parts.py $plan example/parts example/voice
+          python3 engine/render.py $plan example/pictures example/voice example/boond-hindi-chatterbox.mp4 \
+            --logo brand/watermark.png --music "$(python3 engine/pick_music.py $plan "$GITHUB_RUN_ID")"
+          python3 engine/check_sync.py example/boond-hindi-chatterbox.mp4
+          python3 - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, pathlib
+          c = json.load(open('example/voice/cuts.json'))
+          print(f"Chatterbox Hindi: {c['audio_seconds']:.1f} s, {c['pieces']} sentences, {c['pieces_redone']} recorded again, "
+                f"{c['words_without_time']} words without a time, least clear sentence {c['worst_piece_error']:.0%}")
+          for d in sorted(pathlib.Path('example/parts').glob('part-*')):
+              for pc in json.load(open(d / 'part.json'))['pieces']:
+                  print(f"  piece {pc['i']}: take {pc['tries']}, {pc['cer']:.0%} not understood, heard: {pc['heard']}")
+          assert c['words_without_time'] == 0, 'every word must have a time'
+          PY
+      - name: Keep the Chatterbox example to watch
+        if: steps.need.outputs.run == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view film-example >/dev/null 2>&1 || \
+            gh release create film-example --title film-example --notes "The example plans, spoken, with stand-in pictures." --prerelease
+          cp example/voice/cuts.json example/cuts-boond-hindi-chatterbox.json
+          gh release upload film-example example/boond-hindi-chatterbox.mp4 example/cuts-boond-hindi-chatterbox.json --clobber

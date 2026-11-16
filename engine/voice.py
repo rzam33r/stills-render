@@ -1,6 +1,7 @@
 """Speak the narration and record when each shot starts.
 
     python3 engine/voice.py plan.json OUT_DIR
+    python3 engine/voice.py plan.json PARTS_DIR --part N --parts M   (Chatterbox)
 
 Writes, in OUT_DIR:
   voice.wav   the narration (24 kHz mono)
@@ -18,6 +19,12 @@ Voices:
     Hindi voices hm_omega, hm_psi, hf_alpha and hf_beta. For English Kokoro
     reports when it says each word. For Hindi it does not, so the times are
     worked out from how long the voice holds each sound (hindi_words below).
+  - Chatterbox Multilingual, Hindi edition (chatterbox-hi, the Hindi default
+    since 16 Nov 2026): one sentence at a time, every word found in the
+    recording by engine/align_hi.py, and a sentence the aligner cannot
+    understand recorded again (engine/chatterbox_hi.py). A long film is
+    recorded in parts at the same time (--part) and joined by
+    engine/voice_parts.py.
   - Azure neural voices, optional (any voice named like hi-IN-MadhurNeural).
     Azure reports every word's time too. They need the repository secrets
     AZURE_SPEECH_KEY and AZURE_SPEECH_REGION.
@@ -33,18 +40,12 @@ import soundfile as sf
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from timing import narration_words, paragraphs, shot_starts, word_starts  # noqa: E402
-from voices import DEFAULT_VOICE, chosen_voice, is_azure  # noqa: E402,F401
+from voices import DEFAULT_VOICE, chosen_voice, is_azure, is_chatterbox  # noqa: E402,F401
+from voice_parts import (BREATH, COMMA_PAUSE, EDGE_AFTER, EDGE_BEFORE, LEAD, RATE,  # noqa: E402,F401
+                         SENTENCE_PAUSE, join, spoken_text, trim_to_words, write_outputs)
 
-RATE = 24000
-LEAD = 0.20       # silence before the first word
-BREATH = 0.45     # silence between paragraphs
 FRAME = 600 / RATE   # one unit of Kokoro's sound lengths, in seconds
 NOT_A_WORD = set(' ;:,.!?—…"()“”«»।॥-\'')
-
-
-def spoken_text(say):
-    """What the voice reads: the words without the *highlight* marks."""
-    return say.replace('*', '').strip()
 
 
 def azure_voice(plan, voice, speed):
@@ -172,47 +173,6 @@ def kokoro_voice(plan, voice, speed):
     return np.concatenate(audio), tokens, missing
 
 
-SENTENCE_PAUSE = 0.32   # seconds of quiet after each Hindi sentence
-COMMA_PAUSE = 0.15      # after a long sentence's comma, where it was split
-EDGE_BEFORE, EDGE_AFTER = 0.05, 0.10   # sound kept around a piece's words
-
-
-def trim_to_words(a, timed, rate=None):
-    """Cut Kokoro's own silence from the start and end of a piece.
-
-    Kokoro pads everything it says with about half a second of quiet at each
-    end; spoken one sentence at a time, that made 1.2-second gaps (the first
-    clear Hindi voice of bharat-mein-badhti-mehngai ran 84 s instead of 63).
-    The piece is cut from just before its first word to just after its last,
-    by Kokoro's own sound lengths. Returns (samples, seconds cut from the
-    start)."""
-    rate = rate or RATE
-    if not timed:
-        return a, 0.0
-    s0 = max(0.0, timed[0][1] - EDGE_BEFORE)
-    e1 = min(len(a) / rate, timed[-1][2] + EDGE_AFTER)
-    if e1 <= s0:
-        return a, 0.0
-    cut = a[int(s0 * rate):int(e1 * rate)].copy()
-    # Then to where the sound really starts and stops: Kokoro's last word of
-    # a sentence ends in quiet its sound lengths still count (gaps of 0.8 s
-    # where 0.4 s sounds natural).
-    step = max(1, int(0.01 * rate))
-    if len(cut) > 2 * step:
-        rms = np.sqrt(np.convolve(cut ** 2, np.ones(step) / step, mode='same'))
-        loud = np.flatnonzero(rms > max(0.005, 0.03 * float(np.abs(cut).max())))
-        if len(loud):
-            first = max(0, loud[0] - int(0.03 * rate))
-            last = min(len(cut), loud[-1] + int(0.06 * rate))
-            cut = cut[first:last]
-            s0 += first / rate
-    fade = min(len(cut), int(0.01 * rate))
-    if fade:
-        cut[:fade] *= np.linspace(0, 1, fade, dtype=cut.dtype)
-        cut[-fade:] *= np.linspace(1, 0, fade, dtype=cut.dtype)
-    return cut, s0
-
-
 def hindi_voice(pipe, shots, voice, speed):
     """Kokoro's Hindi, made clear (engine/hindi.py): one sentence at a time,
     respelled where espeak gets a word wrong, its sounds mended, and a short
@@ -260,36 +220,37 @@ def hindi_voice(pipe, shots, voice, speed):
     return np.concatenate(audio), tokens, missing
 
 
-def main(plan_path, out_dir):
+def main(plan_path, out_dir, part=None, parts=1):
     plan = json.loads(pathlib.Path(plan_path).read_text(encoding='utf-8-sig'))
-    shots = plan['shots']
-    lang = plan.get('language', 'en')
     voice = chosen_voice(plan)
     speed = float(plan.get('speed') or 1.0)
-    out = pathlib.Path(out_dir)
-    out.mkdir(parents=True, exist_ok=True)
+    if is_chatterbox(voice):
+        from chatterbox_hi import speak_part
+        if part is not None:
+            speak_part(plan, part, parts, out_dir)
+            return 0
+        # The whole narration on this computer (samples and tests): one part.
+        parts_dir = pathlib.Path(out_dir) / 'parts'
+        speak_part(plan, 0, 1, parts_dir)
+        join(plan, parts_dir, out_dir, voice)
+        return 0
     wav, tokens, missing = (azure_voice if is_azure(voice) else kokoro_voice)(plan, voice, speed)
-    sf.write(out / 'voice.wav', wav, RATE)
-
-    says = [s['say'] for s in shots]
-    starts = shot_starts(says, tokens)
-    words = [{'shot': i, 'word': w, 'start': s}
-             for (i, w), s in zip(narration_words(says), word_starts(says, tokens))]
-    spoken = [t for t in tokens if t[1] is not None and any(c.isalnum() for c in t[0])]
-    speech_end = max((t[2] or t[1]) for t in spoken) if spoken else len(wav) / RATE
-    (out / 'words.json').write_text(json.dumps(
-        [{'text': t[0], 'start': t[1], 'end': t[2]} for t in tokens], indent=0))
-    (out / 'cuts.json').write_text(json.dumps({
-        'starts': starts, 'speech_end': speech_end, 'audio_seconds': len(wav) / RATE,
-        'voice': voice, 'speed': speed, 'words_without_time': missing, 'words': words}, indent=1, ensure_ascii=False))
-    n_words = sum(1 for t in spoken)
-    print(f'voice {voice} at {speed}: {len(wav) / RATE:.1f} s, {n_words} words timed, '
-          f'{missing} pieces without a time, {len(shots)} shots')
+    write_outputs(plan, wav, tokens, missing, voice, speed, out_dir)
     return 0
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    args = sys.argv[1:]
+    part, parts = None, 1
+    if '--part' in args:
+        i = args.index('--part')
+        part = int(args[i + 1])
+        del args[i:i + 2]
+    if '--parts' in args:
+        i = args.index('--parts')
+        parts = int(args[i + 1])
+        del args[i:i + 2]
+    if len(args) != 2:
         print(__doc__)
         sys.exit(2)
-    sys.exit(main(sys.argv[1], sys.argv[2]))
+    sys.exit(main(args[0], args[1], part, parts))
