@@ -46,15 +46,15 @@ class Aligner:
         print(f'word timing: {self.name}', flush=True)
         tok = self.proc.tokenizer
         self.vocab = tok.get_vocab()
-        # The CTC blank is the model's pad id, which is not always the
-        # tokenizer's: Vakyansh (from fairseq) uses "<s>" (16 Nov 2026: taking
-        # the tokenizer's made every sentence look unclear).
-        blank = self.model.config.pad_token_id
-        self.blank = blank if blank is not None else (tok.pad_token_id or 0)
+        # The CTC blank ("nothing new here") is measured on each recording,
+        # not read from the settings: Vakyansh (converted from fairseq)
+        # names "<pad>" but predicts "<s>". On 16 Nov 2026 trusting the
+        # names made every sentence look unclear, then put words out of order.
+        self.blank = self.model.config.pad_token_id if self.model.config.pad_token_id is not None else 0
         self.delim = self.vocab.get(getattr(tok, 'word_delimiter_token', None) or '|')
         self.id_to_char = {i: c for c, i in self.vocab.items()}
         self.special = {i for c, i in self.vocab.items() if c.startswith('<') and c.endswith('>') or c in ('[PAD]', '[UNK]')}
-        print(f'word timing: blank is {self.id_to_char.get(self.blank)!r}, word break {self.id_to_char.get(self.delim)!r}', flush=True)
+        self.reported = False
 
     def letters(self, word):
         """The recogniser's ids for a word's letters; letters it does not
@@ -81,6 +81,14 @@ class Aligner:
         lp = torch.log_softmax(logits, dim=-1)[0]
         return lp, (len(x) / 16000) / max(1, lp.shape[0])
 
+    def measure_blank(self, lp):
+        """The blank is the symbol a CTC model predicts on most frames."""
+        best = lp.argmax(dim=-1)
+        self.blank = int(torch.bincount(best, minlength=lp.shape[1]).argmax())
+        if not self.reported:
+            print(f'word timing: blank is {self.id_to_char.get(self.blank)!r}, word break {self.id_to_char.get(self.delim)!r}', flush=True)
+            self.reported = True
+
     def heard(self, lp):
         ids = lp.argmax(dim=-1).tolist()
         out, last = [], None
@@ -95,6 +103,7 @@ class Aligner:
         A word the recogniser has no letters for takes the gap between its
         neighbours."""
         lp, step = self.emissions(a, rate)
+        self.measure_blank(lp)
         heard = self.heard(lp)
         targets, owner = [], []
         for wi, w in enumerate(words):
