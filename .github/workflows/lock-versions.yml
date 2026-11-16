@@ -24,6 +24,21 @@ jobs:
           /tmp/voice/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cpu
           /tmp/voice/bin/pip install -q kokoro soundfile
           echo "=== voice.txt ==="; /tmp/voice/bin/pip freeze; echo "=== end ==="
+      - name: hindi voice (Chatterbox) and word timing (IndicWav2Vec)
+        run: |
+          python3 -m venv /tmp/cbx
+          /tmp/cbx/bin/pip install -q torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          /tmp/cbx/bin/pip install -q "chatterbox-tts @ git+https://github.com/resemble-ai/chatterbox@ab55923c27757c90cfcc407baa57dc25a7d25217" --extra-index-url https://download.pytorch.org/whl/cpu
+          echo "=== voice-chatterbox.txt ==="; /tmp/cbx/bin/pip freeze; echo "=== end ==="
+          /tmp/cbx/bin/python - <<'PY'
+          from huggingface_hub import HfApi
+          api = HfApi()
+          print('=== models ===')
+          for repo in ('ResembleAI/chatterbox', 'ResembleAI/Chatterbox-Multilingual-hi', 'ai4bharat/indicwav2vec-hindi'):
+              i = api.model_info(repo, expand=['sha', 'cardData', 'gated'])
+              print(repo, i.sha, (i.card_data or {}).get('license'), 'gated' if i.gated else 'open')
+          print('=== end ===')
+          PY
       - name: azure voice
         run: |
           python3 -m venv /tmp/azure
