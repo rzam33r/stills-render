@@ -22,7 +22,9 @@ upload anything, and do not create or change any file.
    answer yes or no to each: can you (a) create or open a Flow project by
    name, (b) choose the picture shape, 9:16 and 16:9, (c) choose where a
    downloaded picture is saved and what it is called. For any "no", say what
-   /make-pictures would do instead.
+   /make-pictures does instead: for (a) it asks me to open the film's Flow
+   project and waits for "ready"; for (c) it moves each new download from the
+   browser's download folder. A "no" for (b) means pictures cannot be made.
 
 4. **Python.** Run `python --version` (or `py --version` on Windows). Say
    whether the plan check in `tools/` can run. It is optional.
