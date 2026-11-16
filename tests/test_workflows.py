@@ -167,5 +167,36 @@ for n, w in flows.items():
 say(not missing, 'every Python step has its packages installed first'
     + ('' if not missing else ':\n       ' + '\n       '.join(missing)))
 
+# --- a skipped job upstream must not silently skip the jobs after it -------
+# GitHub skips a job when ANY job before it in the chain was skipped, unless
+# the job's own "if" says otherwise. A short Hindi film skips "voice_more"
+# (one part is enough), and that silently skipped "deliver": the film was
+# made but never reached Drive. So a job that comes after a job that can be
+# skipped must say !cancelled() and check each job it needs by name.
+silent = []
+for n, w in flows.items():
+    jobs = w.get('jobs') or {}
+
+    def before(job, seen=None):
+        seen = set() if seen is None else seen
+        need = jobs[job].get('needs') or []
+        for x in [need] if isinstance(need, str) else need:
+            if x not in seen:
+                seen.add(x)
+                before(x, seen)
+        return seen
+
+    for job, spec in jobs.items():
+        if not any('if' in jobs[a] for a in before(job)):
+            continue
+        cond = str(spec.get('if', ''))
+        need = spec.get('needs') or []
+        need = [need] if isinstance(need, str) else need
+        lack = [x for x in need if f'needs.{x}.result' not in cond]
+        if not re.search(r'!\s*cancelled\(\)|always\(\)', cond) or lack:
+            silent.append(f'{n} / {job}')
+say(not silent, 'no job is skipped just because an earlier job was skipped'
+    + ('' if not silent else f': {silent}'))
+
 print('\nall good' if not bad else f'\n{bad} failing')
 sys.exit(1 if bad else 0)

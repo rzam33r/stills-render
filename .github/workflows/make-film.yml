@@ -275,7 +275,7 @@ jobs:
 
   render:
     needs: [prepare, voice, voice_more]
-    if: ${{ !cancelled() && needs.voice.result == 'success' && (needs.voice_more.result == 'success' || needs.voice_more.result == 'skipped') }}
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.voice.result == 'success' && (needs.voice_more.result == 'success' || needs.voice_more.result == 'skipped') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 240
     steps:
@@ -348,7 +348,9 @@ jobs:
 
   deliver:
     needs: render
-    if: ${{ inputs.deliver }}
+    # !cancelled() is needed: a short film skips voice_more, and without it
+    # GitHub skips every job after that, so the film never reached Drive.
+    if: ${{ !cancelled() && needs.render.result == 'success' && inputs.deliver }}
     uses: ./.github/workflows/final-video-delivery.yml
     with:
       video: output/${{ inputs.slug }}.mp4
