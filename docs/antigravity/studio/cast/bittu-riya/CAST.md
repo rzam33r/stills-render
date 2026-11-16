@@ -1,0 +1,65 @@
+# Bittu & Riya — the cast
+
+## Who they are
+
+- **Bittu** (Hindi: बिट्टू) — never "Bitto". The cheerful, romantic trouble
+  magnet whose plans go wrong.
+- **Riya** (Hindi: रिया) — the clever, sarcastic one who keeps things under
+  control, and sometimes starts the chaos herself.
+
+`bittu.json` and `riya.json` hold their personalities, humour, expressions,
+gestures and how they behave together. Use them for the story and the lines.
+Their looks sections are for checking pictures, not for pasting into
+prompts.
+
+## Their looks live in Google Flow
+
+- Flow project: **`Bittu & Riya`** (exactly). Every picture of a Bittu & Riya
+  film is made in this project and no other. Never create this project,
+  never make new characters in it, never change its characters.
+- Its Characters: **`Bittu`** and **`Riya`**. They are the master looks:
+  if this file or a JSON file disagrees with the Flow character, the Flow
+  character wins.
+- A picture that shows Bittu or Riya is made with each of them **really
+  tagged** in Flow's prompt box: the character's tag with its little
+  picture, the same as typing @ and choosing them from Flow's list. The
+  text "@Bittu" typed into the box is NOT a tag and does not keep his look.
+
+## In plan.json
+
+- `"cast": "Bittu & Riya"` at the top. Leave out `"character"`.
+- Every picture that shows them lists them in `"who"`: `["Bittu"]`,
+  `["Riya"]` or `["Bittu", "Riya"]`, exactly those spellings. A picture that
+  shows neither has no `"who"`.
+- Every character the prompt names is in `"who"`, and everyone in `"who"`
+  is in the picture.
+
+## In a prompt
+
+Do not describe their faces, hair or clothes: the tag carries the look.
+Write, in this order:
+
+1. the shot type (wide, medium, close-up);
+2. who does what, with which expression and gesture (from the JSON lists);
+3. the place, the time of day, the light;
+4. the one detail that matches the shot's words;
+5. the keep-line of each person in `"who"`, word for word:
+   - Bittu: `Bittu keeps his orange shirt open over his beige T-shirt, blue jeans, white sneakers and wristwatch.`
+   - Riya: `Riya keeps her long loose wavy hair, never tied up, her red V-neck top, black pants, white sneakers, gold hoop earrings and gold pendant.`
+6. the style block, as `"style"`, word for word (16:9 films: change
+   "upright 9:16 frame" to "wide 16:9 frame"):
+
+> 2D illustrated cartoon, clean bold dark outlines, warm vibrant pastel
+> colours, soft simple cel shading, slightly exaggerated cartoon
+> proportions, warm illustrated comic setting, upright 9:16 frame, no text,
+> no letters, no numbers, no signs, no watermark.
+
+Example (`"who": ["Bittu", "Riya"]`):
+
+> Medium shot: Bittu kneels in a busy café holding out a small ring box,
+> grinning with pride, while Riya stands over him with her arms crossed and
+> one eyebrow raised, trying not to laugh; warm afternoon light, people at
+> other tables turning to look. Bittu keeps his orange shirt open over his
+> beige T-shirt, blue jeans, white sneakers and wristwatch. Riya keeps her
+> long loose wavy hair, never tied up, her red V-neck top, black pants,
+> white sneakers, gold hoop earrings and gold pendant. [style]

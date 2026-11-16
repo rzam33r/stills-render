@@ -73,6 +73,35 @@ url = 'https://picture-plan-film-forge.lovable.app/stills'
 say(url in rule and url in flows['upload-film'], 'the rule and /upload-film name the same upload page')
 say('plan.json' in flows['upload-film'] and 'Never type' in flows['upload-film'], '/upload-film zips the plan and never types a password')
 say('ONE Google Flow project' in rule and 'no other' in flows['make-pictures'], 'pictures are made in the film\'s own Flow project only')
+# Bittu & Riya: the cast's rule book, its characters, and the plan check agree.
+import json  # noqa: E402
+from check_plan import CASTS, check as check_plan  # noqa: E402
+CAST = AG / 'cast' / 'bittu-riya'
+cast_md = (CAST / 'CAST.md').read_text()
+people = {json.loads((CAST / f).read_text())['name'] for f in ('bittu.json', 'riya.json')}
+say(CASTS == {'Bittu & Riya': ('Bittu', 'Riya')} and people == {'Bittu', 'Riya'}
+    and '**`Bittu & Riya`**' in cast_md, 'the cast, its Flow project and its character files agree')
+keep = re.findall(r'- (?:Bittu|Riya): `([^`]+)`', cast_md)
+example = cast_md.split('Example')[1].replace('\n> ', ' ')
+say(len(keep) == 2 and all(k in example for k in keep), 'the cast example carries both keep-lines word for word')
+everything = [rule, cast_md] + list(flows.values()) + [(DOCS / n).read_text() for n in ('3_FLOW_PROMPTS.md', '4_PLAN_FORMAT.md')]
+say(sum(t.count('Bitto') for t in everything) == 1 and 'never "Bitto"' in cast_md, 'his name is Bittu everywhere (Bitto only in "never Bitto")')
+mp = flows['make-pictures']
+say('real tag' in mp and 'Never make a picture of Bittu or Riya' in mp and 'Never ask Flow for the' in mp
+    and 'first 2 pictures' in mp and 'Never create it' in mp,
+    '/make-pictures really tags Bittu and Riya, checks the tags, stops after 2 pictures the first time, never creates the cast project')
+say('`Bittu & Riya`' in rule and 'Never create the `Bittu & Riya` project' in rule, 'the rule keeps Bittu & Riya films in their own Flow project')
+cast_plan = {'title': 'T', 'layout': 'short', 'style': 's', 'cast': 'Bittu & Riya', 'shots': [
+    {'say': 'one two three', 'picture': '001', 'prompt': 'Riya laughs as Bittu trips', 'who': ['Riya', 'Bittu']}]}
+say(not check_plan(cast_plan)[0], 'a good Bittu & Riya plan passes the plan check')
+for what, shot in (('a misspelt name', {'who': ['Bitto', 'Riya']}), ('a name left out of "who"', {'who': ['Riya']}),
+                   ('"who" on a card', {'picture': None})):
+    bad_plan = json.loads(json.dumps(cast_plan))
+    s = bad_plan['shots'][0]
+    s.update(shot)
+    if s.get('picture') is None:
+        s.pop('picture'), s.pop('prompt'), s.update(card='Hi')
+    say(bool(check_plan(bad_plan)[0]), f'the plan check refuses {what}')
 for bad_line in ('"voice": "', '"speed": '):
     say(not any(bad_line in (DOCS / n).read_text() for n in ('4_PLAN_FORMAT.md', '5_SHORTS.md')),
         f'no example in the guide sets {bad_line.split(":")[0]} (writers copy examples)')

@@ -53,9 +53,11 @@ from voices import AZURE, CHATTERBOX_VOICES, KOKORO_VOICES, is_hindi_voice  # no
 
 PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 VOICES = KOKORO_VOICES | CHATTERBOX_VOICES
-KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt'}
+KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt', 'who'}
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
-       'layout', 'language', 'captions'}
+       'layout', 'language', 'captions', 'cast'}
+# A cast film's characters live in a Flow project; "who" names them per picture.
+CASTS = {'Bittu & Riya': ('Bittu', 'Riya')}
 # Words per shot: (aim low, aim high, warn above, refuse above).
 SHOT_WORDS = {'wide': (6, 12, 16, 24), 'short': (1, 5, 7, 10)}
 
@@ -127,6 +129,17 @@ def check(plan, pictures=None):
         errors.append('"speed" must be a number from 0.8 to 1.3')
     if plan.get('frame', '16:9') not in ('16:9', '9:16'):
         errors.append('"frame" must be "16:9" or "9:16"')
+    cast = plan.get('cast')
+    members = ()
+    if cast is not None:
+        if cast not in CASTS:
+            errors.append(f'"cast": "{cast}" is not a cast; the casts are: ' + ', '.join(f'"{c}"' for c in CASTS))
+        else:
+            members = CASTS[cast]
+            if 'character' in plan:
+                warnings.append(f'a "{cast}" film leaves out "character": the Flow characters carry the looks')
+            if not any(isinstance(s, dict) and s.get('who') for s in (plan.get('shots') or [])):
+                warnings.append(f'a "{cast}" film with no "who" anywhere: no picture will be tagged')
 
     used = {}
     total = 0
@@ -165,6 +178,22 @@ def check(plan, pictures=None):
                 errors.append(f'{where}: "card" must be the short line to show')
             elif len(card) > 70 or len(words(card)) > 10:
                 errors.append(f'{where}: card "{card}" is too long for a card (at most 10 words)')
+        if 'who' in s:
+            who = s['who']
+            if not has_pic:
+                errors.append(f'{where}: "who" goes only with a picture')
+            elif cast is None:
+                errors.append(f'{where}: "who" names cast members, so the plan needs "cast" at the top')
+            elif (not isinstance(who, list) or not who or len(set(map(str, who))) != len(who)
+                  or any(m not in members for m in who)):
+                if members:
+                    errors.append(f'{where}: "who" must list who is in the picture, from '
+                                  + ', '.join(f'"{m}"' for m in members) + ', each once, like ["' + members[0] + '"]')
+        if has_pic and members:
+            listed = s.get('who') if isinstance(s.get('who'), list) else []
+            for m in members:
+                if re.search(rf'\b{re.escape(m)}\b', str(s.get('prompt', ''))) and m not in listed:
+                    errors.append(f'{where}: the prompt shows {m} but "who" leaves {m} out, so {m} would not be tagged')
         if has_pic and not str(s.get('prompt', '')).strip():
             warnings.append(f'{where}: picture with no "prompt" for Flow')
         if s.get('doodle') is not None and not str(s.get('doodle_prompt', '')).strip():

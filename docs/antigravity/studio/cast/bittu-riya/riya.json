@@ -1,0 +1,204 @@
+{
+  "character_id": "RIYA_001",
+  "name": "Riya",
+  "role": "Female Lead",
+  "universe": "Bittu & Riya",
+  "character_type": "Romantic Comedy Cartoon",
+  "gender": "Female",
+  "age_group": "Young Adult",
+
+  "physical_appearance": {
+    "body_type": "Slim, feminine, naturally proportioned",
+    "skin_tone": "Warm light peach",
+    "face_shape": "Soft, rounded cartoon face",
+    "hair": {
+      "color": "Rich warm brown",
+      "style": "Long, thick, loose wavy hair",
+      "direction": "Side-parted with flowing waves",
+      "length": "Below shoulders",
+      "signature_rule": "Hair must remain loose and untied"
+    },
+    "eyes": {
+      "shape": "Small vertical ovals",
+      "color": "Black",
+      "style": "Expressive cartoon eyes"
+    },
+    "eyebrows": "Dark brown, expressive and slightly curved",
+    "nose": "Small, rounded cartoon nose",
+    "mouth": "Warm, playful smile",
+    "cheeks": "Soft rosy blush",
+    "facial_hair": "None"
+  },
+
+  "signature_outfit": {
+    "top": {
+      "type": "Fitted V-neck short-sleeve top",
+      "color": "Red",
+      "style": "Casual, feminine and fashionable"
+    },
+    "pants": {
+      "type": "Fitted casual pants",
+      "color": "Black",
+      "style": "Slim fit, ankle length"
+    },
+    "shoes": {
+      "type": "Lace-up sneakers",
+      "color": "White",
+      "details": "Dark outlines and light soles"
+    },
+    "accessories": [
+      "Gold hoop earrings",
+      "Gold necklace with pendant"
+    ]
+  },
+
+  "personality": {
+    "primary_traits": [
+      "Confident",
+      "Intelligent",
+      "Independent",
+      "Playful",
+      "Witty",
+      "Sarcastic",
+      "Romantic",
+      "Caring",
+      "Mischievous",
+      "Strong-minded"
+    ],
+    "strengths": [
+      "Quick thinking and problem solving",
+      "Sharp sense of humor",
+      "Emotionally supportive",
+      "Confident communication",
+      "Creative ideas",
+      "Standing up for people she loves"
+    ],
+    "weaknesses": [
+      "Occasionally stubborn",
+      "Sometimes overly dramatic",
+      "Can be impatient with Bittu",
+      "Loves proving she is right",
+      "Her playful pranks sometimes backfire"
+    ],
+    "humor_style": "Witty comebacks, playful teasing, sarcasm and exaggerated reactions",
+    "core_motivation": "Build a happy life with Bittu while maintaining her independence"
+  },
+
+  "relationships": {
+    "boyfriend": {
+      "name": "Bittu",
+      "relationship_type": "Romantic couple",
+      "dynamic": "Loving, playful, chaotic",
+      "behavior": [
+        "Playfully teases Bittu",
+        "Challenges his silly ideas",
+        "Sometimes plans mischievous surprises",
+        "Supports him during difficult moments",
+        "Gets amused by his romantic failures",
+        "Occasionally becomes jealous",
+        "Deeply loves and cares for him"
+      ]
+    }
+  },
+
+  "facial_expressions": [
+    "Neutral",
+    "Happy",
+    "Laughing",
+    "Surprised",
+    "Thinking",
+    "Winking",
+    "Concerned",
+    "Excited",
+    "Impressed",
+    "Confused",
+    "Embarrassed",
+    "Romantic",
+    "Annoyed",
+    "Playfully Angry",
+    "Suspicious",
+    "Smirking"
+  ],
+
+  "hand_gestures": [
+    "Open palm",
+    "Pointing",
+    "Thumbs up",
+    "Excited fist",
+    "Presenting",
+    "Arms crossed",
+    "Waving",
+    "Facepalm",
+    "Hands on hips",
+    "Finger wagging",
+    "Hands clasped",
+    "Playful teasing gesture"
+  ],
+
+  "movement_style": {
+    "walking": "Confident, relaxed and graceful",
+    "running": "Energetic with natural cartoon exaggeration",
+    "idle": "Relaxed posture with expressive gestures",
+    "romantic": "Gentle smile, soft gaze and affectionate movements",
+    "comedy": "Expressive hand gestures, dramatic reactions and playful body language",
+    "angry": "Arms crossed, raised eyebrows and impatient foot tapping",
+    "surprised": "Wide eyes, raised eyebrows and quick backward movement"
+  },
+
+  "voice_profile": {
+    "voice_type": "Young adult female",
+    "tone": "Warm, expressive, confident",
+    "delivery": "Conversational, witty and playful",
+    "emotional_range": [
+      "Happy",
+      "Romantic",
+      "Sarcastic",
+      "Excited",
+      "Annoyed",
+      "Surprised",
+      "Concerned",
+      "Embarrassed",
+      "Playfully Jealous"
+    ],
+    "accent": "Not specified"
+  },
+
+  "visual_style": {
+    "art_style": "2D illustrated cartoon",
+    "linework": "Clean bold dark outlines",
+    "color_palette": "Warm, vibrant pastel tones",
+    "shading": "Soft, simple cel-style shading",
+    "proportions": "Slightly exaggerated cartoon proportions",
+    "background_compatibility": "Warm illustrated comic environments"
+  },
+
+  "character_consistency_rules": [
+    "Maintain the same long, loose wavy brown hairstyle",
+    "Never tie her hair into a ponytail or bun",
+    "Preserve her small rounded nose",
+    "Maintain the rounded face and black oval eyes",
+    "Keep the fitted red V-neck top",
+    "Maintain the fitted black pants",
+    "Keep the white lace-up sneakers",
+    "Always include gold hoop earrings",
+    "Always include the gold pendant necklace",
+    "Preserve original facial and body proportions",
+    "Do not change hairstyle, outfit colors or accessories",
+    "Keep her appearance consistent in every camera angle",
+    "Use the approved Riya model sheet as the visual reference"
+  ],
+
+  "character_interactions": {
+    "with_bittu": {
+      "romantic": "Affectionate smiles, playful teasing and tender gestures",
+      "comedy": "Sarcastic reactions to Bittu's ridiculous ideas",
+      "arguments": "Exaggerated expressions and humorous misunderstandings",
+      "reconciliation": "Warm smiles, affectionate gestures and heartfelt moments",
+      "adventures": "Riya often uses clever ideas to solve the trouble Bittu creates"
+    }
+  },
+
+  "introduction": "Riya is a beautiful, intelligent, confident and playful young woman whose sharp wit and charming personality make her impossible to ignore. Deeply in love with her boyfriend Bittu, she balances his impulsive nature with clever thinking, sarcastic comebacks and affectionate teasing. Together, they transform ordinary everyday moments into hilarious romantic-comedy adventures.",
+
+  "tagline": "Beauty with brains, a heart full of love, and just enough attitude to drive Bittu absolutely crazy!"
+}

@@ -19,6 +19,14 @@ ragged brown animal-hide tunic"; today: "wearing a plain blue t-shirt and
 grey trousers"). Keep the head, face and body the same in every picture.
 In Flow, use the same reference image of the character for every picture.
 
+## Bittu & Riya films
+
+Bittu and Riya are Flow characters in the Flow project `Bittu & Riya`, and
+their pictures are made in Antigravity, which tags them in Flow. For these
+films, follow `cast/bittu-riya/CAST.md` in the studio instead of this
+section: no `"character"`, no description of their faces, hair or clothes,
+and each picture lists who is in it in `"who"`.
+
 ## The style block
 
 Write it once as `"style"` in plan.json and end every picture prompt with

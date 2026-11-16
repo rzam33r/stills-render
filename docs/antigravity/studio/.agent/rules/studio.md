@@ -28,8 +28,12 @@ at either end, at most 30 characters ("Bharat mein badhti mehngai" is
 - `001.jpg`, `002.jpg`... — its pictures, named exactly as in the plan;
 - and next to the folder, `films/<story name>.zip` for the upload page.
 
-The film's pictures are made in ONE Google Flow project named exactly the
-story name, and nowhere else.
+The film's pictures are made in ONE Google Flow project, and nowhere else:
+
+- a **Bittu & Riya film** (its plan has "cast") uses the cast's own Flow
+  project, `Bittu & Riya`, because Bittu and Riya live there as Flow
+  characters. `cast/bittu-riya/CAST.md` is the cast's rule book;
+- every other film uses a project named exactly the story name.
 
 ## Always
 
@@ -44,7 +48,11 @@ story name, and nowhere else.
 - Invent a fact, a number, a date, a name, a study or a quote.
 - Ask Flow for words, letters, numbers or signs inside a picture.
 - Use any Flow project other than the film's own, or make a second one for
-  the same film.
+  the same film. Never create the `Bittu & Riya` project, or make or change
+  characters in it.
+- Make a picture that shows Bittu or Riya without really tagging them in
+  Flow (/make-pictures says how), or describe their faces, hair or clothes
+  in a prompt instead.
 - Type a password or sign in for me; when a page asks me to sign in, stop
   and ask me to do it.
 - Upload anywhere except the upload page

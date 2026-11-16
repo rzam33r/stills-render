@@ -7,8 +7,9 @@ Deliver one JSON object. Nothing before or after it in the file.
 | key | required | what |
 |---|---|---|
 | `title` | yes | the film's title, in English letters (Hinglish for a Hindi film); it names the film in Drive |
-| `character` | yes | the lead character's description, pasted into every prompt that shows them |
+| `character` | yes, except Bittu & Riya films | the lead character's description, pasted into every prompt that shows them |
 | `style` | yes | the style block, ending every picture prompt |
+| `cast` | Bittu & Riya films | `"Bittu & Riya"`, the Flow project holding the characters; then leave out `character` |
 | `shots` | yes | the shots, in order |
 | `layout` | no | `"wide"` (default, normal pace) or `"short"` (fast pace, under 3 minutes, always upright) |
 | `frame` | no | the shape: `"16:9"` (default) or `"9:16"` for an upright film at normal pace (file 6) |
@@ -24,6 +25,7 @@ Deliver one JSON object. Nothing before or after it in the file.
 | `say` | always | the exact words spoken while this shot is on screen |
 | `picture` | picture shots | the picture's number: `"001"`, `"002"`… (the file will be 001.png) |
 | `prompt` | picture shots | the Flow prompt for that picture |
+| `who` | Bittu & Riya films | who is in the picture: `["Bittu"]`, `["Riya"]` or `["Bittu", "Riya"]`; left out when neither is |
 | `card` | card shots | the short line the engine draws (at most 8 words) |
 | `doodle` | optional, card shots | the doodle picture's number |
 | `doodle_prompt` | with `doodle` | the Flow prompt for the doodle |

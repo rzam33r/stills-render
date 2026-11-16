@@ -1,0 +1,170 @@
+{
+  "character_id": "BITTU_001",
+  "name": "Bittu",
+  "role": "Male Lead",
+  "universe": "Bittu & Riya",
+  "character_type": "Romantic Comedy Cartoon",
+  "gender": "Male",
+  "age_group": "Young Adult",
+
+  "physical_appearance": {
+    "body_type": "Slim, average build",
+    "skin_tone": "Warm light peach",
+    "face_shape": "Rounded, friendly face",
+    "hair": {
+      "color": "Warm brown",
+      "style": "Short, thick, slightly wavy",
+      "direction": "Swept to the side"
+    },
+    "eyes": {
+      "shape": "Small vertical ovals",
+      "color": "Black",
+      "style": "Expressive cartoon eyes"
+    },
+    "eyebrows": "Dark brown, expressive",
+    "nose": "Small, rounded cartoon nose",
+    "mouth": "Wide, cheerful smile",
+    "cheeks": "Subtle rosy blush",
+    "facial_hair": "None"
+  },
+
+  "signature_outfit": {
+    "outerwear": {
+      "type": "Casual button-up shirt",
+      "color": "Orange",
+      "style": "Open front, rolled-up sleeves"
+    },
+    "innerwear": {
+      "type": "Crew-neck T-shirt",
+      "color": "Light beige"
+    },
+    "pants": {
+      "type": "Casual jeans",
+      "color": "Medium blue",
+      "style": "Straight fit, cuffed ankles"
+    },
+    "shoes": {
+      "type": "Lace-up sneakers",
+      "color": "White",
+      "details": "Dark outlines and light soles"
+    },
+    "accessories": [
+      "Simple wristwatch"
+    ]
+  },
+
+  "personality": {
+    "primary_traits": [
+      "Cheerful",
+      "Romantic",
+      "Playful",
+      "Kind-hearted",
+      "Mischievous",
+      "Confident",
+      "Funny",
+      "Loyal"
+    ],
+    "strengths": [
+      "Makes people laugh",
+      "Cares deeply about loved ones",
+      "Optimistic during difficult situations",
+      "Creative with romantic surprises"
+    ],
+    "weaknesses": [
+      "Impulsive decisions",
+      "Occasionally overconfident",
+      "Gets into silly misunderstandings",
+      "Romantic plans often go wrong"
+    ],
+    "humor_style": "Situational comedy, exaggerated reactions, playful misunderstandings",
+    "core_motivation": "Make Riya happy and enjoy life"
+  },
+
+  "relationships": {
+    "girlfriend": {
+      "name": "Riya",
+      "relationship_type": "Romantic couple",
+      "dynamic": "Loving, playful, chaotic",
+      "behavior": [
+        "Tries to impress Riya",
+        "Plans unexpected romantic surprises",
+        "Gets teased by Riya",
+        "Sometimes makes Riya jealous",
+        "Always supports and cares for her"
+      ]
+    }
+  },
+
+  "facial_expressions": [
+    "Neutral",
+    "Happy",
+    "Laughing",
+    "Surprised",
+    "Thinking",
+    "Winking",
+    "Concerned",
+    "Excited",
+    "Impressed",
+    "Confused",
+    "Embarrassed",
+    "Romantic"
+  ],
+
+  "hand_gestures": [
+    "Open palm",
+    "Pointing",
+    "Thumbs up",
+    "Excited fist",
+    "Presenting",
+    "Arms crossed",
+    "Waving",
+    "Facepalm"
+  ],
+
+  "movement_style": {
+    "walking": "Relaxed and energetic",
+    "running": "Playful, slightly exaggerated",
+    "idle": "Casual standing with natural gestures",
+    "romantic": "Shy smile, gentle movements",
+    "comedy": "Expressive gestures and exaggerated reactions"
+  },
+
+  "voice_profile": {
+    "voice_type": "Young adult male",
+    "tone": "Warm, friendly, energetic",
+    "delivery": "Playful and conversational",
+    "emotional_range": [
+      "Excited",
+      "Romantic",
+      "Confused",
+      "Embarrassed",
+      "Surprised",
+      "Happy"
+    ],
+    "accent": "Not specified"
+  },
+
+  "visual_style": {
+    "art_style": "2D illustrated cartoon",
+    "linework": "Clean bold dark outlines",
+    "color_palette": "Warm, vibrant pastel tones",
+    "shading": "Soft, simple cel-style shading",
+    "proportions": "Slightly exaggerated cartoon proportions",
+    "background_compatibility": "Warm illustrated comic environments"
+  },
+
+  "character_consistency_rules": [
+    "Maintain the same brown swept hairstyle",
+    "Always include the small rounded nose",
+    "Preserve the rounded face and black oval eyes",
+    "Keep the orange shirt and beige T-shirt",
+    "Maintain blue jeans and white sneakers",
+    "Keep the wristwatch",
+    "Do not change the character's facial proportions",
+    "Use the approved model sheet as the visual reference"
+  ],
+
+  "introduction": "Bittu is a cheerful, playful and hopelessly romantic young man whose good intentions often lead to hilarious trouble. Deeply in love with his girlfriend Riya, he turns ordinary moments into unforgettable romantic-comedy adventures.",
+
+  "tagline": "A guy with a big heart, bigger dreams, and absolutely no idea what trouble is coming next!"
+}

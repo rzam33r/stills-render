@@ -22,6 +22,9 @@ film and puts it in your Google Drive folder.
 Type `/new-film` and the topic, for example:
 `/new-film why prices keep rising in India — upright, 1 minute, Hindi`
 
+or, with Bittu and Riya:
+`/new-film Bittu & Riya: Bittu's surprise birthday plan — upright, 1 minute, Hindi`
+
 Antigravity stops for your OK after the format, the hooks, the facts, the
 script, the shot list and the plan, just like the ChatGPT project. After
 your OK on the plan it makes the pictures and uploads the film.
@@ -37,6 +40,8 @@ your OK on the plan it makes the pictures and uploads the film.
 - `guide/` — the writing rules (the same files the ChatGPT project uses).
 - `tools/` — the engine's own plan check (needs Python; optional).
 - `films/` — one folder per film, and its ZIP.
+- `cast/bittu-riya/` — Bittu and Riya: who they are, and how their pictures
+  are made with their Flow characters (project `Bittu & Riya`).
 
 ## Updating
 

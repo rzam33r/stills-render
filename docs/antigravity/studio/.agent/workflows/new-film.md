@@ -7,11 +7,14 @@ description: Make a FACT HUBZZZ film from a topic, step by step: format, hooks, 
 Read `guide/1_SCRIPT_RULES.md`, `guide/2_SHOT_LIST.md`,
 `guide/3_FLOW_PROMPTS.md` and `guide/4_PLAN_FORMAT.md` first. Read
 `guide/5_SHORTS.md` for a film under 3 minutes, `guide/6_LONG_FILMS.md` for
-3 minutes or more, and `guide/7_HINDI_VOICE.md` for a Hindi film.
+3 minutes or more, and `guide/7_HINDI_VOICE.md` for a Hindi film. For a
+Bittu & Riya film, also read `cast/bittu-riya/CAST.md`, `bittu.json` and
+`riya.json` in that folder: CAST.md wins over `guide/3_FLOW_PROMPTS.md` on
+how prompts describe them.
 
 1. **Topic and format.** If I gave no topic, ask for one. Ask the shape
-   (upright 9:16 or wide 16:9), the length, and the language (English or
-   Hindi), unless I said. Then say in one line how big the film is: words,
+   (upright 9:16 or wide 16:9), the length, the language (English or
+   Hindi), and whether it is a Bittu & Riya film, unless I said. Then say in one line how big the film is: words,
    pictures, and Flow generations (`guide/6_LONG_FILMS.md` has the table).
    A film under 3 minutes is upright at the fast pace (`guide/5_SHORTS.md`).
    Wait for my OK.
@@ -47,8 +50,12 @@ Read `guide/1_SCRIPT_RULES.md`, `guide/2_SHOT_LIST.md`,
    - shots outside their word range (`guide/2_SHOT_LIST.md`, file 5 or 6);
    - cards: count and share of all shots;
    - pictures: count, numbered without gaps, each with a "prompt";
-   - every prompt describes the lead character the same way and ends with
-     the style block;
+   - every prompt ends with the style block;
+   - a Bittu & Riya film: "cast" is `Bittu & Riya` and there is no
+     "character"; every picture that shows Bittu or Riya lists them in "who";
+     no prompt describes their faces, hair or clothes; each prompt has the
+     keep-line of everyone in its "who" (`cast/bittu-riya/CAST.md`);
+   - any other film: every prompt describes the lead character the same way;
    - no prompt asks for text;
    - "title" in English letters; "voice" and "speed" left out;
    - Hindi: the checks at the end of `guide/7_HINDI_VOICE.md`.

@@ -10,7 +10,8 @@ upload anything, and do not create or change any file.
 1. **The folder.** The open folder must hold `.agent/rules/studio.md`, the
    five workflows in `.agent/workflows/` (new-film, make-pictures,
    upload-film, fix-plan, check-studio), `guide/1_SCRIPT_RULES.md` to
-   `guide/7_HINDI_VOICE.md`, `tools/check_plan.py` and `films/`. If `.agent`
+   `guide/7_HINDI_VOICE.md`, `tools/check_plan.py`, `films/` and
+   `cast/bittu-riya/` (CAST.md, bittu.json, riya.json). If `.agent`
    sits inside a subfolder instead, tell me to open that subfolder with
    File → Open Folder, and stop.
 
@@ -21,10 +22,13 @@ upload anything, and do not create or change any file.
 3. **Flow Connect.** Look at the Flow tools you have, without using them, and
    answer yes or no to each: can you (a) create or open a Flow project by
    name, (b) choose the picture shape, 9:16 and 16:9, (c) choose where a
-   downloaded picture is saved and what it is called. For any "no", say what
+   downloaded picture is saved and what it is called, (d) put a Flow
+   character (Bittu, Riya) into a prompt as a real tag. For any "no", say what
    /make-pictures does instead: for (a) it asks me to open the film's Flow
    project and waits for "ready"; for (c) it moves each new download from the
-   browser's download folder. A "no" for (b) means pictures cannot be made.
+   browser's download folder; for (d) it tags them through the browser on
+   the open Flow tab (type @, choose from Flow's list). A "no" for (b) means
+   pictures cannot be made.
 
 4. **Python.** Run `python --version` (or `py --version` on Windows). Say
    whether the plan check in `tools/` can run. It is optional.
@@ -35,7 +39,7 @@ upload anything, and do not create or change any file.
    in that window and wait; never type an email or a password yourself. Do
    not upload or press anything else.
 
-6. **Report**, one line each: folder, rules, Flow Connect (a, b, c), Python,
+6. **Report**, one line each: folder, rules, Flow Connect (a, b, c, d), Python,
    upload page — each "ready" or what to fix. Then give the command to start
    the first film:
    `/new-film <topic> — upright or wide, length, English or Hindi`
