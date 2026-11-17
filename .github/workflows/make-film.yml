@@ -34,7 +34,7 @@ on:
         required: false
         default: '16:9'
       logo:
-        description: 'The FACT HUBZZZ logo in the top right-hand corner'
+        description: 'The Bittu & Riya logo in the top right-hand corner'
         type: boolean
         required: false
         default: true
