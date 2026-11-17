@@ -143,6 +143,33 @@ say(not check_plan(named)[0] and any('names Bittu' in w for w in check_plan(name
     'a prompt naming Bittu outside "who" is a question (warning), not an error')
 named['shots'][0]['prompt'] = 'Riya laughs at Bittu’s drawing'
 say(not any('names Bittu' in w for w in check_plan(named)[1]), '"Bittu’s drawing" only mentions him: no warning')
+# 17 Nov 2026 film review: a sideways picture, a 286 x 512 preview, Bittu's
+# hair turning black next to Riya, a drawing that changed between pictures.
+say('Look at every picture' in mp and 'sideways' in mp and 'shows both of them' in mp,
+    '/make-pictures looks at every picture (sideways, size, faces, words) and checks the first two-person picture')
+say('Flow remembers nothing between pictures' in cast_md and 'warm brown wavy hair' in KEEP['Bittu'],
+    'prompts describe again what must match, and Bittu\'s keep-line names his hair colour')
+say('--pictures' in flows['upload-film'], '/upload-film checks picture sizes before zipping')
+import tempfile, struct, zlib  # noqa: E402
+from check_plan import image_size  # noqa: E402
+
+
+def tiny_png(path, w, h):
+    raw = b''.join(b'\x00' + b'\x00\x00\x00' * w for _ in range(h))
+    chunk = lambda k, d: struct.pack('>I', len(d)) + k + d + struct.pack('>I', zlib.crc32(k + d))
+    pathlib.Path(path).write_bytes(b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0))
+                                   + chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b''))
+
+
+pics = pathlib.Path(tempfile.mkdtemp())
+tiny_png(pics / '001.png', 286, 512)
+say(image_size(pics / '001.png') == (286, 512), 'the checker reads a picture\'s size from its file')
+sized = {'title': 'T', 'style': 's', 'frame': '9:16', 'shots': [{'say': 'one two three four five six', 'picture': '001', 'prompt': 'p'}]}
+say(any('blurry' in w for w in check_plan(sized, pics)[1]), 'a 286 x 512 picture is called blurry')
+tiny_png(pics / '001.png', 1376, 768)
+say(any('wrong shape' in w for w in check_plan(sized, pics)[1]), 'a wide picture in an upright film is called the wrong shape')
+tiny_png(pics / '001.png', 768, 1376)
+say(not any('blurry' in w or 'shape' in w for w in check_plan(sized, pics)[1]), 'a 768 x 1376 picture in an upright film passes')
 misspelt = json.loads(json.dumps(cast_plan))
 misspelt['shots'][0]['who'] = ['Bitto']
 say(any('"who"' in e for e in check_plan(misspelt)[0])

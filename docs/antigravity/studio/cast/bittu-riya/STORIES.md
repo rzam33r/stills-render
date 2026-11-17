@@ -120,6 +120,9 @@ Then report this checklist, each line done or not:
   has their keep-line and does not describe their faces, hair or clothes;
 - every one-off person's description appears word for word in every
   prompt that shows them;
+- no prompt points back to an earlier picture ("Bittu's drawing", "the same
+  cave"): what must match is described again in full, including the
+  place (CAST.md);
 - "title" in English letters; "voice" and "speed" left out;
 - Hindi: the checks at the end of `guide/7_HINDI_VOICE.md`.
 

@@ -60,7 +60,7 @@ TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style
 CASTS = {'Bittu & Riya': ('Bittu', 'Riya')}
 # The line each prompt carries for each cast member in it (CAST.md, word for word).
 KEEP = {
-    'Bittu': 'Bittu keeps his orange shirt open over his beige T-shirt, blue jeans, white sneakers and wristwatch.',
+    'Bittu': 'Bittu keeps his warm brown wavy hair, his orange shirt open over his beige T-shirt, blue jeans, white sneakers and wristwatch.',
     'Riya': 'Riya keeps her long loose wavy hair, never tied up, her red V-neck top, black pants, white sneakers, gold hoop earrings and gold pendant.',
 }
 # Words per shot: (aim low, aim high, warn above, refuse above).
@@ -94,6 +94,48 @@ def find_picture(folder, name):
             if cand.is_file():
                 return cand
     return None
+
+
+def image_size(path):
+    """(width, height) of a PNG, JPEG or WebP file from its header, or None."""
+    try:
+        with open(path, 'rb') as f:
+            head = f.read(64)
+            if head[:8] == b'\x89PNG\r\n\x1a\n':
+                return int.from_bytes(head[16:20], 'big'), int.from_bytes(head[20:24], 'big')
+            if head[:4] == b'RIFF' and head[8:12] == b'WEBP':
+                kind = head[12:16]
+                if kind == b'VP8 ':
+                    return (int.from_bytes(head[26:28], 'little') & 0x3FFF,
+                            int.from_bytes(head[28:30], 'little') & 0x3FFF)
+                if kind == b'VP8L':
+                    b0 = int.from_bytes(head[21:25], 'little')
+                    return (b0 & 0x3FFF) + 1, ((b0 >> 14) & 0x3FFF) + 1
+                if kind == b'VP8X':
+                    return int.from_bytes(head[24:27], 'little') + 1, int.from_bytes(head[27:30], 'little') + 1
+                return None
+            if head[:2] == b'\xff\xd8':
+                f.seek(2)
+                while True:
+                    m = f.read(2)
+                    if len(m) < 2 or m[0] != 0xFF:
+                        return None
+                    if m[1] in (0xD8, 0x01) or 0xD0 <= m[1] <= 0xD7:
+                        continue
+                    n = int.from_bytes(f.read(2), 'big')
+                    if 0xC0 <= m[1] <= 0xCF and m[1] not in (0xC4, 0xC8, 0xCC):
+                        seg = f.read(5)
+                        return int.from_bytes(seg[3:5], 'big'), int.from_bytes(seg[1:3], 'big')
+                    f.seek(n - 2, 1)
+    except OSError:
+        return None
+    return None
+
+
+# A picture whose shorter side is under this many pixels looks blurry in the
+# film (1080 wide). 17 Nov 2026: a 286 x 512 preview was saved instead of the
+# 768 x 1376 picture.
+MIN_SIDE = 600
 
 
 def check(plan, pictures=None):
@@ -139,6 +181,7 @@ def check(plan, pictures=None):
     sp = plan.get('speed', 1.0)
     if not isinstance(sp, (int, float)) or not 0.8 <= sp <= 1.3:
         errors.append('"speed" must be a number from 0.8 to 1.3')
+    frame = '9:16' if layout == 'short' or plan.get('frame') == '9:16' else '16:9'
     if plan.get('frame', '16:9') not in ('16:9', '9:16'):
         errors.append('"frame" must be "16:9" or "9:16"')
     cast = plan.get('cast')
@@ -250,8 +293,17 @@ def check(plan, pictures=None):
             if name in used:
                 warnings.append(f'{where}: picture "{name}" is also used by shot {used[name]}')
             used.setdefault(name, i)
-            if pictures is not None and find_picture(pictures, name) is None:
+            found = find_picture(pictures, name) if pictures is not None else None
+            if pictures is not None and found is None:
                 errors.append(f'{where}: no picture "{name}" (looked for {name}.png, .jpg, .jpeg, .webp)')
+            elif found is not None and key == 'picture':
+                size = image_size(found)
+                if size and min(size) < MIN_SIDE:
+                    warnings.append(f'{where}: picture "{name}" is only {size[0]} x {size[1]}, so it will look '
+                                    f'blurry; make it again at full size')
+                elif size and (size[0] > size[1]) != (frame == '16:9') and size[0] != size[1]:
+                    warnings.append(f'{where}: picture "{name}" is {size[0]} x {size[1]}, the wrong shape for a '
+                                    f'{frame} film, so much of it will be cut off; make it again in {frame}')
     nums = [n for n in used if re.fullmatch(r'\d{3}', n)]
     if nums and len(nums) == len(used):
         seq = [int(n) for n in sorted(used, key=lambda n: used[n])]

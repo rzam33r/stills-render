@@ -8,7 +8,11 @@ For the film I name, or the one being worked on.
 
 1. **Check it is complete.** `films/<story name>/plan.json` exists, and every
    picture and doodle it names has exactly one file in the folder. If not,
-   say what is missing and stop (run /make-pictures).
+   say what is missing and stop (run /make-pictures). If Python is
+   installed, run `python tools/check_plan.py films/<story name>/plan.json
+   --pictures films/<story name>`: a picture it calls blurry or the wrong
+   shape is made again first (/make-pictures, after moving that file to
+   `films/<story name>-not-used/`).
 
 2. **Make the ZIP** `films/<story name>.zip` holding the folder's plan.json
    and pictures and nothing else (not facts.md, script.md or shots.md),

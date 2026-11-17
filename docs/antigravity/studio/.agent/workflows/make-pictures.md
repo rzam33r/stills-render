@@ -74,14 +74,30 @@ Bittu from the project with `character_refs` and made a 768 × 1376 picture.)
    Every 25 pictures, say how many are done.
    **Bittu & Riya films, first time:** if the film's folder had no pictures
    when this run started, stop after the first 2 pictures that show Bittu or
-   Riya. Show them to me next to the cast's Flow characters and say, for each
+   Riya, and again after the first picture that shows both of them (Flow
+   holds a face less firmly with two characters). Show them to me next to the cast's Flow characters and say, for each
    person in them: same face, same hair, same clothes: yes or no; in a
    medium shot or close-up also earrings and pendant (Riya), watch
    (Bittu). Also say each one's file (`films/<story name>/001.jpg`…) and
    its width × height (taller than wide for 9:16, wider than tall for
    16:9), read from the file itself. Wait for my OK before the rest.
 
-5. **Check the folder.** Every picture name in the plan has exactly one file.
+5. **Look at every picture** before calling it done, and remake (once) each
+   one that is wrong: move the bad file to `films/<story name>-not-used/`,
+   make it again with the same request, look again. Wrong means:
+   - sideways or upside down: the ground is not at the bottom (17 Nov
+     2026: picture 32 came out turned 90°);
+   - too small: under 600 pixels on its shorter side (a preview saved
+     instead of the picture), or the wrong shape for the film;
+   - Bittu or Riya does not match their Flow character: face, hair colour,
+     clothes (judge earrings, pendant and watch only in medium shots and
+     close-ups);
+   - it does not show what its words and prompt say (the drawing is a car,
+     not a mammoth; the torch count; the place).
+   List every picture remade and why, and any still wrong after the remake,
+   for me to decide.
+
+6. **Check the folder.** Every picture name in the plan has exactly one file.
    Move any other image to `films/<story name>-not-used/`. Report: how many
    were made, how many were already there, how many were cast with
    `character_refs` (Bittu & Riya films), and each one that is missing with

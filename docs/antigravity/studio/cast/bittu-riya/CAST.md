@@ -48,8 +48,15 @@ prompts.
 
 ## In a prompt
 
-Do not describe their faces, hair or clothes: the Flow character carries
-the look.
+Do not describe their faces, hair or clothes beyond their keep-lines: the
+Flow character carries the look. (Bittu's keep-line names his hair colour
+because, with Riya in the picture too, Flow turned it black: 17 Nov 2026.)
+
+**Flow remembers nothing between pictures.** Anything that must match an
+earlier picture is described again in full, never pointed back to: "a red
+outline drawing of a car on the cave wall", not "Bittu's drawing" (17 Nov
+2026: it became a mammoth). The same for the place: if the cave opens onto
+a snowy ice-age pine forest, every picture that shows outside says so.
 Write, in this order:
 
 1. the shot type (wide, medium, close-up);
@@ -57,7 +64,7 @@ Write, in this order:
 3. the place, the time of day, the light;
 4. the one detail that matches the shot's words;
 5. the keep-line of each person in `"who"`, word for word:
-   - Bittu: `Bittu keeps his orange shirt open over his beige T-shirt, blue jeans, white sneakers and wristwatch.`
+   - Bittu: `Bittu keeps his warm brown wavy hair, his orange shirt open over his beige T-shirt, blue jeans, white sneakers and wristwatch.`
    - Riya: `Riya keeps her long loose wavy hair, never tied up, her red V-neck top, black pants, white sneakers, gold hoop earrings and gold pendant.`
 
    Small things (earrings, pendant, watch) often vanish in wide shots; that
@@ -75,7 +82,8 @@ Example (`"who": ["Bittu", "Riya"]`):
 > Medium shot: Bittu kneels in a busy café holding out a small ring box,
 > grinning with pride, while Riya stands over him with her arms crossed and
 > one eyebrow raised, trying not to laugh; warm afternoon light, people at
-> other tables turning to look. Bittu keeps his orange shirt open over his
-> beige T-shirt, blue jeans, white sneakers and wristwatch. Riya keeps her
+> other tables turning to look. Bittu keeps his warm brown wavy hair, his
+> orange shirt open over his beige T-shirt, blue jeans, white sneakers and
+> wristwatch. Riya keeps her
 > long loose wavy hair, never tied up, her red V-neck top, black pants,
 > white sneakers, gold hoop earrings and gold pendant. [style]
