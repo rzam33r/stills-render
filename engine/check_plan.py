@@ -99,6 +99,10 @@ def find_picture(folder, name):
 def check(plan, pictures=None):
     """(errors, warnings) for a plan; pictures is the folder of pictures, or None."""
     errors, warnings = [], []
+    # Problems with how pictures are to be made (cast, "who", "extras") stop a
+    # plan before its pictures exist; once they do (GitHub, with --pictures),
+    # they cannot change the pictures, so they never stop the film.
+    making = []
     if not isinstance(plan, dict):
         return ['plan.json must be an object with "title" and "shots"'], []
     for k in plan:
@@ -141,7 +145,7 @@ def check(plan, pictures=None):
     members = ()
     if cast is not None:
         if cast not in CASTS:
-            errors.append(f'"cast": "{cast}" is not a cast; the casts are: ' + ', '.join(f'"{c}"' for c in CASTS))
+            making.append(f'"cast": "{cast}" is not a cast; the casts are: ' + ', '.join(f'"{c}"' for c in CASTS))
         else:
             members = CASTS[cast]
             if 'character' in plan:
@@ -154,12 +158,12 @@ def check(plan, pictures=None):
     elif (not isinstance(extras, dict)
           or not all(isinstance(k, str) and k.strip() and isinstance(v, str) and len(words(v)) >= 4
                      for k, v in extras.items())):
-        errors.append('"extras" must map each one-off person\'s short name to their look, like '
+        making.append('"extras" must map each one-off person\'s short name to their look, like '
                       '{"Ugg": "a tall stone-age man with a bushy black beard and a brown fur wrap"}')
         extras = {}
     for k in extras:
         if k in members:
-            errors.append(f'"extras": {k} is in the cast; the Flow character carries their look')
+            making.append(f'"extras": {k} is in the cast; the Flow character carries their look')
     unused = set(extras)
 
     used = {}
@@ -202,19 +206,22 @@ def check(plan, pictures=None):
         if 'who' in s:
             who = s['who']
             if not has_pic:
-                errors.append(f'{where}: "who" goes only with a picture')
+                making.append(f'{where}: "who" goes only with a picture')
             elif cast is None:
-                errors.append(f'{where}: "who" names cast members, so the plan needs "cast" at the top')
+                making.append(f'{where}: "who" names cast members, so the plan needs "cast" at the top')
             elif (not isinstance(who, list) or not who or len(set(map(str, who))) != len(who)
                   or any(m not in members for m in who)):
                 if members:
-                    errors.append(f'{where}: "who" must list who is in the picture, from '
+                    making.append(f'{where}: "who" must list who is in the picture, from '
                                   + ', '.join(f'"{m}"' for m in members) + ', each once, like ["' + members[0] + '"]')
         if has_pic and members:
             listed = s.get('who') if isinstance(s.get('who'), list) else []
             for m in members:
-                if re.search(rf'\b{re.escape(m)}\b', str(s.get('prompt', ''))) and m not in listed:
-                    errors.append(f'{where}: the prompt shows {m} but "who" leaves {m} out, so {m} would not be tagged')
+                # "Bittu's drawing" only mentions him; any other use of the name
+                # may mean he is in the picture, so ask, never block.
+                if m not in listed and re.search(rf'\b{re.escape(m)}\b(?![\'’]s\b)', str(s.get('prompt', ''))):
+                    warnings.append(f'{where}: the prompt names {m} but "who" leaves {m} out: if the picture '
+                                    f'shows {m}, add {m} to "who" so {m} is cast; if it only mentions {m}, leave it')
         prompt = str(s.get('prompt', ''))
         if has_pic and members and isinstance(s.get('who'), list):
             for m in s['who']:
@@ -252,6 +259,10 @@ def check(plan, pictures=None):
             warnings.append('pictures are not numbered 001, 002, 003... in the order they appear')
     for k in sorted(unused):
         warnings.append(f'"extras": {k} is in no picture prompt')
+    if pictures is None:
+        errors += making
+    else:
+        warnings += [f'{m} (the pictures are already made, so this does not stop the film)' for m in making]
     if total:
         warnings.insert(0, f'{len(shots)} shots, {total} words, about {total / wps / 60:.1f} minutes '
                            f'(a picture every {total / wps / len(shots):.1f} s)')

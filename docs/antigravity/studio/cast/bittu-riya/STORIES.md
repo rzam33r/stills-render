@@ -125,7 +125,9 @@ Then report this checklist, each line done or not:
 
 If Python is installed, run
 `python tools/check_plan.py films/<story name>/plan.json`. Fix every error,
-and every warning about a keep-line or a one-off person. Then say how many
+and every warning about a keep-line or a one-off person. A warning that a
+prompt names Bittu or Riya outside "who": add them to "who" if the picture
+shows them; leave it if the prompt only mentions them. Then say how many
 pictures Flow will make and wait for my OK.
 
 ## One-off people

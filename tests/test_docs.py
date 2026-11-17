@@ -101,8 +101,7 @@ say('`Bittu & Riya`' in rule and 'Never create the `Bittu & Riya` project' in ru
 cast_plan = {'title': 'T', 'layout': 'short', 'style': 's', 'cast': 'Bittu & Riya', 'shots': [
     {'say': 'one two three', 'picture': '001', 'prompt': 'Riya laughs as Bittu trips', 'who': ['Riya', 'Bittu']}]}
 say(not check_plan(cast_plan)[0], 'a good Bittu & Riya plan passes the plan check')
-for what, shot in (('a misspelt name', {'who': ['Bitto', 'Riya']}), ('a name left out of "who"', {'who': ['Riya']}),
-                   ('"who" on a card', {'picture': None})):
+for what, shot in (('a misspelt name', {'who': ['Bitto', 'Riya']}), ('"who" on a card', {'picture': None})):
     bad_plan = json.loads(json.dumps(cast_plan))
     s = bad_plan['shots'][0]
     s.update(shot)
@@ -135,6 +134,20 @@ loose['shots'][0]['prompt'] = f'Bittu meets Ugg the caveman. {KEEP["Bittu"]}'
 say(any('Ugg' in w for w in check_plan(loose)[1]), 'the plan check warns when a one-off person appears without their look')
 loose['shots'][0]['prompt'] = f'Bittu meets Ugg, {look}.'
 say(any('keep-line' in w for w in check_plan(loose)[1]), 'the plan check warns when a prompt lacks a keep-line')
+# 17 Nov 2026: "Bittu's drawing" stopped a finished film on GitHub. A name in a
+# prompt only raises a question; picture-making problems never stop a film
+# whose pictures are already made.
+named = json.loads(json.dumps(cast_plan))
+named['shots'][0]['who'] = ['Riya']
+say(not check_plan(named)[0] and any('names Bittu' in w for w in check_plan(named)[1]),
+    'a prompt naming Bittu outside "who" is a question (warning), not an error')
+named['shots'][0]['prompt'] = 'Riya laughs at Bittu’s drawing'
+say(not any('names Bittu' in w for w in check_plan(named)[1]), '"Bittu’s drawing" only mentions him: no warning')
+misspelt = json.loads(json.dumps(cast_plan))
+misspelt['shots'][0]['who'] = ['Bitto']
+say(any('"who"' in e for e in check_plan(misspelt)[0])
+    and not any('"who"' in e for e in check_plan(misspelt, '/no/such/dir')[0]),
+    'a "who" mistake stops a plan before its pictures exist, never a film whose pictures are made')
 for bad_line in ('"voice": "', '"speed": '):
     say(not any(bad_line in (DOCS / n).read_text() for n in ('4_PLAN_FORMAT.md', '5_SHORTS.md')),
         f'no example in the guide sets {bad_line.split(":")[0]} (writers copy examples)')
