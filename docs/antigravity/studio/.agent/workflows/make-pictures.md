@@ -87,6 +87,10 @@ Bittu from the project with `character_refs` and made a 768 × 1376 picture.)
    make it again with the same request, look again. Wrong means:
    - sideways or upside down: the ground is not at the bottom (17 Nov
      2026: picture 32 came out turned 90°);
+   - a body that is wrong: count every person's arms, hands and legs (two
+     each) and look for a hand coming from nowhere (17 Nov 2026: Bittu
+     with a third hand at his pocket; a boy holding three things with
+     three hands);
    - too small: under 600 pixels on its shorter side (a preview saved
      instead of the picture), or the wrong shape for the film;
    - Bittu or Riya does not match their Flow character: face, hair colour,

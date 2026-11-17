@@ -150,6 +150,8 @@ say('Look at every picture' in mp and 'sideways' in mp and 'shows both of them' 
 say('Flow remembers nothing between pictures' in cast_md and 'warm brown wavy hair' in KEEP['Bittu'],
     'prompts describe again what must match, and Bittu\'s keep-line names his hair colour')
 say('--pictures' in flows['upload-film'], '/upload-film checks picture sizes before zipping')
+say('arms, hands and legs' in mp and '**Hands.**' in (DOCS / '3_FLOW_PROMPTS.md').read_text() and 'two things' in stories,
+    'extra hands: prompts give at most two things to hold, and every picture\'s arms and hands are counted')
 import tempfile, struct, zlib  # noqa: E402
 from check_plan import image_size  # noqa: E402
 

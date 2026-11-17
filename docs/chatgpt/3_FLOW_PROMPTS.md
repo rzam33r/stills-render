@@ -53,6 +53,12 @@ Example, for "If animals avoided a particular pool, humans learned to avoid it t
 > looking uneasy, while a deer on the far bank turns away from the water;
 > dry grassland in afternoon light. [style]
 
+**Hands.** Say what each person's hands do, and give one person at most two
+things to hold, one per hand. Image models add a third hand to hold a third
+thing (17 Nov 2026: a boy with a hammer, a blade and a stone grew a third
+arm). "Holds a hammer in one hand and a black stone in the other" is safe;
+"holds a hammer, a blade and a stone" is not.
+
 ## A doodle prompt (for cards)
 
 > Minimal black ink doodle icon of [the idea], thick simple lines, centred
@@ -65,5 +71,6 @@ out, maybe with a tiny symbol (question mark, light bulb, warning sign).
 
 - Text, labels, signs, letters or numbers inside a picture (use a card).
 - A different face, head shape or body for the lead character.
+- More than two things held by one person, or hands not said.
 - Photographic, 3D or anime styles.
 - Gore. Danger is shown by situation and expression, not injury.
