@@ -1,5 +1,5 @@
 ---
-description: Make every picture of a film's plan.json in its Google Flow project, one by one, into the film's folder, with Bittu and Riya really tagged
+description: Make every picture of a film's plan.json with Flow Connector in its Google Flow project, one by one, into the film's folder, with Bittu and Riya cast as Flow characters
 ---
 
 # /make-pictures
@@ -7,44 +7,31 @@ description: Make every picture of a film's plan.json in its Google Flow project
 For the film I name, or the one being worked on. Its plan is
 `films/<story name>/plan.json`. Never change the plan.
 
-1. **Check the Flow tools first**, before spending anything: can they
-   (a) create or open a Flow project by name, (b) choose the picture shape,
-   (c) save a picture where and as you choose. If (b) is not possible, stop
-   and tell me. (On 16 Nov 2026 Roshan's Flow Connect could do (b) only.)
-   **A Bittu & Riya film (the plan has "cast") is made entirely in your
-   browser, on the Flow page**, never through Flow Connect: a tag exists
-   only in Flow's own prompt box, so a picture made through Flow Connect
-   would lose it. For every picture, in the browser: the shape, the tags,
-   the prompt, making the picture, and downloading it. (On 17 Nov 2026 the
-   browser opened the project and made real tags.) Check in the browser
-   instead of (a) to (c): (d) you can put a Flow character into the prompt
-   as a **real tag**: click in the prompt box, type @, choose the character
-   from Flow's list; its tag with its little picture appears. The text
-   "@Bittu" is not a tag. If it does not work, stop and tell me what
-   happened. Never make a picture of Bittu or Riya without their tags.
-   (e) the picture shape: Flow's shape choice by the prompt box (9:16 or
-   16:9) is part of the request, not a setting; set it before the first
-   picture and check it every 25 pictures. (f) where this browser saves
-   downloads: find its download folder before the first picture (look,
-   change nothing) and tell me where it is.
+**Pictures are made only with Flow Connector** (its tools `flow_status`,
+`flow_generate`, `flow_get_job`, `flow_list_jobs`), in the Flow tab open in
+my Chrome. Never use your own browser for Flow: it is far slower, and your
+browser is only for the upload page. (17 Nov 2026: Flow Connector cast
+Bittu from the project with `character_refs` and made a 768 × 1376 picture.)
+
+1. **Check Flow Connector first**, before spending anything: call
+   `flow_status`. If it is not connected, or says the Flow tab is closed,
+   tell me and stop. If it says a daily allowance is used up, tell me and
+   stop.
 
 2. **The Flow project.** Every picture of this film is made in one project
-   and in no other:
-   - a Bittu & Riya film: the project named exactly as the plan's "cast",
-     `Bittu & Riya`. Open it from its link in `cast/bittu-riya/CAST.md`, in
-     the browser (or with Flow Connect, if it can open a link). If Flow asks
-     me to sign in, stop and ask me to. Never create the project: if the
-     link does not open it, tell me: "In Flow, open the project
-     `Bittu & Riya` and say ready." Wait for "ready". Then check its
-     Characters include `Bittu` and `Riya`;
-   - any other film: the project named exactly the story name. If the tools
-     can create or open a project by name, do that (open it if it exists;
-     never make a second one for the same film). If they cannot, tell me:
-     "In Flow, create or open the project `<story name>` and say ready."
-     Wait for "ready".
-   - Either way: if the tools can tell which project is open, check its
-     name is that name before the first picture and again every 25
-     pictures; if they cannot, ask me to confirm the name when I say ready.
+   and in no other. Flow Connector makes pictures in the project open in my
+   Chrome, so tell me which one to open, and wait for "ready":
+   - a Bittu & Riya film: "In Chrome, open the `Bittu & Riya` project from
+     its link, keep the tab open and visible, and say ready":
+     https://flow.google.com/project/983f2d4b-d432-439c-8283-587e8c9865c9
+     (the link is in `cast/bittu-riya/CAST.md`). Never create the project.
+     If Flow asks me to sign in, I do it myself;
+   - any other film: "In Chrome, create or open the Flow project
+     `<story name>`, keep the tab open and visible, and say ready". Never a
+     second project for the same film.
+   - Either way: if `flow_status` tells which project is open, check its
+     name before the first picture and again every 25 pictures; if it does
+     not, ask me to confirm the name when I say ready.
 
 3. **List the pictures**, in shot order: each shot's "picture" with its
    "prompt", and each "doodle" with its "doodle_prompt". A name listed once
@@ -52,34 +39,38 @@ For the film I name, or the one being worked on. Its plan is
    `films/<story name>/` (.png, .jpg, .jpeg or .webp): that is how an
    interrupted run carries on. Say "N to make, M already there".
 
-4. **Make them one at a time**, in order:
-   - a shot with "who" (Bittu & Riya films): first put each character it
-     names into the prompt box as a real tag (step 1 (d)), in the order
-     listed, then the prompt text. Tag no one who is not in "who". Before
-     asking Flow for the picture, look at the prompt box: every name in
-     "who" shows as a tag with its little picture, and nothing shows as
-     plain "@Bittu" or "@Riya" text. If it is wrong, clear the box and try
-     again; if it is wrong twice, stop and tell me. Never ask Flow for the
-     picture with a tag missing;
-   - the prompt text exactly as written: never shorten, translate, reword or
-     add to it;
-   - shape: 9:16 when the plan's "layout" is "short" or its "frame" is
-     "9:16", otherwise 16:9; doodles square (1:1);
-   - Flow's default image model, unless I said another;
-   - one image per name: if Flow makes several, keep the first;
-   - wait until it is finished and download it, then save it as
-     `films/<story name>/<name>.<its own extension>`: `001.jpg`, `002.jpg`...
-     never `1 - Medium shot of a man.jpg`, never a second copy.
-     If the tools cannot choose where it is saved, it lands in the browser's
-     download folder: note the time just before asking Flow for the picture,
-     wait until the download has finished (no `.crdownload` or `.tmp` file
-     left, and the size stays the same for 2 seconds), and take only an image
-     file that appeared after that time. Move it (do not copy) to the film's
-     folder under the picture's name. If more than one new image appeared,
-     take the first and move the others to `films/<story name>-not-used/`.
-     Never take a file that was there before the request;
-   - if Flow fails or refuses, try once more; if it fails again, note the
-     name and Flow's message and go on.
+4. **Make them one at a time**, in order, each with one `flow_generate`
+   call:
+   - `"mode": "flow-text-to-image"`;
+   - `"prompt"`: the prompt text exactly as written: never shorten,
+     translate, reword or add to it;
+   - `"aspect_ratio"`: `"9:16"` when the plan's "layout" is "short" or its
+     "frame" is "9:16", otherwise `"16:9"`; doodles `"1:1"`;
+   - `"character_refs"`: a shot with "who" (Bittu & Riya films) gets exactly
+     its "who" list, in that order, like `["Bittu", "Riya"]`. A shot
+     without "who" gets none. Never make a picture of Bittu or Riya
+     without them in `"character_refs"`: writing their name or "@Bittu" in
+     the prompt does not keep their look. If Flow Connector refuses a
+     character name, stop and tell me;
+   - `"image_model"`: `"nano-banana-pro"` for every picture of the film
+     (the model the Flow characters were made with), unless I said
+     another. Never change models in the middle of a film;
+   - `"outputs": 1`;
+   - `"folder"`: the story name, so its downloads land together in
+     Chrome's download folder under `<story name>/`.
+   Then wait with `flow_get_job` until it is finished and downloaded. Take
+   the downloaded file's path from the job. If the job does not give it,
+   take the newest image in that download folder that appeared after the
+   request, once its size stays the same for 2 seconds (no `.crdownload`
+   or `.tmp` file left); never a file that was there before. Move it (do
+   not copy) to `films/<story name>/<name>.<its own extension>`: `001.jpg`,
+   `002.jpg`... never `1 - Medium shot of a man.jpg`, never a second copy.
+   Any other new image for the same request goes to
+   `films/<story name>-not-used/`.
+   If Flow fails or refuses, try once more; if it fails again, note the
+   name and Flow's message and go on. If Flow Connector says the allowance
+   is used up, stop and say how many are done: running /make-pictures
+   again later carries on.
    Every 25 pictures, say how many are done.
    **Bittu & Riya films, first time:** if the film's folder had no pictures
    when this run started, stop after the first 2 pictures that show Bittu or
@@ -92,7 +83,7 @@ For the film I name, or the one being worked on. Its plan is
 
 5. **Check the folder.** Every picture name in the plan has exactly one file.
    Move any other image to `films/<story name>-not-used/`. Report: how many
-   were made, how many were already there, how many were made with their
-   tags checked (Bittu & Riya films), and each one that is missing with
+   were made, how many were already there, how many were cast with
+   `character_refs` (Bittu & Riya films), and each one that is missing with
    Flow's reason. If any is missing, stop: running /make-pictures again
    carries on from there.

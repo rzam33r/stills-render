@@ -22,7 +22,8 @@ In Flow, use the same reference image of the character for every picture.
 ## Bittu & Riya films
 
 Bittu and Riya are Flow characters in the Flow project `Bittu & Riya`, and
-their pictures are made in Antigravity, which tags them in Flow. For these
+their pictures are made in Antigravity, which casts them as Flow characters
+through Flow Connector. For these
 films, follow `cast/bittu-riya/CAST.md` in the studio instead of this
 section: no `"character"`, no description of their faces, hair or clothes,
 and each picture lists who is in it in `"who"`.

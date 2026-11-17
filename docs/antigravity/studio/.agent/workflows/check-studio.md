@@ -19,16 +19,13 @@ upload anything, and do not create or change any file.
    Tell me in three lines: the shapes and lengths a film can have, which
    voice reads English and which reads Hindi, and what a plan must leave out.
 
-3. **Flow Connect.** Look at the Flow tools you have, without using them, and
-   answer yes or no to each: can you (a) create or open a Flow project by
-   name, (b) choose the picture shape, 9:16 and 16:9, (c) choose where a
-   downloaded picture is saved and what it is called, (d) put a Flow
-   character (Bittu, Riya) into a prompt as a real tag. For any "no", say what
-   /make-pictures does instead: for (a) it asks me to open the film's Flow
-   project and waits for "ready"; for (c) it moves each new download from the
-   browser's download folder; for (d), Bittu & Riya films are made entirely
-   in your browser on the Flow page anyway (type @, choose from Flow's
-   list). A "no" for (b) means other films' pictures cannot be made.
+3. **Flow Connector.** Call `flow_status` and read `flow_generate`'s
+   options, without making anything. Answer yes or no: (a) it is connected
+   to a Flow tab in my Chrome, (b) `flow_generate` takes `aspect_ratio`
+   with 9:16 and 16:9, (c) it takes `character_refs`, (d) it takes
+   `folder`. A "no" for (a) means: open Flow in Chrome and keep the
+   tab open. A "no" for (b) or (c) means pictures cannot be made as
+   /make-pictures says: tell me. Never use your own browser for Flow.
 
 4. **Python.** Run `python --version` (or `py --version` on Windows). Say
    whether the plan check in `tools/` can run. It is optional.
@@ -39,7 +36,7 @@ upload anything, and do not create or change any file.
    in that window and wait; never type an email or a password yourself. Do
    not upload or press anything else.
 
-6. **Report**, one line each: folder, rules, Flow Connect (a, b, c, d), Python,
+6. **Report**, one line each: folder, rules, Flow Connector (a, b, c, d), Python,
    upload page — each "ready" or what to fix. Then give the command to start
    the first film:
    `/new-film <topic> — upright or wide, length, English or Hindi`

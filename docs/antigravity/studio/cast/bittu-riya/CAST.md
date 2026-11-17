@@ -17,8 +17,9 @@ prompts.
 - Flow project: **`Bittu & Riya`** (exactly), opened from its link:
   https://flow.google.com/project/983f2d4b-d432-439c-8283-587e8c9865c9
   Every picture of a Bittu & Riya film is made in this project and no
-  other. Never create this project, never make new characters in it, never
-  change its characters.
+  other. Roshan opens it in his Chrome for Flow Connector. Never create
+  this project, never make new characters in it, never change its
+  characters.
 - Its Characters: **`Bittu`** and **`Riya`**. They are the master looks:
   if this file, a JSON file or the old model sheets disagree with the Flow
   character, the Flow character wins. Each holds a full-body front view, so
@@ -29,10 +30,11 @@ prompts.
 - Other people are not Flow characters (yet): see "One-off people" in
   `STORIES.md`. A new regular character is added to the project only by
   Roshan.
-- A picture that shows Bittu or Riya is made with each of them **really
-  tagged** in Flow's prompt box: the character's tag with its little
-  picture, the same as typing @ and choosing them from Flow's list. The
-  text "@Bittu" typed into the box is NOT a tag and does not keep his look.
+- A picture that shows Bittu or Riya is made with each of them **cast as a
+  Flow character**: Flow Connector's `"character_refs": ["Bittu"]` (or
+  `["Riya"]`, `["Bittu", "Riya"]`), from the project open in Roshan's
+  Chrome. Writing their name or "@Bittu" in the prompt does NOT keep their
+  look.
 
 ## In plan.json
 
@@ -46,7 +48,8 @@ prompts.
 
 ## In a prompt
 
-Do not describe their faces, hair or clothes: the tag carries the look.
+Do not describe their faces, hair or clothes: the Flow character carries
+the look.
 Write, in this order:
 
 1. the shot type (wide, medium, close-up);

@@ -54,9 +54,11 @@ The film's pictures are made in ONE Google Flow project, and nowhere else:
 - Use any Flow project other than the film's own, or make a second one for
   the same film. Never create the `Bittu & Riya` project, or make or change
   characters in it.
-- Make a picture that shows Bittu or Riya without really tagging them in
-  Flow (/make-pictures says how), or describe their faces, hair or clothes
-  in a prompt instead.
+- Make a picture that shows Bittu or Riya without casting them with Flow
+  Connector's `character_refs` (/make-pictures says how), or describe their
+  faces, hair or clothes in a prompt instead.
+- Use your own browser for Google Flow. Pictures are made with Flow
+  Connector only; your browser is for the upload page.
 - Type a password or sign in for me; when a page asks me to sign in, stop
   and ask me to do it.
 - Upload anywhere except the upload page

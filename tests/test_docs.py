@@ -66,7 +66,9 @@ say(all((DOCS / f'{n}').exists() for n in ('6_LONG_FILMS.md', '7_HINDI_VOICE.md'
 # Quoted words in the workflows are plan keys, plan values, or answers
 # Roshan types ("ready"); only the keys must be ones the engine knows.
 ANSWERS = {'ready', 'yes', 'no', 'story'}
-keys = {k for t in flows.values() for k in re.findall(r'"([a-z_]+)"', t)} - {'say', 'short', 'wide'} - ANSWERS
+# Flow Connector's flow_generate options, named in /make-pictures; not plan keys.
+FLOW_OPTIONS = {'mode', 'prompt', 'aspect_ratio', 'character_refs', 'image_model', 'outputs', 'folder'}
+keys = {k for t in flows.values() for k in re.findall(r'"([a-z_]+)"', t)} - {'say', 'short', 'wide'} - ANSWERS - (FLOW_OPTIONS - {'prompt'})
 say(keys <= KEYS | TOP | {'say'}, f'the workflows use only plan keys the engine knows: {sorted(keys)}')
 say('`bharat-mein-badhti-mehngai`' in rule and 'at most 30 characters' in rule, 'the story name follows the upload page\'s rule')
 url = 'https://picture-plan-film-forge.lovable.app/stills'
@@ -87,11 +89,14 @@ say(len(keep) == 2 and all(k in example for k in keep), 'the cast example carrie
 everything = [rule, cast_md] + list(flows.values()) + [(DOCS / n).read_text() for n in ('3_FLOW_PROMPTS.md', '4_PLAN_FORMAT.md')]
 say(sum(t.count('Bitto') for t in everything) == 1 and 'never "Bitto"' in cast_md, 'his name is Bittu everywhere (Bitto only in "never Bitto")')
 mp = flows['make-pictures']
-say('real tag' in mp and 'Never make a picture of Bittu or Riya' in mp and 'Never ask Flow for the' in mp
+say('"character_refs"' in mp and 'Never make a picture of Bittu or Riya' in mp
     and 'first 2 pictures' in mp and 'Never create the project' in mp,
-    '/make-pictures really tags Bittu and Riya, checks the tags, stops after 2 pictures the first time, never creates the cast project')
-say('made entirely in your\n   browser' in mp and 'never through Flow Connect' in mp and 'width × height' in mp,
-    'Bittu & Riya pictures are made wholly in the browser, so the tags reach Flow, and checked for name and shape')
+    '/make-pictures casts Bittu and Riya as Flow characters, stops after 2 pictures the first time, never creates the cast project')
+say('Never use your own browser for Flow' in mp and 'Use your own browser for Google Flow' in rule
+    and 'width × height' in mp and all(f'"{o}"' in mp for o in ('aspect_ratio', 'image_model', 'folder', 'outputs')),
+    'pictures are made with Flow Connector only, never Antigravity\'s browser, and checked for name and shape')
+say('Never change models in the middle of a film' in mp and '"nano-banana-pro"' in mp,
+    'every picture of a film uses the same image model')
 say('`Bittu & Riya`' in rule and 'Never create the `Bittu & Riya` project' in rule, 'the rule keeps Bittu & Riya films in their own Flow project')
 cast_plan = {'title': 'T', 'layout': 'short', 'style': 's', 'cast': 'Bittu & Riya', 'shots': [
     {'say': 'one two three', 'picture': '001', 'prompt': 'Riya laughs as Bittu trips', 'who': ['Riya', 'Bittu']}]}
@@ -113,7 +118,7 @@ say('cast/bittu-riya/STORIES.md' in flows['new-film'] and 'instead of steps 1 to
 say(all(f'| {n} |' in stories for n in ('90 seconds', '3 minutes', '6 minutes', '9 minutes', '12 minutes', '15 minutes')),
     'stories come in 90 s, 3, 6, 9, 12 and 15 minutes')
 link = 'https://flow.google.com/project/983f2d4b-d432-439c-8283-587e8c9865c9'
-say(link in cast_md and 'from its link' in mp and 'sign in' in mp, '/make-pictures opens the Bittu & Riya project from its link')
+say(link in cast_md and link in mp and 'from\n     its link' in mp and 'sign in' in mp, '/make-pictures has Roshan open the Bittu & Riya project from its link in Chrome')
 say('invented adventure in a real world' in stories and 'every fact it shows is real' in rule,
     'a story is invented, the facts in it are real')
 say('medium shot or close-up' in mp and 'Judge them only in medium shots and close-ups' in cast_md,

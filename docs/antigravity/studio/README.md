@@ -1,7 +1,7 @@
 # FACT HUBZZZ Studio (Antigravity)
 
 Antigravity plans and writes the film, makes its pictures in Google Flow
-through Flow Connect, and starts it on the upload page. GitHub makes the
+through Flow Connector, and starts it on the upload page. GitHub makes the
 film and puts it in your Google Drive folder.
 
 ## Set up once
@@ -9,12 +9,13 @@ film and puts it in your Google Drive folder.
 1. Unzip this folder somewhere you keep work, for example
    `Documents\FACT HUBZZZ Studio`.
 2. In Antigravity: **File → Open Folder** and choose it.
-3. Make sure Flow Connect is connected (agent panel **…** → MCP servers).
+3. Make sure Flow Connector is connected: the Chrome extension, with its
+   setup prompt pasted into Antigravity once. Keep a Flow tab open in Chrome.
 4. In the agent panel, type `/`. You should see **check-studio**,
    **new-film**, **make-pictures**, **upload-film** and **fix-plan**. If they
    are not there, the folder you opened is not the one holding `.agent`
    (File → Open Folder → `FACT HUBZZZ Studio`).
-5. Type `/check-studio`. It checks the folder, Flow Connect and the upload
+5. Type `/check-studio`. It checks the folder, Flow Connector and the upload
    page, changes nothing, and tells you what to fix before your first film.
 
 ## Make a film
