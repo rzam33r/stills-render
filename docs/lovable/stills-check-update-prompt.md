@@ -1,10 +1,10 @@
 # Lovable prompt — update the still-picture upload check
 
-The newest check: Chatterbox is the Hindi voice and the notes say how long
-it takes; a ZIP with no plan (or an empty one) says so plainly instead of
-"plan.json is not valid JSON: Unexpected end of JSON input"; and "Copy for
-ChatGPT" only offers plan mistakes, never ZIP problems such as missing
-pictures (16 Nov 2026).
+The newest check (17 Nov 2026): a shot may be an animated "graphic" (a pie,
+bars, a gauge, a counter, a road, a map or icons) instead of a picture or a
+card, and the notes count them; a Hindi film's length is worked out at
+Chatterbox's real speed. Earlier: a ZIP with no plan says so plainly, and
+"Copy for ChatGPT" only offers plan mistakes, never ZIP problems.
 
 Copy everything below the line into Lovable's chat, in one message.
 
@@ -167,3 +167,7 @@ Test it and tell me the result of each:
   "Copy for ChatGPT" button (ChatGPT cannot make pictures).
 - A Hindi ZIP whose plan has no "voice": the notes show "voice
   chatterbox-hi" and how long the Hindi voice takes.
+- A plan whose shot has `"graphic": {"kind": "pie", "value": 30}` and no
+  picture: no problem for that shot, and the notes say "1 animated graphic".
+- A shot with `"graphic": {"kind": "spin"}`: the problem names the kinds
+  (icons, pie, bars, gauge, count, road, map).
