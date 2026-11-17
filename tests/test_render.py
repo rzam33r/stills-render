@@ -76,8 +76,19 @@ def fake_voice(plan, out):
     return starts
 
 
+def stand_in_icons(plan, folder):
+    """A coloured disc for every icon the plan's graphics use (no download)."""
+    import icons
+    folder.mkdir(parents=True, exist_ok=True)
+    for k, code in enumerate(sorted(icons.plan_codes(plan))):
+        im = Image.new('RGBA', (512, 512), (0, 0, 0, 0))
+        ImageDraw.Draw(im).ellipse((40, 40, 472, 472), fill=((k * 70) % 200 + 40, 120, 200 - (k * 40) % 150, 255))
+        im.save(folder / f'emoji_u{code}.png')
+
+
 def film_test(name, want_size, keep, captions=False):
-    plan_path = ROOT / 'examples' / name
+    plan_path = name if isinstance(name, pathlib.Path) else ROOT / 'examples' / name
+    name = plan_path.name
     plan = json.loads(plan_path.read_text())
     tag = name.replace('-plan.json', '') + (' with subtitles' if captions else '')
     with tempfile.TemporaryDirectory() as tmp:
@@ -97,11 +108,12 @@ def film_test(name, want_size, keep, captions=False):
                             '--pictures', str(pics)], capture_output=True, text=True)
         say(r.returncode == 0, f'{tag}: the plan passes with its pictures present')
         fake_voice(plan, tmp / 'voice')
+        stand_in_icons(plan, tmp / 'icons')
         film = tmp / 'film.mp4'
         music = sorted((ROOT / 'music').glob('*.mp3'))[0]
         r = subprocess.run([sys.executable, str(ROOT / 'engine' / 'render.py'), str(plan_path),
                             str(pics), str(tmp / 'voice'), str(film), '--logo', str(ROOT / 'brand' / 'watermark.png'),
-                            '--music', str(music)], capture_output=True, text=True)
+                            '--music', str(music), '--icons', str(tmp / 'icons')], capture_output=True, text=True)
         print('     ' + (r.stdout.strip() or r.stderr.strip()[-600:]))
         say(r.returncode == 0 and film.exists(), f'{tag}: the film renders')
         if not film.exists():
@@ -129,6 +141,8 @@ def main():
                        ('boond-hindi-short-plan.json', '1080,1920')):
         film_test(name, size, keep)
     film_test('boond-hindi-short-plan.json', '1080,1920', keep, captions=True)
+    # Animated graphics: every kind, upright, with subtitles drawn over them.
+    film_test(ROOT / 'tests' / 'fixtures' / 'graphics-plan.json', '1080,1920', keep, captions=True)
 
     # Cards: words inside the frame, doodle white gone.
     for text in ('No map.', 'The star that never moves.',

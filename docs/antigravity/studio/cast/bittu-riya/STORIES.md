@@ -94,9 +94,10 @@ Save to `films/<story name>/script.md`.
 
 Split the approved script by `guide/2_SHOT_LIST.md` without changing a
 word: 6 to 12 words a shot under 3 minutes, 8 to 14 from 3 minutes on
-(fast pace: `guide/5_SHORTS.md`). Cards are rare: at most one shot in ten,
-for a fact's number or the final line. Show a numbered table: number, words
-spoken, picture or card, who is in it (Bittu, Riya, one-off people), what
+(fast pace: `guide/5_SHORTS.md`). About once a minute, a fact's number,
+share, journey, place or list is an animated graphic instead of a picture
+(`guide/8_GRAPHICS.md`); no cards. Show a numbered table: number, words
+spoken, picture or graphic, who is in it (Bittu, Riya, one-off people), what
 it shows. Save to `films/<story name>/shots.md`. Wait for my OK.
 
 ## 6. plan.json

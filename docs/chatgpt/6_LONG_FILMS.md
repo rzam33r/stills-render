@@ -43,8 +43,9 @@ more, say how many pictures it will need and get an OK.
    before writing it.
 3. **One chapter at a time.** Write a chapter, show it, wait for the OK,
    then the next. Never write a whole long film in one reply.
-4. Each chapter opens with its spoken title (a card with
-   `"paragraph": true`) and ends with a hand-off line into the next one.
+4. Each chapter opens with its spoken title (a picture of the chapter's
+   first scene, with `"paragraph": true`) and ends with a hand-off line into
+   the next one.
 5. Every 10 minutes or so, one or two sentences remind the viewer where the
    story stands. Never a summary of everything said so far.
 
@@ -52,7 +53,7 @@ more, say how many pictures it will need and get an OK.
 
 - 8 to 14 words a shot (a picture every 3 to 5 seconds). Up to 16 when the
   image genuinely stays the same.
-- Cards: 15 to 25 percent of the shots.
+- Animated graphics: about one a minute (`8_GRAPHICS.md`); no cards.
 - Show progress through the story: the same place at a new time, the same
   character a step further, before moving somewhere new.
 - Pictures are numbered across the whole film: `"001"` to `"680"` in a

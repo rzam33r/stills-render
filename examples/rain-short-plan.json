@@ -57,13 +57,17 @@
     },
     {
       "say": "Water never runs out.",
-      "card": "Water never runs out.",
-      "doodle": "011",
-      "doodle_prompt": "Minimal black ink doodle icon of a water drop with a circular arrow around it, thick simple lines, centred on a pure white background, square, no text, no letters, no shading."
+      "graphic": {
+        "kind": "icons",
+        "icons": [
+          "droplet",
+          "infinity"
+        ]
+      }
     },
     {
       "say": "It only changes shape.",
-      "picture": "012",
+      "picture": "011",
       "prompt": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts looking up in wonder at a sky with a cloud, a raindrop and a snowflake floating side by side. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, tall upright 9:16 frame, no text, no letters, no numbers, no signs, no watermark."
     }
   ]

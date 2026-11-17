@@ -63,15 +63,26 @@ def main(film):
     frames, scale = decode(film, size)
     bad = []
 
+    # Animated graphics move on every frame of their shot: only their first
+    # frame (the cut) can be checked; everything inside them is skipped.
+    moving = info.get('moving') or []
+    still = lambda f: not any(a < f < a + n for a, n in moving)
     want = [frames_plan[i][0] for i in range(1, len(frames_plan)) if pics[i] != pics[i - 1]]
-    got = changes(frames, info.get('picture_box') or [0, 0, *size], scale, 2.0)
+    # With subtitles, the picture is judged above them: a new subtitle line
+    # is big enough on an upright film to look like a picture change.
+    box = list(info.get('picture_box') or [0, 0, *size])
+    if info.get('caption_box'):
+        box[3] = min(box[3], info['caption_box'][1])
+    got = [g for g in changes(frames, box, scale, 2.0) if still(g)]
     b, exact = compare(want, got, 'picture', fps)
     bad += b
     report = f'{len(want)} picture changes, {exact} on the exact frame'
+    if moving:
+        report += f' ({len(moving)} animated graphic(s), checked at their first frame)'
 
     if info.get('caption_box'):
-        wantc = [f for f in info['word_frames'] if f > 0]
-        gotc = changes(frames, info['caption_box'], scale, 0.3)
+        wantc = [f for f in info['word_frames'] if f > 0 and still(f)]
+        gotc = [g for g in changes(frames, info['caption_box'], scale, 0.3) if still(g)]
         b, exactc = compare(wantc, gotc, 'subtitle', fps)
         bad += b
         report += f'; {len(wantc)} subtitle changes, {exactc} on the exact frame'

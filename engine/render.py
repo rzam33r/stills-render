@@ -1,9 +1,11 @@
 """Make the film: each shot's picture from the frame its first word is spoken.
 
     python3 engine/render.py plan.json PICTURES_DIR VOICE_DIR OUT.mp4
-        [--logo brand/watermark.png] [--music music/x.mp3] [--fps 30]
+        [--logo brand/watermark.png] [--music music/x.mp3] [--fps 30] [--icons ICON_DIR]
 
-VOICE_DIR is what voice.py wrote (voice.wav and cuts.json).
+VOICE_DIR is what voice.py wrote (voice.wav and cuts.json). ICON_DIR holds the
+icons the plan's animated graphics use (engine/icons.py fetch); a shot with a
+"graphic" is drawn frame by frame by graphics.py for as long as it lasts.
 
 Two layouts, chosen by the plan's "layout"; in both, every picture fills
 the whole frame:
@@ -33,7 +35,7 @@ from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from check_plan import find_picture  # noqa: E402
-from frames import SIZES, shot_image  # noqa: E402
+from frames import SIZES, shot_image, with_logo  # noqa: E402
 
 TAIL = 0.8          # the last picture stays this long after the voice ends
 MUSIC_GAIN = -22    # dB under the voice
@@ -99,10 +101,40 @@ def run(cmd):
         raise SystemExit(f'ffmpeg failed: {" ".join(cmd[:6])} ...\n{r.stderr[-2000:]}')
 
 
+ENCODE = ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-tune', 'stillimage', '-pix_fmt', 'yuv420p']
+
+
+def encode_graphic(job):
+    """Draw an animated graphic's frames for one stretch and encode them,
+    with the same settings as a still stretch so the parts join exactly."""
+    (graphic, first, n, shot_first, shot_frames, fps, size, icon_dir, language,
+     logo_path, rows, out) = job
+    import graphics
+    from frames import with_logo
+    logo = Image.open(logo_path).convert('RGBA') if logo_path else None
+    ts = None
+    if rows:
+        import typeset as ts
+    cmd = ['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{size[0]}x{size[1]}',
+           '-framerate', str(fps), '-i', '-', '-frames:v', str(n)] + ENCODE + [
+           '-r', str(fps), '-video_track_timescale', str(fps * 1000), '-g', str(fps * 10), str(out)]
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    for f in range(first, first + n):
+        img = graphics.frame(graphic, (f - shot_first) / fps, shot_frames / fps, size, icon_dir, language)
+        img = with_logo(img, logo, size)
+        if rows:
+            img = with_caption(img, rows, ts)
+        proc.stdin.write(img.convert('RGB').tobytes())
+    proc.stdin.close()
+    err = proc.stderr.read().decode(errors='replace')
+    if proc.wait():
+        raise SystemExit(f'ffmpeg failed on an animated graphic: {err[-2000:]}')
+    return out
+
+
 def encode_segment(png, frames, fps, out):
     run(['ffmpeg', '-v', 'error', '-y', '-loop', '1', '-framerate', str(fps), '-i', str(png),
-         '-frames:v', str(frames), '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18',
-         '-tune', 'stillimage', '-pix_fmt', 'yuv420p', '-r', str(fps), '-video_track_timescale', str(fps * 1000),
+         '-frames:v', str(frames)] + ENCODE + ['-r', str(fps), '-video_track_timescale', str(fps * 1000),
          '-g', str(fps * 10), str(out)])
 
 
@@ -131,6 +163,7 @@ def main(argv):
     opt = lambda k, d=None: argv[argv.index(k) + 1] if k in argv else d
     fps = int(opt('--fps', 30))
     logo_path, music = opt('--logo'), opt('--music')
+    icon_dir = opt('--icons', str(pic_dir))
 
     plan = json.loads(plan_path.read_text(encoding='utf-8-sig'))
     shots = plan['shots']
@@ -168,14 +201,32 @@ def main(argv):
             raise SystemExit('Pillow has no Raqm text shaping: Hindi would be drawn wrongly. '
                              'Install libfribidi0 (apt) and use the Pillow wheel from locks/pictures.txt.')
 
+    language = plan.get('language', 'en')
+    animated = {i for i, s in enumerate(shots) if isinstance(s.get('graphic'), dict)}
+    if animated:
+        import graphics
+
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
         base = {}
         for i, s in enumerate(shots):
-            base[i] = shot_image(s, find, size, logo)
-        pngs, keys, cache = [], [], {}
-        for first, n, (shot, L, shown) in parts:
+            if i in animated:
+                img = graphics.frame(s['graphic'], 0.0, shot_frames[i][1] / fps, size, icon_dir, language)
+                base[i] = with_logo(img, logo, size)
+            else:
+                base[i] = shot_image(s, find, size, logo)
+        pngs, keys, cache, jobs = [], [], {}, {}
+        for k, (first, n, (shot, L, shown)) in enumerate(parts):
             key = (shot, L, shown)
+            if shot in animated:
+                rows = None
+                if L is not None and shown:
+                    said = ' '.join(words[w]['word'] for w in lines[L][:shown])
+                    rows = typeset.lay_out(typeset.words_of(said), caption_size(size), round(size[0] * 0.86))
+                jobs[k] = (shots[shot]['graphic'], first, n, shot_frames[shot][0], shot_frames[shot][1], fps,
+                           size, icon_dir, language, logo_path, rows, tmp / f'seg{k:05d}.mp4')
+                pngs.append(None)
+                continue
             if key not in cache:
                 img = base[shot]
                 if L is not None and shown:
@@ -189,9 +240,13 @@ def main(argv):
                 cache[key] = png
             pngs.append(cache[key])
         segs = [tmp / f'seg{i:05d}.mp4' for i in range(len(parts))]
-        with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as pool:
-            list(pool.map(lambda a: encode_segment(*a),
-                          [(pngs[i], parts[i][1], fps, segs[i]) for i in range(len(parts))]))
+        with concurrent.futures.ProcessPoolExecutor(max_workers=os.cpu_count() or 2) as procs:
+            drawing = [procs.submit(encode_graphic, job) for job in jobs.values()]
+            with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as pool:
+                list(pool.map(lambda a: encode_segment(*a),
+                              [(pngs[i], parts[i][1], fps, segs[i]) for i in range(len(parts)) if i not in jobs]))
+            for d in drawing:
+                d.result()
         (tmp / 'list.txt').write_text(''.join(f"file '{p}'\n" for p in segs))
         video = tmp / 'video.mp4'
         run(['ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', str(tmp / 'list.txt'),
@@ -203,14 +258,19 @@ def main(argv):
 
     # What the sync check needs: where each shot and each subtitle word
     # starts, what each shot shows, and where on screen to look.
-    pic_keys = [hashlib.sha1(base[i].tobytes()).hexdigest()[:16] for i in range(len(shots))]
+    # A graphic starts from an empty sunburst, so two in a row look alike at
+    # their first frame; each is still its own picture.
+    pic_keys = [f'graphic-{i}' if i in animated else hashlib.sha1(base[i].tobytes()).hexdigest()[:16]
+                for i in range(len(shots))]
     (out.with_suffix('.cuts.json')).write_text(json.dumps({
         'fps': fps, 'frames': shot_frames, 'pictures': pic_keys, 'starts': cuts['starts'],
         'picture_box': [0, 0, size[0], size[1]],
         'caption_box': caption_box(size) if lines else None,
         'word_frames': sorted(set(word_frames)) if lines else [],
+        'moving': [list(shot_frames[i]) for i in sorted(animated)],
         'size': list(size)}, indent=0))
     print(f'{out.name}: {layout}, {len(shots)} shots, {len(parts)} stretches, {end} frames, {end / fps:.1f} s'
+          + (f', {len(animated)} animated graphic(s)' if animated else '')
           + (f', {len(lines)} subtitle lines' if lines else '')
           + (f', music {pathlib.Path(music).name}' if music else ''))
     return 0

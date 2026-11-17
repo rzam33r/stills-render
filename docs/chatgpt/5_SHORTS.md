@@ -30,7 +30,8 @@ Everything in files 1 to 4 holds unless this file says otherwise.
 - Tell the story in steps: consecutive pictures can be the same place a
   moment later, or the same subject changing (a cub, then the same cub
   grown into a lion).
-- Cards are rare in SHORT films. Use one only for the closing truth.
+- No cards. At most one animated graphic, for the key number or idea
+  (`8_GRAPHICS.md`).
 
 ## Flow prompts for SHORT films
 
@@ -115,13 +116,17 @@ Everything in files 1 to 4 holds unless this file says otherwise.
     },
     {
       "say": "Water never runs out.",
-      "card": "Water never runs out.",
-      "doodle": "011",
-      "doodle_prompt": "Minimal black ink doodle icon of a water drop with a circular arrow around it, thick simple lines, centred on a pure white background, square, no text, no letters, no shading."
+      "graphic": {
+        "kind": "icons",
+        "icons": [
+          "droplet",
+          "infinity"
+        ]
+      }
     },
     {
       "say": "It only changes shape.",
-      "picture": "012",
+      "picture": "011",
       "prompt": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts looking up in wonder at a sky with a cloud, a raindrop and a snowflake floating side by side. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, tall upright 9:16 frame, no text, no letters, no numbers, no signs, no watermark."
     }
   ]
@@ -180,13 +185,17 @@ Everything in files 1 to 4 holds unless this file says otherwise.
     },
     {
       "say": "पानी कभी खत्म नहीं होता,",
-      "card": "पानी कभी खत्म नहीं होता",
-      "doodle": "009",
-      "doodle_prompt": "Minimal black ink doodle icon of a water drop with a circular arrow around it, thick simple lines, centred on a pure white background, square, no text, no letters, no shading."
+      "graphic": {
+        "kind": "icons",
+        "icons": [
+          "droplet",
+          "infinity"
+        ]
+      }
     },
     {
       "say": "बस रूप बदलता है।",
-      "picture": "010",
+      "picture": "009",
       "prompt": "a cheerful cartoon boy of about ten with spiky black hair, round face, big expressive eyes, wearing a plain orange t-shirt and blue shorts looking up in wonder at a sky with a cloud, a raindrop and a snowflake floating side by side. Bright hand-drawn cartoon illustration, clean bold dark outlines, warm saturated colours, soft shading, simple detailed background, tall upright 9:16 frame, no text, no letters, no numbers, no signs, no watermark."
     }
   ]

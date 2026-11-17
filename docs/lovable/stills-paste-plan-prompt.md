@@ -56,6 +56,7 @@ exactly as it is.
 //   Returns { ok, problems: [..], notes: [..], forChatGPT, slug, frame,
 //   language, voice }.
 
+const STILLS_GRAPHIC_KINDS = ['icons', 'pie', 'bars', 'gauge', 'count', 'road', 'map'];
 const STILLS_DEFAULT_VOICE = { en: 'am_michael', hi: 'chatterbox-hi' };
 
 function parsePlan(planText) {
@@ -139,8 +140,14 @@ function checkStillsUpload(planText, fileNames) {
     const n = i + 1;
     if (!s || typeof s !== 'object') { problems.push(`shot ${n}: not an object`); return; }
     if (!String(s.say || '').trim()) problems.push(`shot ${n}: no "say" words`);
-    const pic = 'picture' in s, card = 'card' in s;
-    if (pic === card) problems.push(`shot ${n}: needs exactly one of "picture" or "card"`);
+    const kinds = ['picture', 'card', 'graphic'].filter(k => k in s);
+    if (kinds.length !== 1) problems.push(`shot ${n}: needs exactly one of "picture", "graphic" or "card"`);
+    if ('graphic' in s) {
+      const g = s.graphic;
+      if (!g || typeof g !== 'object' || !STILLS_GRAPHIC_KINDS.includes(g.kind)) {
+        problems.push(`shot ${n}: "graphic" needs a "kind": ${STILLS_GRAPHIC_KINDS.join(', ')}`);
+      }
+    }
     for (const key of ['picture', 'doodle']) {
       if (s[key] == null) continue;
       if (!have.has(String(s[key]))) zipProblem(`shot ${n}: picture "${s[key]}" is not in the ZIP (looked for ${s[key]}.png, .jpg, .jpeg, .webp)`);
@@ -149,8 +156,10 @@ function checkStillsUpload(planText, fileNames) {
 
   const frame = plan.layout === 'short' ? '9:16' : (plan.frame === '9:16' ? '9:16' : '16:9');
   const words = plan.shots.reduce((a, s) => a + String((s && s.say) || '').replace(/\*/g, ' ').split(/\s+/).filter(Boolean).length, 0);
-  const seconds = Math.round(words / 2.75);
-  notes.push(`${plan.shots.length} shots, ${words} words, about ${seconds < 90 ? seconds + ' seconds' : (seconds / 60).toFixed(1) + ' minutes'}`);
+  // Words a second: Kokoro in English, Chatterbox in Hindi (measured, Nov 2026).
+  const seconds = Math.round(words / (language === 'hi' ? 3.3 : 2.75));
+  const graphics = plan.shots.filter(s => s && typeof s === 'object' && 'graphic' in s).length;
+  notes.push(`${plan.shots.length} shots, ${words} words, about ${seconds < 90 ? seconds + ' seconds' : (seconds / 60).toFixed(1) + ' minutes'}${graphics ? `, ${graphics} animated graphic${graphics === 1 ? '' : 's'}` : ''}`);
   notes.push(`${frame === '9:16' ? 'Upright 9:16' : 'Wide 16:9'} · ${language === 'hi' ? 'Hindi' : 'English'} · voice ${voice}`);
   if (voice === 'chatterbox-hi') {
     // Chatterbox needs about 12 minutes of GitHub work per minute of speech;

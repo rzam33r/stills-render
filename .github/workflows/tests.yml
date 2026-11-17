@@ -34,6 +34,8 @@ jobs:
         run: python3 engine/check_plan.py examples/north-star-plan.json
       - name: A film is cut on the right frames, and cards fit
         run: python3 tests/test_render.py
+      - name: Animated graphics and the icon library
+        run: python3 tests/test_graphics.py
       - name: Every music track has its credit
         run: python3 tests/test_music.py
       - name: The workflows keep their rules

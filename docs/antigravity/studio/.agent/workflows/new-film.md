@@ -7,7 +7,8 @@ description: Make a FACT HUBZZZ film from a topic or a Bittu & Riya story from a
 Read `guide/1_SCRIPT_RULES.md`, `guide/2_SHOT_LIST.md`,
 `guide/3_FLOW_PROMPTS.md` and `guide/4_PLAN_FORMAT.md` first. Read
 `guide/5_SHORTS.md` for a film under 3 minutes, `guide/6_LONG_FILMS.md` for
-3 minutes or more, and `guide/7_HINDI_VOICE.md` for a Hindi film.
+3 minutes or more, and `guide/7_HINDI_VOICE.md` for a Hindi film, and
+`guide/8_GRAPHICS.md` for the animated graphics (about one a minute).
 
 **A Bittu & Riya story?** If my one-liner names Bittu or Riya, or I say
 "story", it is a story: also read `cast/bittu-riya/STORIES.md`,
@@ -43,16 +44,17 @@ Riya.
 
 5. **Shots.** Split the approved script into shots by `guide/2_SHOT_LIST.md`
    without changing a word. Show a numbered table: number, words spoken,
-   picture or card, what the picture shows. Save it to
+   picture or graphic, what it shows. Save it to
    `films/<story name>/shots.md`. Wait for my OK.
 
-6. **plan.json.** Write the Flow prompt for every picture and doodle by
-   `guide/3_FLOW_PROMPTS.md`, then write `films/<story name>/plan.json` exactly
+6. **plan.json.** Write the Flow prompt for every picture by
+   `guide/3_FLOW_PROMPTS.md` and every graphic by `guide/8_GRAPHICS.md`, then write `films/<story name>/plan.json` exactly
    as `guide/4_PLAN_FORMAT.md` describes. Then report this checklist, each
    line done or not:
    - words in all "say" fields = words in the approved script (both counts);
    - shots outside their word range (`guide/2_SHOT_LIST.md`, file 5 or 6);
-   - cards: count and share of all shots;
+   - animated graphics: how many, about one a minute, never two in a row;
+     no cards or doodles;
    - pictures: count, numbered without gaps, each with a "prompt";
    - every prompt describes the lead character the same way and ends with
      the style block;

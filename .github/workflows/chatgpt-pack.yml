@@ -14,7 +14,7 @@ name: ChatGPT pack
 on:
   push:
     branches: [main]
-    paths: ['docs/chatgpt/**', 'docs/antigravity/**', 'engine/check_plan.py', 'engine/voices.py', '.github/workflows/chatgpt-pack.yml']
+    paths: ['docs/chatgpt/**', 'docs/antigravity/**', 'engine/check_plan.py', 'engine/voices.py', 'engine/icons.py', 'engine/icons.json', '.github/workflows/chatgpt-pack.yml']
   workflow_dispatch:
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
         run: |
           cd docs/chatgpt
           zip -X -q ../../stills-studio-chatgpt-pack.zip PROJECT_INSTRUCTIONS.md 1_SCRIPT_RULES.md \
-            2_SHOT_LIST.md 3_FLOW_PROMPTS.md 4_PLAN_FORMAT.md 5_SHORTS.md 6_LONG_FILMS.md 7_HINDI_VOICE.md
+            2_SHOT_LIST.md 3_FLOW_PROMPTS.md 4_PLAN_FORMAT.md 5_SHORTS.md 6_LONG_FILMS.md 7_HINDI_VOICE.md 8_GRAPHICS.md
           cd ../..
           unzip -l stills-studio-chatgpt-pack.zip
       - name: Build the Antigravity project
@@ -42,8 +42,8 @@ jobs:
           root="/tmp/pack/FACT HUBZZZ Studio"
           mkdir -p "$root/guide" "$root/tools"
           cp -r docs/antigravity/studio/. "$root/"
-          cp docs/chatgpt/[1-7]_*.md "$root/guide/"
-          cp engine/check_plan.py engine/voices.py "$root/tools/"
+          cp docs/chatgpt/[1-8]_*.md "$root/guide/"
+          cp engine/check_plan.py engine/voices.py engine/icons.py engine/icons.json "$root/tools/"
           (cd /tmp/pack && zip -X -q -r "$GITHUB_WORKSPACE/FACT-HUBZZZ-Studio.zip" "FACT HUBZZZ Studio")
           unzip -l FACT-HUBZZZ-Studio.zip
       - name: Publish it
@@ -53,7 +53,7 @@ jobs:
           stamp="$(date -u +%d-%b-%y) (${GITHUB_SHA:0:7})"
           notes="ChatGPT project files for Stills Studio, version $stamp.
           
-          ChatGPT: paste PROJECT_INSTRUCTIONS.md into the project's instructions and upload files 1 to 7, replacing the old ones. Antigravity: unzip FACT-HUBZZZ-Studio.zip and open the folder (see its README.md)."
+          ChatGPT: paste PROJECT_INSTRUCTIONS.md into the project's instructions and upload files 1 to 8, replacing the old ones. Antigravity: unzip FACT-HUBZZZ-Studio.zip and open the folder (see its README.md)."
           if ! gh release view chatgpt-pack >/dev/null 2>&1; then
             gh release create chatgpt-pack --title "ChatGPT project files" --notes "$notes" --latest=false
           else

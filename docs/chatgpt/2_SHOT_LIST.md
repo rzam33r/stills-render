@@ -16,28 +16,22 @@ shot's words say first is what the picture must show.
   stays the same. Chapter titles and punchlines may be 2 to 5 words.
 - Never change, add or drop a word of the approved script while splitting.
 
-## Picture or card
+## Picture or graphic
 
-**Picture** (about three quarters of the shots): a full painting that shows
-literally what the words say at that moment. "If animals avoided a
-particular pool" → a deer turning away from a still green pool, the lead
-character watching. Not a mood, not a symbol: the thing itself.
+**Picture** (almost every shot): a full painting that shows literally what
+the words say at that moment. "If animals avoided a particular pool" → a
+deer turning away from a still green pool, the lead character watching. Not
+a mood, not a symbol: the thing itself.
 
-**Card** (about a quarter): white background, a short line in black
-capitals drawn by the engine, and optionally a small black doodle under it.
-Use a card for:
-- every chapter title (with `"paragraph": true` on that shot);
-- the punchline of a section ("Not superstition.");
-- a list of absences or negatives ("No filters." "No boiling." — up to three
-  cards in a row is fine for a list);
-- a key number or claim that should stay with the viewer.
+**Animated graphic** (about one a minute): a pie, bars, a gauge, a counter,
+a road with footprints, a map with a pin, or icons, drawn and animated by
+the engine, for a number, a share, a journey, a place or a list the words
+say. How to write one: `8_GRAPHICS.md`. Never two in a row, never the first
+shot.
 
-Card text: at most 8 words, taken from the shot's spoken words (or the chapter
-title itself). Write it in normal case; the engine sets it in capitals.
-
-A **doodle** is a tiny black line icon on white that makes the card's idea
-visible at a glance: a crossed-out water jug for "No filters", a skull in a
-water drop for "the silent killer". Give most cards one.
+White cards and doodles are retired. A chapter title is a picture of the
+chapter's first scene with `"paragraph": true` on that shot; a key number
+is a graphic.
 
 ## Variety
 
@@ -54,5 +48,5 @@ least half of the pictures.
 ## The first and last shots
 
 - Shot 1 is a picture of the cold open's scene, with the lead character.
-- The last shot is a card with the subscribe line, or a picture of the
-  lead character in the viewer's modern world.
+- The last shot is a picture of the lead character in the viewer's modern
+  world.

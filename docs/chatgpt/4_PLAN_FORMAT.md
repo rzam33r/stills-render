@@ -27,13 +27,12 @@ Deliver one JSON object. Nothing before or after it in the file.
 | `picture` | picture shots | the picture's number: `"001"`, `"002"`… (the file will be 001.png) |
 | `prompt` | picture shots | the Flow prompt for that picture |
 | `who` | Bittu & Riya films | who is in the picture: `["Bittu"]`, `["Riya"]` or `["Bittu", "Riya"]`; left out when neither is |
-| `card` | card shots | the short line the engine draws (at most 8 words) |
-| `doodle` | optional, card shots | the doodle picture's number |
-| `doodle_prompt` | with `doodle` | the Flow prompt for the doodle |
+| `graphic` | graphic shots | an animated graphic the engine draws: `8_GRAPHICS.md` |
+| `card`, `doodle` | retired | old plans only; use a picture or a graphic |
 | `paragraph` | chapter titles | `true`: the voice takes a breath before this shot |
 
-A shot has `picture` or `card`, never both. Numbers run 001, 002, 003… in
-the order pictures and doodles first appear, with no gaps.
+A shot has `picture` or `graphic`, never both. Numbers run 001, 002, 003…
+in the order pictures first appear, with no gaps.
 
 ## The ZIP
 
@@ -56,15 +55,13 @@ the order pictures and doodles first appear, with no gaps.
     },
     {
       "say": "No map shows where you are.",
-      "card": "No map.",
-      "doodle": "002",
-      "doodle_prompt": "Minimal black ink doodle icon of a rolled paper map, crossed out, thick simple lines, centred on a pure white background, square, no text, no letters, no shading."
+      "picture": "002",
+      "prompt": "Medium shot of a simple stick-figure man with a large round white head, two small black dot eyes, simple expressive eyebrows and mouth, a thin black stick body and limbs, wearing a short rough linen tunic, standing at an empty wooden table on the deck of a small boat by lantern light, holding up both open empty hands, puzzled; dark open sea at night. Hand-drawn cartoon illustration, ink outlines with soft watercolour colouring, muted natural colours, simple clear composition, wide 16:9 frame, no text, no letters, no numbers, no signs, no watermark."
     },
     {
       "say": "No machine tells you which way is home.",
-      "card": "No machine.",
-      "doodle": "003",
-      "doodle_prompt": "Minimal black ink doodle icon of a simple compass dial with a question mark, thick simple lines, centred on a pure white background, square, no text, no letters, no shading."
+      "picture": "003",
+      "prompt": "Close-up of a simple stick-figure man with a large round white head, two small black dot eyes, simple expressive eyebrows and mouth, a thin black stick body and limbs, wearing a short rough linen tunic, kneeling on the bare wooden deck at night and searching an empty wooden chest with both hands, worried; a single lantern glowing beside him. Hand-drawn cartoon illustration, ink outlines with soft watercolour colouring, muted natural colours, simple clear composition, wide 16:9 frame, no text, no letters, no numbers, no signs, no watermark."
     },
     {
       "say": "One wrong guess, and the water runs out before the land appears.",
@@ -78,13 +75,17 @@ the order pictures and doodles first appear, with no gaps.
     },
     {
       "say": "So how did they find their way with nothing but the sky?",
-      "card": "Nothing but the sky.",
-      "doodle": "006",
-      "doodle_prompt": "Minimal black ink doodle icon of a night sky with a few stars and a small question mark, thick simple lines, centred on a pure white background, square, no text, no letters, no shading."
+      "picture": "006",
+      "prompt": "Medium shot of a simple stick-figure man with a large round white head, two small black dot eyes, simple expressive eyebrows and mouth, a thin black stick body and limbs, wearing a short rough linen tunic, sitting on the deck of a small wooden boat with one hand on his chin and the other on the deck, looking up at a sky full of stars, wondering; calm dark sea. Hand-drawn cartoon illustration, ink outlines with soft watercolour colouring, muted natural colours, simple clear composition, wide 16:9 frame, no text, no letters, no numbers, no signs, no watermark."
     },
     {
       "say": "The star that never moves.",
-      "card": "The star that never moves.",
+      "graphic": {
+        "kind": "icons",
+        "icons": [
+          "glowing star"
+        ]
+      },
       "paragraph": true
     },
     {

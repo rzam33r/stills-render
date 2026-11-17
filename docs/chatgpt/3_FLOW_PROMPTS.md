@@ -59,17 +59,10 @@ thing (17 Nov 2026: a boy with a hammer, a blade and a stone grew a third
 arm). "Holds a hammer in one hand and a black stone in the other" is safe;
 "holds a hammer, a blade and a stone" is not.
 
-## A doodle prompt (for cards)
-
-> Minimal black ink doodle icon of [the idea], thick simple lines, centred
-> on a pure white background, square, no text, no letters, no shading.
-
-Keep doodles simple enough to read at a glance: one object, maybe crossed
-out, maybe with a tiny symbol (question mark, light bulb, warning sign).
-
 ## Never
 
-- Text, labels, signs, letters or numbers inside a picture (use a card).
+- Text, labels, signs, letters or numbers inside a picture (a number is an
+  animated graphic: `8_GRAPHICS.md`).
 - A different face, head shape or body for the lead character.
 - More than two things held by one person, or hands not said.
 - Photographic, 3D or anime styles.

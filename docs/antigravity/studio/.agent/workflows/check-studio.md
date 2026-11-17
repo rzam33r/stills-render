@@ -10,7 +10,8 @@ upload anything, and do not create or change any file.
 1. **The folder.** The open folder must hold `.agent/rules/studio.md`, the
    five workflows in `.agent/workflows/` (new-film, make-pictures,
    upload-film, fix-plan, check-studio), `guide/1_SCRIPT_RULES.md` to
-   `guide/7_HINDI_VOICE.md`, `tools/check_plan.py`, `films/` and
+   `guide/8_GRAPHICS.md`, `tools/check_plan.py`, `tools/icons.py`,
+   `tools/icons.json`, `films/` and
    `cast/bittu-riya/` (CAST.md, bittu.json, riya.json). If `.agent`
    sits inside a subfolder instead, tell me to open that subfolder with
    File → Open Folder, and stop.

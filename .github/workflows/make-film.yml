@@ -314,6 +314,15 @@ jobs:
                 f"{c['pieces']} sentences, {c['pieces_redone']} recorded again because they were unclear; "
                 f"the least clear sentence was {c['worst_piece_error']:.0%} not understood.\n")
           PY
+      # The icon library (Google Noto emoji): each picture is downloaded once and
+      # kept in the cache, so the library grows with every film that uses it.
+      - uses: actions/cache@v4
+        with:
+          path: icons
+          key: icons-${{ hashFiles('engine/icons.json') }}-${{ github.run_id }}
+          restore-keys: icons-${{ hashFiles('engine/icons.json') }}-
+      - name: Fetch the icons the animated graphics use
+        run: python3 engine/icons.py fetch story/plan.json icons
       - name: Make the film
         env:
           SLUG: ${{ inputs.slug }}
@@ -324,7 +333,7 @@ jobs:
           args=()
           [ -n "$MUSIC" ] && args+=(--music "$MUSIC")
           [ "$LOGO" = true ] && args+=(--logo brand/watermark.png)
-          python3 engine/render.py story/plan.json story/pictures voice "output/$SLUG.mp4" "${args[@]}"
+          python3 engine/render.py story/plan.json story/pictures voice "output/$SLUG.mp4" --icons icons "${args[@]}"
       - name: Check every picture lands on its word
         env:
           SLUG: ${{ inputs.slug }}

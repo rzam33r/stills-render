@@ -14,7 +14,8 @@ what a shot's words say first is what its picture must show.
 
 The files in `guide/` are the rules for the work: 1_SCRIPT_RULES.md,
 2_SHOT_LIST.md, 3_FLOW_PROMPTS.md, 4_PLAN_FORMAT.md, 5_SHORTS.md,
-6_LONG_FILMS.md, 7_HINDI_VOICE.md. Read the ones a step names before doing
+6_LONG_FILMS.md, 7_HINDI_VOICE.md, 8_GRAPHICS.md (animated graphics and the
+icon list). Read the ones a step names before doing
 it. When this file and a guide file disagree, the guide file wins.
 
 ## Where things go

@@ -50,10 +50,78 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from voices import AZURE, CHATTERBOX_VOICES, KOKORO_VOICES, is_hindi_voice  # noqa: E402
+try:
+    import icons  # noqa: E402
+except ImportError:          # an old copy of tools/ without the icon list
+    icons = None
 
 PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 VOICES = KOKORO_VOICES | CHATTERBOX_VOICES
-KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt', 'who'}
+KEYS = {'say', 'picture', 'card', 'doodle', 'paragraph', 'note', 'prompt', 'doodle_prompt', 'who', 'graphic'}
+# An animated graphic (graphics.py): its kind, the fields it needs, the fields it may have.
+GRAPHICS = {
+    'icons': ({'icons'}, set()),
+    'pie': (set(), {'value', 'values', 'icon'}),
+    'bars': ({'values'}, {'labels', 'unit'}),
+    'gauge': ({'value'}, {'unit'}),
+    'count': ({'value'}, {'unit', 'icon'}),
+    'road': ({'icon'}, {'from'}),
+    'map': (set(), {'icon', 'at'}),
+}
+
+
+def is_number(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def check_graphic(g, where):
+    """Problems with one shot's "graphic": (errors, warnings)."""
+    errors, warnings = [], []
+    kinds = ', '.join(GRAPHICS)
+    if not isinstance(g, dict) or g.get('kind') not in GRAPHICS:
+        return [f'{where}: "graphic" needs a "kind": {kinds}'], []
+    kind = g['kind']
+    need, may = GRAPHICS[kind]
+    for k in sorted(need - set(g)):
+        errors.append(f'{where}: a "{kind}" graphic needs "{k}"')
+    for k in sorted(set(g) - need - may - {'kind', 'label'}):
+        warnings.append(f'{where}: "{k}" is not used by a "{kind}" graphic')
+    if 'label' in g and (not isinstance(g['label'], str) or len(words(g['label'])) > 6):
+        errors.append(f'{where}: the graphic\'s "label" is a short line, at most 6 words')
+    if kind == 'pie':
+        vals = g.get('values') if 'values' in g else [g.get('value')]
+        if not isinstance(vals, list) or not 1 <= len(vals) <= 5 or not all(is_number(v) and v >= 0 for v in vals):
+            errors.append(f'{where}: a pie needs "value" (a percentage) or "values" (1 to 5 shares)')
+        elif 'values' not in g and not 0 <= vals[0] <= 100:
+            errors.append(f'{where}: a pie\'s "value" is a percentage, 0 to 100')
+    if kind == 'bars':
+        vals = g.get('values')
+        if not isinstance(vals, list) or not 2 <= len(vals) <= 6 or not all(is_number(v) and v >= 0 for v in vals):
+            errors.append(f'{where}: bars need "values": 2 to 6 numbers, none below 0')
+        labels = g.get('labels')
+        if labels is not None and (not isinstance(labels, list) or not isinstance(vals, list) or len(labels) != len(vals)
+                                   or not all(isinstance(x, str) and len(x) <= 14 for x in labels)):
+            errors.append(f'{where}: "labels" gives one short label (up to 14 letters) per bar')
+    if kind == 'gauge' and 'value' in g and not (is_number(g['value']) and 0 <= g['value'] <= 100):
+        errors.append(f'{where}: a gauge\'s "value" is 0 to 100')
+    if kind == 'count' and 'value' in g and not is_number(g['value']):
+        errors.append(f'{where}: a counter\'s "value" is a number')
+    for k in ('unit',):
+        if k in g and (not isinstance(g[k], str) or len(g[k]) > 12):
+            errors.append(f'{where}: "{k}" is a short word, like "%" or "years"')
+    if kind == 'icons':
+        names = g.get('icons')
+        if not isinstance(names, list) or not 1 <= len(names) <= 6:
+            errors.append(f'{where}: "icons" lists 1 to 6 icon names')
+    if kind == 'map' and 'at' in g:
+        at = g['at']
+        if not (isinstance(at, list) and len(at) == 2 and all(is_number(v) and 0 <= v <= 1 for v in at)):
+            errors.append(f'{where}: "at" is [x, y], each 0 to 1 across the map, where the pin drops')
+    if icons is not None:
+        for n in icons.icon_names(g):
+            if icons.lookup(n) is None:
+                errors.append(f'{where}: no icon called "{n}"; see the icon list (python tools/icons.py list)')
+    return errors, warnings
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
        'layout', 'language', 'captions', 'cast', 'extras'}
 # A cast film's characters live in a Flow project; "who" names them per picture.
@@ -211,6 +279,7 @@ def check(plan, pictures=None):
 
     used = {}
     total = 0
+    graphics_count = retired_cards = 0
     for i, s in enumerate(shots, 1):
         where = f'shot {i}'
         if not isinstance(s, dict):
@@ -236,10 +305,17 @@ def check(plan, pictures=None):
             warnings.append(f'{where}: {len(w)} word(s) is under a second on screen')
         if say.count('*') % 2:
             warnings.append(f'{where}: an odd number of * marks; a highlight is not closed')
-        has_pic, has_card = 'picture' in s, 'card' in s
-        if has_pic == has_card:
-            errors.append(f'{where}: give exactly one of "picture" or "card"')
+        has_pic, has_card, has_graphic = 'picture' in s, 'card' in s, 'graphic' in s
+        if has_pic + has_card + has_graphic != 1:
+            errors.append(f'{where}: give exactly one of "picture", "graphic" or "card"')
             continue
+        if has_graphic:
+            e, w_ = check_graphic(s['graphic'], where)
+            errors += e
+            warnings += w_
+            graphics_count += 1
+        if has_card:
+            retired_cards += 1
         if has_card:
             card = s['card']
             if not isinstance(card, str) or not words(card):
@@ -315,9 +391,21 @@ def check(plan, pictures=None):
         errors += making
     else:
         warnings += [f'{m} (the pictures are already made, so this does not stop the film)' for m in making]
+    minutes = total / wps / 60
+    if retired_cards:
+        warnings.append(f'{retired_cards} card(s): white cards are retired; show the number or idea with an '
+                        f'animated "graphic" instead')
+    want = max(1, round(minutes))
+    if total and minutes >= 0.75 and not graphics_count:
+        warnings.append(f'no animated graphic: about one a minute, so about {want} here (a pie, bars, a gauge, '
+                        f'a counter, a road, a map or icons)')
+    elif graphics_count > 2 * want + 1:
+        warnings.append(f'{graphics_count} animated graphics in about {minutes:.1f} minutes: about one a minute '
+                        f'keeps them special')
     if total:
-        warnings.insert(0, f'{len(shots)} shots, {total} words, about {total / wps / 60:.1f} minutes '
-                           f'(a picture every {total / wps / len(shots):.1f} s)')
+        warnings.insert(0, f'{len(shots)} shots, {total} words, about {minutes:.1f} minutes '
+                           f'(a picture every {total / wps / len(shots):.1f} s)'
+                           + (f', {graphics_count} animated graphic(s)' if graphics_count else ''))
     return errors, warnings
 
 

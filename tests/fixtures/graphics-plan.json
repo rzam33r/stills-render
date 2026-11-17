@@ -1,0 +1,19 @@
+{
+  "title": "Every animated graphic",
+  "layout": "wide",
+  "frame": "9:16",
+  "language": "en",
+  "style": "2D illustrated cartoon",
+  "shots": [
+    {"say": "Bittu opened the fridge and stared at it for a long time.", "picture": "001", "prompt": "p"},
+    {"say": "Only thirty out of every hundred people eat fruit daily.", "graphic": {"kind": "pie", "value": 30, "icon": "apple", "label": "eat fruit every day"}},
+    {"say": "And the share kept growing, year after year after year.", "graphic": {"kind": "bars", "values": [12, 30, 45, 61], "labels": ["1990", "2000", "2010", "2020"], "unit": "%"}},
+    {"say": "Riya laughed at him and pointed at the empty shelves.", "picture": "002", "prompt": "p"},
+    {"say": "His snack danger meter went all the way into the red.", "graphic": {"kind": "gauge", "value": 82, "label": "snack danger"}},
+    {"say": "People have cooked over fire for thirty thousand years.", "graphic": {"kind": "count", "value": 30000, "unit": "years", "icon": "fire"}},
+    {"say": "So Bittu walked the long road all the way to the market.", "graphic": {"kind": "road", "icon": "house", "from": "tent"}},
+    {"say": "The best mangoes in the world grow right here in India.", "graphic": {"kind": "map", "icon": "earth asia", "at": [0.32, 0.38], "label": "India"}},
+    {"say": "He came home with apples, bananas, carrots, broccoli and fish.", "graphic": {"kind": "icons", "icons": ["apple", "banana", "carrot", "broccoli", "fish"]}},
+    {"say": "Riya finally smiled, because tonight dinner was his job.", "picture": "003", "prompt": "p"}
+  ]
+}
