@@ -209,6 +209,27 @@ for n, w in flows.items():
             missing.append(f'{n} / {job} -> {uses}')
 say(not missing, 'every workflow a job calls exists' + ('' if not missing else f': {missing}'))
 
+# --- every film render can draw its animated graphics -----------------------
+# 18 Nov 2026: the example films gained a graphic, and two test jobs rendered
+# them without fetching the icons (they had skipped themselves until then).
+renders = []
+for n in flows:
+    for line in (WF / n).read_text().split('\n'):
+        if 'engine/render.py' in line and not line.strip().startswith('#'):
+            block = line
+            renders.append((n, line))
+lacking = []
+for n, line in renders:
+    text_n = (WF / n).read_text()
+    i = text_n.index(line)
+    stmt = text_n[i:text_n.find('\n', i + len(line))]
+    nxt = text_n[i:].split('\n')
+    joined = nxt[0] + (' ' + nxt[1] if nxt[0].rstrip().endswith('\\') else '')
+    if '--icons' not in joined:
+        lacking.append(f'{n}: {line.strip()[:60]}')
+say(renders and not lacking, f'all {len(renders)} film renders in the workflows are given the icons'
+    + ('' if not lacking else f': {lacking}'))
+
 # --- the repository cleans up after itself ----------------------------------
 # Uploaded pictures and finished films must never pile up on GitHub.
 uploads = []

@@ -65,8 +65,14 @@ jobs:
       - name: Only when the voice changed, or when run by hand
         id: need
         run: |
+          # Every commit of the push, not only the last: a push of several
+          # commits once hid a break in an earlier one (18 Nov 2026).
+          before="${{ github.event.before }}"
+          range="HEAD~1 HEAD"
+          if [ -n "$before" ] && [ "$before" != 0000000000000000000000000000000000000000 ] && \
+             git fetch -q --depth=1 origin "$before" 2>/dev/null; then range="$before HEAD"; fi
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || ! git rev-parse -q --verify HEAD~1 >/dev/null || \
-             git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(engine/(voice|voice_parts|voices|hindi|timing|render|frames|typeset|check_sync)\.py|locks/voice\.txt|examples/)'; then
+             git diff --name-only $range 2>/dev/null | grep -qE '^(engine/(voice|voice_parts|voices|hindi|timing|render|frames|typeset|check_sync|graphics|icons)\.py|engine/icons\.json|locks/voice\.txt|examples/|brand/|fonts/|\.github/workflows/tests\.yml)'; then
             echo run=yes >> "$GITHUB_OUTPUT"
           else
             echo "voice untouched; skipping"; echo run=no >> "$GITHUB_OUTPUT"
@@ -97,11 +103,12 @@ jobs:
           # Kokoro's Hindi working for plans that name a Kokoro Hindi voice.
           python3 -c "import json; p=json.load(open('examples/boond-hindi-short-plan.json')); p['voice']='hm_omega'; json.dump(p, open('examples/boond-hindi-short-kokoro.json','w'), ensure_ascii=False)"
           for name in north-star rain-short boond-hindi-short; do
+            python3 engine/icons.py fetch "examples/$name-plan.json" icons
             plan="examples/$name-plan.json"
             [ "$name" = boond-hindi-short ] && plan=examples/boond-hindi-short-kokoro.json
             python3 engine/voice.py "$plan" "example/voice-$name"
             python3 engine/render.py "examples/$name-plan.json" "example/pictures-$name" "example/voice-$name" "example/$name.mp4" \
-              --logo brand/watermark.png --music "$(python3 engine/pick_music.py "examples/$name-plan.json" "$GITHUB_RUN_ID")"
+              --icons icons --logo brand/watermark.png --music "$(python3 engine/pick_music.py "examples/$name-plan.json" "$GITHUB_RUN_ID")"
             python3 engine/check_sync.py "example/$name.mp4"
           done
           python3 - <<'PY'
@@ -123,7 +130,7 @@ jobs:
           pip install -q -r locks/voice-azure.txt
           python3 -c "import json; p=json.load(open('examples/boond-hindi-short-plan.json')); p['voice']='hi-IN-MadhurNeural'; json.dump(p, open('/tmp/azure-plan.json','w'), ensure_ascii=False)"
           python3 engine/voice.py /tmp/azure-plan.json example/voice-azure
-          python3 engine/render.py /tmp/azure-plan.json example/pictures-boond-hindi-short example/voice-azure example/boond-hindi-azure.mp4
+          python3 engine/render.py /tmp/azure-plan.json example/pictures-boond-hindi-short example/voice-azure example/boond-hindi-azure.mp4 --icons icons
           python3 engine/check_sync.py example/boond-hindi-azure.mp4
       - name: Keep the example film to watch
         if: steps.need.outputs.run == 'yes'
@@ -148,8 +155,14 @@ jobs:
       - name: Only when the Hindi voice changed, or when run by hand
         id: need
         run: |
+          # Every commit of the push, not only the last: a push of several
+          # commits once hid a break in an earlier one (18 Nov 2026).
+          before="${{ github.event.before }}"
+          range="HEAD~1 HEAD"
+          if [ -n "$before" ] && [ "$before" != 0000000000000000000000000000000000000000 ] && \
+             git fetch -q --depth=1 origin "$before" 2>/dev/null; then range="$before HEAD"; fi
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || ! git rev-parse -q --verify HEAD~1 >/dev/null || \
-             git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^(engine/(voice|voice_parts|voices|chatterbox_hi|align_hi|hindi|timing|render|check_sync)\.py|locks/(voice-chatterbox|models)\.txt|examples/boond)'; then
+             git diff --name-only $range 2>/dev/null | grep -qE '^(engine/(voice|voice_parts|voices|chatterbox_hi|align_hi|hindi|timing|render|frames|check_sync|graphics|icons)\.py|engine/icons\.json|locks/(voice-chatterbox|models)\.txt|examples/boond|brand/|\.github/workflows/tests\.yml)'; then
             echo run=yes >> "$GITHUB_OUTPUT"
           else
             echo "Hindi voice untouched; skipping"; echo run=no >> "$GITHUB_OUTPUT"
@@ -187,8 +200,9 @@ jobs:
           python3 engine/voice.py $plan example/parts --part 1 --parts 2
           python3 engine/voice_parts.py $plan example/parts example/voice
           python3 engine/check_voice.py $plan example/voice --strict
+          python3 engine/icons.py fetch $plan icons
           python3 engine/render.py $plan example/pictures example/voice example/boond-hindi-chatterbox.mp4 \
-            --logo brand/watermark.png --music "$(python3 engine/pick_music.py $plan "$GITHUB_RUN_ID")"
+            --icons icons --logo brand/watermark.png --music "$(python3 engine/pick_music.py $plan "$GITHUB_RUN_ID")"
           python3 engine/check_sync.py example/boond-hindi-chatterbox.mp4
           python3 - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
           import json, pathlib
