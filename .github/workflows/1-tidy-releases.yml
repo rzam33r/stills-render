@@ -1,0 +1,28 @@
+name: Tidy old releases
+
+# Weekly sweep, and runnable by hand: drops story releases (uploaded picture
+# ZIPs) and film releases (films kept to watch instead of delivered) once
+# they are 7 days old. The example film, the ChatGPT pack and the voice
+# samples are kept. make-film sweeps on every upload; this catches the weeks
+# nothing is uploaded, so old artwork never lingers.
+on:
+  schedule:
+    - cron: '23 3 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Drop story and film releases older than 7 days
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: tools/tidy_releases.sh --repo "$REPO" --days 7
