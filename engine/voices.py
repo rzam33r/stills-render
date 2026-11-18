@@ -35,12 +35,16 @@ def is_hindi_voice(voice):
     return str(voice) in HINDI_VOICES or str(voice).startswith('hi-IN-')
 
 
-# Chatterbox needs about 11 s of a GitHub computer per second of speech, and
-# a step may run at most 6 hours, so a long Hindi film is recorded in parts at
-# the same time, each about 12 minutes of speech (about 2.5 hours of work).
+# Chatterbox needs about 11 s of a GitHub computer per second of speech
+# (measured on 17 Nov 2026 films: 15 to 26 s a sentence). One computer spoke
+# a whole 94-second film in 15 minutes, so the narration is recorded in parts
+# at the same time on separate computers, each about 20 seconds of speech
+# (about 4 minutes of work), then joined. Each sentence has its own seed, so
+# the voice sounds the same however it is split. GitHub runs up to 20 jobs at
+# once for a free account; 16 parts leaves room for the rest of the film.
 CHARS_PER_SECOND = 13.0          # Hindi narration, with its pauses
-PART_SECONDS = 12 * 60
-MAX_PARTS = 8
+PART_SECONDS = 20
+MAX_PARTS = 16
 
 
 def voice_parts(plan, engine, forced=None):
@@ -49,9 +53,11 @@ def voice_parts(plan, engine, forced=None):
         return 1
     if forced:
         return max(1, min(MAX_PARTS, int(forced)))
-    chars = sum(len(str(s.get('say', ''))) for s in plan.get('shots', []) if isinstance(s, dict))
-    seconds = chars / CHARS_PER_SECOND
-    return max(1, min(MAX_PARTS, -(-int(seconds) // PART_SECONDS)))
+    says = [str(s.get('say', '')) for s in plan.get('shots', []) if isinstance(s, dict)]
+    seconds = sum(len(x) for x in says) / CHARS_PER_SECOND
+    # every shot is at least one sentence, so no part is ever left empty
+    shots = max(1, sum(1 for x in says if x.strip()))
+    return max(1, min(MAX_PARTS, shots, -(-int(seconds) // PART_SECONDS)))
 
 
 def chosen_voice(plan):

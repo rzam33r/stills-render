@@ -78,7 +78,7 @@ jobs:
       parts: ${{ steps.choose.outputs.parts }}
       more: ${{ steps.choose.outputs.more }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check the story name
         env:
           SLUG: ${{ inputs.slug }}
@@ -167,7 +167,7 @@ jobs:
           print('parts=' + str(n))
           print('more=' + json.dumps(list(range(1, n))))
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: story-${{ inputs.slug }}
           path: story
@@ -178,11 +178,17 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
         with:
           name: story-${{ inputs.slug }}
           path: story
+      - name: Keep the English voice software's downloads between films
+        if: needs.prepare.outputs.engine == 'kokoro'
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: pip-kokoro-${{ hashFiles('locks/voice.txt') }}
       - name: Install Kokoro (exact versions from locks/voice.txt)
         if: needs.prepare.outputs.engine == 'kokoro'
         run: |
@@ -196,12 +202,20 @@ jobs:
           sudo apt-get install -y -qq libasound2t64 ca-certificates libssl3t64
           pip install -q -r locks/voice-azure.txt
           pip install -q -c locks/voice.txt numpy soundfile
+      # pip keeps what it downloaded; the next film installs from here instead
+      # of downloading torch and the rest again.
+      - name: Keep the voice software's downloads between films
+        if: needs.prepare.outputs.engine == 'chatterbox'
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: pip-chatterbox-${{ hashFiles('locks/voice-chatterbox.txt') }}
       - name: Install Chatterbox Hindi (exact versions from locks/voice-chatterbox.txt)
         if: needs.prepare.outputs.engine == 'chatterbox'
         run: pip install -q --no-deps -r locks/voice-chatterbox.txt --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Keep the voice models between films
         if: needs.prepare.outputs.engine == 'chatterbox'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/huggingface
           key: hf-${{ hashFiles('locks/models.txt') }}
@@ -223,13 +237,13 @@ jobs:
         env:
           PARTS: ${{ needs.prepare.outputs.parts }}
         run: python3 engine/voice.py story/plan.json voice-parts --part 0 --parts "$PARTS"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: needs.prepare.outputs.engine != 'chatterbox'
         with:
           name: voice-${{ inputs.slug }}
           path: voice
           retention-days: 3
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: needs.prepare.outputs.engine == 'chatterbox'
         with:
           name: voice-part-${{ inputs.slug }}-0
@@ -250,15 +264,20 @@ jobs:
         part: ${{ fromJSON(needs.prepare.outputs.more) }}
     name: voice part ${{ matrix.part }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
         with:
           name: story-${{ inputs.slug }}
           path: story
+      - name: Keep the voice software's downloads between films
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: pip-chatterbox-${{ hashFiles('locks/voice-chatterbox.txt') }}
       - name: Install Chatterbox Hindi (exact versions from locks/voice-chatterbox.txt)
         run: pip install -q --no-deps -r locks/voice-chatterbox.txt --extra-index-url https://download.pytorch.org/whl/cpu
       - name: Keep the voice models between films
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/huggingface
           key: hf-${{ hashFiles('locks/models.txt') }}
@@ -267,7 +286,7 @@ jobs:
           PART: ${{ matrix.part }}
           PARTS: ${{ needs.prepare.outputs.parts }}
         run: python3 engine/voice.py story/plan.json voice-parts --part "$PART" --parts "$PARTS"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: voice-part-${{ inputs.slug }}-${{ matrix.part }}
           path: voice-parts
@@ -279,17 +298,17 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 240
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
         with:
           name: story-${{ inputs.slug }}
           path: story
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: needs.prepare.outputs.engine != 'chatterbox'
         with:
           name: voice-${{ inputs.slug }}
           path: voice
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: needs.prepare.outputs.engine == 'chatterbox'
         with:
           pattern: voice-part-${{ inputs.slug }}-*
@@ -316,7 +335,7 @@ jobs:
           PY
       # The icon library (Google Noto emoji): each picture is downloaded once and
       # kept in the cache, so the library grows with every film that uses it.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: icons
           key: icons-${{ hashFiles('engine/icons.json') }}-${{ github.run_id }}
@@ -340,7 +359,7 @@ jobs:
         run: |
           python3 engine/check_sync.py "output/$SLUG.mp4" | tee /tmp/sync.txt
           { echo '## Picture timing'; echo '```'; cat /tmp/sync.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: video-${{ inputs.slug }}
           path: output/${{ inputs.slug }}.mp4

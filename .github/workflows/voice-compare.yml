@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: How many people use each model (Hugging Face)
         run: |
           python3 tools/voice_compare/stats.py stats.json
@@ -33,7 +33,7 @@ jobs:
           for r in rows:
               print(f"| {r['id']} | {r.get('downloads_last_30_days')} | {r.get('downloads_all_time')} | {r.get('likes')} | {r.get('licence')} | {r.get('gated')} |")
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: stats
           path: stats.json
@@ -43,12 +43,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Kokoro before and after the Hindi fixes
         run: |
           pip install -q -r locks/voice.txt --extra-index-url https://download.pytorch.org/whl/cpu
           cd tools/voice_compare && python3 run_kokoro.py "$GITHUB_WORKSPACE/${{ inputs.plan }}" "$GITHUB_WORKSPACE/takes/kokoro"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: takes-kokoro
           path: takes/kokoro
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: The reference voice (Kokoro hm_omega, from the voice samples)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -68,7 +68,7 @@ jobs:
           pip install -q torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
           pip install -q git+https://github.com/resemble-ai/chatterbox --extra-index-url https://download.pytorch.org/whl/cpu
           cd tools/voice_compare && python3 run_chatterbox.py "$GITHUB_WORKSPACE/${{ inputs.plan }}" "$GITHUB_WORKSPACE/takes/chatterbox" "$GITHUB_WORKSPACE/ref.wav"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: takes-chatterbox
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: The reference voice (Kokoro hm_omega, from the voice samples)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -89,7 +89,7 @@ jobs:
           pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
           pip install -q -U jinja2 transformers accelerate soundfile git+https://github.com/Aratako/MioCodec --extra-index-url https://download.pytorch.org/whl/cpu
           cd tools/voice_compare && python3 run_indicmio.py "$GITHUB_WORKSPACE/${{ inputs.plan }}" "$GITHUB_WORKSPACE/takes/indicmio" "$GITHUB_WORKSPACE/ref.wav"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: takes-indicmio
@@ -102,12 +102,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
         with:
           path: takes
           pattern: takes-*
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: stats
           path: .

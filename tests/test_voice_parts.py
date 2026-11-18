@@ -53,10 +53,15 @@ errs = check(dict(english, voice='chatterbox-hi'))[0]
 say(any('Hindi voice' in e for e in errs), 'the plan check refuses chatterbox-hi for an English film')
 
 # How many parts
-long45 = {'language': 'hi', 'shots': [{'say': 'क' * 13 * 60 * 45}]}
-say(voice_parts(boond, 'chatterbox') == 1 and voice_parts(bharat, 'chatterbox') == 1, 'a short Hindi film is one part')
-say(voice_parts(long45, 'chatterbox') == 4, f'a 45-minute Hindi film is {voice_parts(long45, "chatterbox")} parts')
-say(voice_parts({'shots': [{'say': 'क' * 13 * 60 * 200}]}, 'chatterbox') == 8, 'never more than 8 parts')
+long45 = {'language': 'hi', 'shots': [{'say': 'क' * 13 * 9}] * 300}   # 300 shots of 9 s: 45 minutes
+# About 20 seconds of speech a part, on separate computers at once: the
+# 46-second Bharat film is 3 parts, a few-sentence film is 1.
+say(voice_parts(boond, 'chatterbox') == 1, 'a few-sentence Hindi film is one part')
+say(voice_parts(bharat, 'chatterbox') == 3, f'the 46-second Bharat film is {voice_parts(bharat, "chatterbox")} parts (3)')
+say(voice_parts(long45, 'chatterbox') == 16, f'a 45-minute Hindi film is {voice_parts(long45, "chatterbox")} parts (16)')
+say(voice_parts({'shots': [{'say': 'क' * 13 * 9}] * 2000}, 'chatterbox') == 16, 'never more than 16 parts')
+say(voice_parts({'shots': [{'say': 'क' * 13 * 100}, {'say': 'क' * 13 * 100}]}, 'chatterbox') == 2,
+    'never more parts than shots, so no computer is left with nothing to say')
 say(voice_parts(long45, 'kokoro') == 1, 'Kokoro is always one part')
 say(voice_parts(boond, 'chatterbox', '2') == 2, 'a test can ask for 2 parts')
 

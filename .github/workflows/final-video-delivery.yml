@@ -77,14 +77,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60   # a 45-minute film can be close to 1 GB
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Fetch the video from its render artifact
         # Renders are no longer committed: git keeps every version of a file
         # for ever, so committed MP4s grow the repository permanently. The
         # render uploads the MP4 as an artifact instead, and this step places
         # it under output/ so the validation below sees an ordinary file.
         if: inputs.artifact_run_id != ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           run-id: ${{ inputs.artifact_run_id }}
           github-token: ${{ github.token }}
@@ -246,7 +246,7 @@ jobs:
           PY
       - name: Keep delivery receipt even on failure
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: delivery-receipt-${{ github.run_id }}-${{ github.run_attempt }}
           path: delivery-receipt.json
