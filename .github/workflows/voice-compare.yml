@@ -37,6 +37,7 @@ jobs:
         with:
           name: stats
           path: stats.json
+          retention-days: 7
 
   kokoro:
     runs-on: ubuntu-24.04
@@ -51,6 +52,7 @@ jobs:
         with:
           name: takes-kokoro
           path: takes/kokoro
+          retention-days: 7
 
   chatterbox:
     runs-on: ubuntu-24.04
@@ -71,6 +73,7 @@ jobs:
         with:
           name: takes-chatterbox
           path: takes/chatterbox
+          retention-days: 7
 
   indicmio:
     runs-on: ubuntu-24.04
@@ -91,6 +94,7 @@ jobs:
         with:
           name: takes-indicmio
           path: takes/indicmio
+          retention-days: 7
 
   score:
     needs: [users, kokoro, chatterbox, indicmio]

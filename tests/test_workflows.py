@@ -198,5 +198,38 @@ for n, w in flows.items():
 say(not silent, 'no job is skipped just because an earlier job was skipped'
     + ('' if not silent else f': {silent}'))
 
+# --- every workflow a job calls exists --------------------------------------
+# 18 Nov 2026: final-video-delivery.yml was deleted and re-added; for half a
+# minute every film would have failed at its Drive step, and no test noticed.
+missing = []
+for n, w in flows.items():
+    for job, spec in (w.get('jobs') or {}).items():
+        uses = str(spec.get('uses', ''))
+        if uses.startswith('./.github/workflows/') and not (ROOT / uses[2:]).exists():
+            missing.append(f'{n} / {job} -> {uses}')
+say(not missing, 'every workflow a job calls exists' + ('' if not missing else f': {missing}'))
+
+# --- the repository cleans up after itself ----------------------------------
+# Uploaded pictures and finished films must never pile up on GitHub.
+uploads = []
+for n, w in flows.items():
+    for job, spec in (w.get('jobs') or {}).items():
+        for step in spec.get('steps') or []:
+            if str(step.get('uses', '')).startswith('actions/upload-artifact'):
+                days = (step.get('with') or {}).get('retention-days')
+                if not isinstance(days, int) or days > 7:
+                    uploads.append(f'{n} / {job} / {(step.get("with") or {}).get("name")}')
+say(not uploads, 'every stored run file is deleted within 7 days' + ('' if not uploads else f': {uploads}'))
+text = {n: (WF / n).read_text() for n in flows}
+say('tools/tidy_releases.sh --repo "$REPO" --drop "$PROJECT"' in text.get('final-video-delivery.yml', ''),
+    'a delivered film drops its story upload')
+say('tools/tidy_releases.sh --repo "$REPO" --keep "$SLUG" --days 7' in text.get('make-film.yml', ''),
+    'every film run sweeps uploads nobody came back to (older than 7 days)')
+tidy = flows.get('tidy-releases.yml') or {}
+say(bool(tidy) and 'schedule' in (tidy.get(True) or tidy.get('on') or {}) and '--days 7' in text.get('tidy-releases.yml', ''),
+    'a weekly sweep drops story and film releases older than 7 days')
+script = (ROOT / 'tools' / 'tidy_releases.sh').read_text()
+say('film-example' in script and 'story-*|film-*' in script, 'the sweep touches only story and film releases, never the example')
+
 print('\nall good' if not bad else f'\n{bad} failing')
 sys.exit(1 if bad else 0)
