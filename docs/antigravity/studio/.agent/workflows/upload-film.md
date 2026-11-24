@@ -22,6 +22,11 @@ For the film I name, or the one being worked on.
    command has finished and the ZIP's size is the same twice, 3 seconds
    apart. Say its size in MB. Above 100 MB, add: "Uploads this big have not
    been tried on the upload page yet."
+   Note the ZIP's exact size and last-changed time
+   (`(Get-Item "films\<story name>.zip") | Select-Object Length, LastWriteTime`
+   in PowerShell). If its full path has `OneDrive` (or another cloud
+   folder) in it, tell me before uploading: a syncing folder can touch the
+   ZIP after it is chosen (StaleZip, 25 Nov 2026), so I may pause syncing.
    From here until the film has started, never re-make, move, rename or
    delete the ZIP or the films folder: the page keeps a link to the file, and
    a changed file cannot be read ("Failed while reading the ZIP", 16 Nov
@@ -45,11 +50,14 @@ For the film I name, or the one being worked on.
    If the browser cannot attach the file, stop and give me the ZIP's full
    path so I can upload it myself.
    If the page says "Failed while reading the ZIP" or that the ZIP changed,
-   check the ZIP still exists with the same size, choose it again once and
-   carry on. If it happens again, stop and give me the page's error details.
+   read the ZIP's size and last-changed time again and tell me which changed
+   since step 2 and what could have touched it (you? a cloud folder?). Then
+   choose it again once and carry on. If it happens again, stop and give me
+   the page's error details with those times.
 
 5. **Start the film** with the page's button that starts it (for example
-   "Make the film"), once. Never press it twice for the same ZIP.
+   "Make the film"), once. Never press it twice for the same ZIP. Do
+   nothing with the ZIP or its folder between choosing it and pressing it.
 
 6. **Watch it** until the last step says "Sent to Google Drive" or a step
    turns red: every minute for an English film, every 5 minutes for a Hindi
