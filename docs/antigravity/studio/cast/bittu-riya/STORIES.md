@@ -110,7 +110,12 @@ Write every prompt by `CAST.md`, then `films/<story name>/plan.json` by
   `"layout": "short"`);
 - `"who"` on every picture showing Bittu or Riya;
 - `"extras"` for the one-off people (below);
-- `"style"`: the style block from `CAST.md`, with the film's frame.
+- `"style"`: the style block from `CAST.md`, with the film's frame;
+- `"youtube"`: the film's YouTube title, caption, question and hashtags
+  (`guide/4_PLAN_FORMAT.md`, "The youtube section"). If the story is one of
+  the 100 ideas, start from that idea's YouTube title, caption and
+  hashtags. The film goes public on YouTube as soon as it is made, so
+  these are the words the world sees.
 
 Then report this checklist, each line done or not:
 
@@ -127,6 +132,8 @@ Then report this checklist, each line done or not:
   cave"): what must match is described again in full, including the
   place (CAST.md);
 - "title" in English letters; "voice" and "speed" left out;
+- "youtube": a title of 60 characters or less, a caption, a question, and
+  2 to 4 hashtags starting with the series tag (no #BittuKiRiya or #Shorts);
 - Hindi: the checks at the end of `guide/7_HINDI_VOICE.md`.
 
 If Python is installed, run

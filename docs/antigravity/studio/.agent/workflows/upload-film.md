@@ -57,3 +57,10 @@ For the film I name, or the one being worked on.
    hours for a long film; the page says how long). Tell me the result and the "Open the
    GitHub run" link. If a step failed, give its name and the message the
    page shows. Do nothing else on the page.
+
+7. **YouTube.** A Bittu & Riya film is also posted on the Bittu Ki Riya
+   YouTube channel, publicly, a few minutes after it reaches Drive, with
+   the plan's "youtube" words. Tell me to check it in YouTube Studio
+   (https://studio.youtube.com/channel/UCBJBFuwimmZdoB5DXbRT7kg/content)
+   and delete it there if anything is wrong. Never open YouTube Studio or
+   change anything on YouTube yourself.

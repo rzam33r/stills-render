@@ -1,0 +1,25 @@
+name: Check the YouTube key
+
+# Run by hand after adding (or renewing) the three YOUTUBE_ secrets
+# (docs/YOUTUBE-SETUP.md). It signs in and checks that the key belongs to
+# the Bittu Ki Riya channel. It posts nothing.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Sign in and name the channel
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_CHANNEL_ID: UCBJBFuwimmZdoB5DXbRT7kg
+        run: python3 engine/youtube.py check

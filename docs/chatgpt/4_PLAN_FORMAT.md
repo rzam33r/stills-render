@@ -12,6 +12,7 @@ Deliver one JSON object. Nothing before or after it in the file.
 | `cast` | Bittu & Riya films | `"Bittu & Riya"`, the Flow project holding the characters; then leave out `character` |
 | `extras` | Bittu & Riya films, if needed | each one-off person's short name and fixed look, pasted after their name in every prompt that shows them |
 | `shots` | yes | the shots, in order |
+| `youtube` | Bittu & Riya films | what the film says on YouTube: below |
 | `layout` | no | `"wide"` (default, normal pace) or `"short"` (fast pace, under 3 minutes, always upright) |
 | `frame` | no | the shape: `"16:9"` (default) or `"9:16"` for an upright film at normal pace (file 6) |
 | `language` | no | `"en"` (default) or `"hi"` |
@@ -111,3 +112,35 @@ in the order pictures first appear, with no gaps.
   ]
 }
 ```
+
+## The `youtube` section
+
+A Bittu & Riya film is posted on the Bittu Ki Riya YouTube channel, publicly,
+as soon as it is made. These are its words:
+
+```json
+"youtube": {
+  "title": "Chaand Gayab Ho Gaya! 🌙 Kya Hota Agar...?",
+  "caption": "Bittu ne Riya ko chaand gift kar diya... aur duniya ulti ho gayi 🌊",
+  "question": "Aap Bittu ki jagah hote toh kya karte?",
+  "hashtags": ["#KyaHotaAgar", "#Moon", "#Science"]
+}
+```
+
+- `title`: Hinglish, at most 60 characters (phones cut longer ones), one
+  emoji at most, the hook as a promise or a surprise. Not the plan's title
+  word for word if a catchier one exists.
+- `caption`: one line, the story's tease. It is the first line of the
+  description and all most viewers read.
+- `question`: one question the viewer can answer in a comment.
+- `hashtags`: 2 to 4: the series tag first (`#KyaHotaAgar`,
+  `#TimeMachine`, `#ScienceKaJadoo`, `#DesiItihaas`, `#DuniyaKeAjoobe`,
+  `#SharirKeRaaz`, `#JanwarAurKudrat`, `#SpaceKiSair`,
+  `#TyohaarAurRishtey`), then the film's topics. No spaces inside a
+  hashtag. `#BittuKiRiya` and `#Shorts` are added by the engine; do not
+  write them.
+- `category`: leave out (Entertainment), or `"education"`.
+
+The engine keeps YouTube's rules itself (at most 100 characters, at most 6
+hashtags, the hashtags on the description's last line, not made for kids)
+and the plan check says what it changed.

@@ -14,7 +14,7 @@ name: ChatGPT pack
 on:
   push:
     branches: [main]
-    paths: ['docs/chatgpt/**', 'docs/antigravity/**', 'engine/check_plan.py', 'engine/voices.py', 'engine/icons.py', 'engine/icons.json', '.github/workflows/chatgpt-pack.yml']
+    paths: ['docs/chatgpt/**', 'docs/antigravity/**', 'engine/check_plan.py', 'engine/voices.py', 'engine/icons.py', 'engine/icons.json', 'engine/youtube.py', '.github/workflows/chatgpt-pack.yml']
   workflow_dispatch:
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
           mkdir -p "$root/guide" "$root/tools"
           cp -r docs/antigravity/studio/. "$root/"
           cp docs/chatgpt/[1-8]_*.md "$root/guide/"
-          cp engine/check_plan.py engine/voices.py engine/icons.py engine/icons.json "$root/tools/"
+          cp engine/check_plan.py engine/voices.py engine/icons.py engine/icons.json engine/youtube.py "$root/tools/"
           (cd /tmp/pack && zip -X -q -r "$GITHUB_WORKSPACE/FACT-HUBZZZ-Studio.zip" "FACT HUBZZZ Studio")
           unzip -l FACT-HUBZZZ-Studio.zip
       - name: Publish it

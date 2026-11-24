@@ -126,9 +126,14 @@ for lang, per_min in (('en', 165), ('hi', 200)):
     say(abs(WPS_BY_LANGUAGE[lang] * 60 - per_min) <= 5 and f'{per_min}' in (DOCS / '1_SCRIPT_RULES.md').read_text(),
         f'the guide and the plan check agree on the {lang} voice: about {per_min} words a minute')
 look = 'a tall stone-age man with a bushy black beard and a brown fur wrap'
-story = {'title': 'T', 'style': 's', 'cast': 'Bittu & Riya', 'extras': {'Ugg': look}, 'shots': [
+story = {'title': 'T', 'style': 's', 'cast': 'Bittu & Riya', 'extras': {'Ugg': look},
+         'youtube': {'title': 'Bittu Meets Ugg', 'caption': 'c', 'hashtags': ['#TimeTravel', '#Comedy']}, 'shots': [
     {'say': 'one two three four five six', 'picture': '001', 'prompt': f'Bittu meets Ugg, {look}. {KEEP["Bittu"]}', 'who': ['Bittu']}]}
 say(check_plan(story) == ([], check_plan(story)[1]) and len(check_plan(story)[1]) == 1, 'a good story plan has no errors and no warnings')
+bare = json.loads(json.dumps(story))
+bare.pop('youtube')
+say(any('no "youtube" section' in w for w in check_plan(bare)[1]) and not check_plan(bare)[0],
+    'a Bittu & Riya plan without its YouTube words is warned, not stopped')
 loose = json.loads(json.dumps(story))
 loose['shots'][0]['prompt'] = f'Bittu meets Ugg the caveman. {KEEP["Bittu"]}'
 say(any('Ugg' in w for w in check_plan(loose)[1]), 'the plan check warns when a one-off person appears without their look')

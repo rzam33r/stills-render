@@ -34,6 +34,8 @@ Optional top level:
   "speed"     0.8 to 1.3, default 1.0
   "music"     a file in music/
   "frame"     "16:9" or "9:16" for the wide layout
+  "youtube"   what the film says on YouTube: "title", "caption", "question",
+              "hashtags", "category" (engine/youtube.py keeps the rules)
 
 In "say", *asterisks* mark words to show in yellow when subtitles are on;
 the voice does not read them.
@@ -54,6 +56,10 @@ try:
     import icons  # noqa: E402
 except ImportError:          # an old copy of tools/ without the icon list
     icons = None
+try:
+    import youtube  # noqa: E402
+except ImportError:          # an old copy of tools/ without the YouTube rules
+    youtube = None
 
 PICTURE_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 VOICES = KOKORO_VOICES | CHATTERBOX_VOICES
@@ -123,7 +129,9 @@ def check_graphic(g, where):
                 errors.append(f'{where}: no icon called "{n}"; see the icon list (python tools/icons.py list)')
     return errors, warnings
 TOP = {'title', 'shots', 'voice', 'speed', 'music', 'frame', 'character', 'style', 'description',
-       'layout', 'language', 'captions', 'cast', 'extras'}
+       'layout', 'language', 'captions', 'cast', 'extras', 'youtube'}
+# The "youtube" section: what the film says on YouTube (engine/youtube.py).
+YOUTUBE_KEYS = {'title', 'caption', 'question', 'hashtags', 'category'}
 # A cast film's characters live in a Flow project; "who" names them per picture.
 CASTS = {'Bittu & Riya': ('Bittu', 'Riya')}
 # The line each prompt carries for each cast member in it (CAST.md, word for word).
@@ -402,6 +410,16 @@ def check(plan, pictures=None):
     elif graphics_count > 2 * want + 1:
         warnings.append(f'{graphics_count} animated graphics in about {minutes:.1f} minutes: about one a minute '
                         f'keeps them special')
+    yt = plan.get('youtube')
+    if yt is not None and not isinstance(yt, dict):
+        warnings.append('"youtube" is a section like {"title": ..., "caption": ..., "question": ..., '
+                        '"hashtags": [...]}; it was ignored')
+    elif yt is not None or cast is not None:
+        for k in sorted(set(yt or {}) - YOUTUBE_KEYS):
+            warnings.append(f'"youtube": "{k}" is not used; the parts are {", ".join(sorted(YOUTUBE_KEYS))}')
+        if youtube is not None:
+            short = frame == '9:16' and total / wps <= youtube.SHORT_SECONDS
+            warnings += ['YouTube: ' + n for n in youtube.metadata(plan, short)[1]]
     if total:
         warnings.insert(0, f'{len(shots)} shots, {total} words, about {minutes:.1f} minutes '
                            f'(a picture every {total / wps / len(shots):.1f} s)'

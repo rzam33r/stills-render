@@ -7,6 +7,9 @@ name: Make a film
 #      lays the music under the voice, and checks every cut in the film
 #   4. sends the film to the Drive folder (or, when not delivering, keeps it
 #      for 7 days on the story's film-<slug> release)
+#   5. posts it, publicly, on the Bittu Ki Riya YouTube channel with the
+#      plan's "youtube" words (engine/youtube.py; set up once by
+#      docs/YOUTUBE-SETUP.md, and skipped until then)
 #
 # The upload page attaches the ZIP to a release tagged story-<slug> and runs
 # this. Nothing is committed: pictures and films live in releases and
@@ -52,6 +55,11 @@ on:
         type: boolean
         required: false
         default: false
+      youtube:
+        description: 'Also post the film on the Bittu Ki Riya YouTube channel (public)'
+        type: boolean
+        required: false
+        default: true
       voice_parts:
         description: 'For tests: record a Hindi (Chatterbox) voice in this many parts at once (auto = by length)'
         required: false
@@ -388,3 +396,69 @@ jobs:
     secrets:
       UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
       DRIVE_ENDPOINT_URL: ${{ secrets.DRIVE_ENDPOINT_URL }}
+
+  youtube:
+    needs: [render, deliver]
+    # Runs once the Drive copy is done, whatever happened to it: a Drive
+    # hiccup must not hold back the release. !cancelled() and the render's
+    # result are needed for the same reason as in "deliver".
+    if: ${{ !cancelled() && needs.render.result == 'success' && (needs.deliver.result == 'success' || needs.deliver.result == 'failure') && inputs.deliver && inputs.youtube }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
+        with:
+          name: story-${{ inputs.slug }}
+          path: story
+      - uses: actions/download-artifact@v7
+        with:
+          name: video-${{ inputs.slug }}
+          path: output
+      - name: What goes on YouTube
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: python3 engine/youtube.py text story/plan.json "output/$SLUG.mp4"
+      - name: Look for a post this run already made
+        # A re-run checks out the commit the run started from, which is older
+        # than the pointer an earlier attempt saved; read the newest one.
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          mkdir -p youtube
+          git fetch -q origin main && git show "origin/main:youtube/$SLUG.json" > "youtube/$SLUG.json" 2>/dev/null \
+            || rm -f "youtube/$SLUG.json"
+      - name: Post it on YouTube
+        # The key is three secrets, made once (docs/YOUTUBE-SETUP.md). Without
+        # them this step says so and passes: the film is still in Drive.
+        env:
+          SLUG: ${{ inputs.slug }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          # Bittu Ki Riya. The key must belong to this channel or nothing is posted.
+          YOUTUBE_CHANNEL_ID: UCBJBFuwimmZdoB5DXbRT7kg
+          YOUTUBE_PRIVACY: public
+        run: python3 engine/youtube.py upload story/plan.json "output/$SLUG.mp4" --record "youtube/$SLUG.json" --run "$GITHUB_RUN_ID"
+      - name: Record the YouTube link
+        # A small pointer, like delivered/<slug>.json, so the upload page can
+        # show "Watch on YouTube", and a re-run of this job never posts twice.
+        if: success() && hashFiles(format('youtube/{0}.json', inputs.slug)) != ''
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          cp "youtube/$SLUG.json" /tmp/youtube.json
+          git fetch origin main
+          git checkout -B youtube-note origin/main
+          mkdir -p youtube && cp -f /tmp/youtube.json "youtube/$SLUG.json"
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
+          git add "youtube/$SLUG.json"
+          git diff --cached --quiet && echo "unchanged" && exit 0
+          git commit -m "on YouTube: $SLUG"
+          for try in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git fetch origin main && git rebase --autostash origin/main || git rebase --abort
+            sleep $((try * 5))
+          done
+          echo "the film is on YouTube; only the pointer file could not be saved"

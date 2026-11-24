@@ -57,8 +57,8 @@ mf = flows['make-film.yml']
 on = mf.get('on', mf.get(True))
 inputs = set(on['workflow_dispatch']['inputs'])
 page = {'slug', 'build', 'deliver', 'frame', 'ignore_plan_errors', 'logo', 'keep_pictures'}
-# Inputs only tests send; each must have a default so the page never needs it.
-tests_only = {'voice_parts', 'voice'}
+# Inputs the page never sends; each must have a default so the page never needs it.
+tests_only = {"voice_parts", "voice", "youtube"}
 spec = on['workflow_dispatch']['inputs']
 say(inputs == page | tests_only and all('default' in spec[k] for k in tests_only),
     'make-film accepts the inputs the upload page sends, plus test-only inputs that have defaults')
@@ -66,6 +66,22 @@ deliver = mf['jobs']['deliver']
 say(deliver.get('uses') == './.github/workflows/final-video-delivery.yml'
     and set(deliver.get('secrets', {})) == {'UPLOAD_TOKEN', 'DRIVE_ENDPOINT_URL'},
     'the delivery gets the two Drive secrets')
+
+# --- YouTube: the key reaches only the post step, and only one channel ------
+yt = mf['jobs'].get('youtube') or {}
+post = next((s for s in yt.get('steps') or [] if 'youtube.py upload' in str(s.get('run', ''))), {})
+env = post.get('env') or {}
+keyed = {k for k, v in env.items() if 'secrets.' in str(v)}
+say(keyed == {'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'YOUTUBE_REFRESH_TOKEN'}
+    and env.get('YOUTUBE_CHANNEL_ID') == 'UCBJBFuwimmZdoB5DXbRT7kg' and env.get('YOUTUBE_PRIVACY') == 'public',
+    'the YouTube step gets the three key secrets and posts publicly to Bittu Ki Riya only')
+say('inputs.deliver' in str(yt.get('if', '')) and 'inputs.youtube' in str(yt.get('if', ''))
+    and 'deliver' in (yt.get('needs') or []), 'a film goes to YouTube only when it is delivered, after the Drive copy')
+leaks = [f'{n}:{k}' for n, t in texts.items() for k, line in enumerate(t.splitlines(), 1)
+         if re.search(r'\b(echo|printf|cat)\b', line) and re.search(r'YOUTUBE_(CLIENT_SECRET|REFRESH_TOKEN)|secrets\.', line)]
+say(not leaks, 'no workflow prints a secret' + ('' if not leaks else f': {leaks}'))
+say(not any('secrets.YOUTUBE' in str(s.get('env', '')) for s in yt.get('steps') or [] if s is not post),
+    'only the post step sees the YouTube key')
 
 commits = [n for n, t in texts.items() if re.search(r'git add [^\n]*(\.mp4|\.png|\.jpg|\.zip|story/|output/)', t)]
 say(not commits, 'no workflow commits pictures, ZIPs or films')

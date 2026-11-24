@@ -2,7 +2,9 @@
 
 Antigravity plans and writes the film, makes its pictures in Google Flow
 through Flow Connector, and starts it on the upload page. GitHub makes the
-film and puts it in your Google Drive folder.
+film, puts it in your Google Drive folder and posts it, publicly, on the
+Bittu Ki Riya YouTube channel with the title, caption and hashtags from the
+plan.
 
 ## Set up once
 
