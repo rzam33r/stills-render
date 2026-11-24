@@ -117,6 +117,8 @@ say('cast/bittu-riya/STORIES.md' in flows['new-film'] and 'instead of steps 1 to
 say(all(f'| {n} |' in stories for n in ('90 seconds', '3 minutes', '6 minutes', '9 minutes', '12 minutes', '15 minutes')),
     'stories come in 90 s, 3, 6, 9, 12 and 15 minutes')
 link = 'https://flow.google.com/project/983f2d4b-d432-439c-8283-587e8c9865c9'
+say('is covered by' in mp and 'maximized' in mp and 'do not retry' in mp,
+    '/make-pictures has the Flow page made wide before the first picture, and stops on a covered click (25 Nov 2026)')
 say(link in cast_md and link in mp and 'from\n     its link' in mp and 'sign in' in mp, '/make-pictures has Roshan open the Bittu & Riya project from its link in Chrome')
 say('fictional, fun couple story' in stories and 'wholesome ending' in stories and '## 3. Facts' not in stories
     and 'beats.md' in stories and 'never presents anything as a\n  real fact' in rule,

@@ -18,6 +18,17 @@ Bittu from the project with `character_refs` and made a 768 × 1376 picture.)
    tell me and stop. If it says a daily allowance is used up, tell me and
    stop.
 
+   Then ask me to get the Flow tab ready, and wait for my "ready". Flow
+   Connector clicks Flow's own buttons, and a narrow Flow page piles them
+   on top of each other (25 Nov 2026: every picture failed with "is
+   covered by <p>"):
+   - the Chrome window with Flow **maximized**, zoom at 100% (Ctrl + 0);
+   - the Flow page itself wide: Flow's prompt bar sits at the bottom of
+     the page, not in a floating box over the pictures. If the Flow
+     Connect side panel squeezes it, close the panel (Flow Connector still
+     works) or widen the window;
+   - Flow's prompt box empty.
+
 2. **The Flow project.** Every picture of this film is made in one project
    and in no other. Flow Connector makes pictures in the project open in my
    Chrome, so tell me which one to open, and wait for "ready":
@@ -67,8 +78,12 @@ Bittu from the project with `character_refs` and made a 768 × 1376 picture.)
    `002.jpg`... never `1 - Medium shot of a man.jpg`, never a second copy.
    Any other new image for the same request goes to
    `films/<story name>-not-used/`.
-   If Flow fails or refuses, try once more; if it fails again, note the
-   name and Flow's message and go on. If Flow Connector says the allowance
+   If Flow Connector says a click "is covered by" something
+   (`clickTrusted`), do not retry: the Flow page is too narrow or something
+   is on top of it. Stop, give me the three points of step 1, and carry on
+   from that picture when I say "ready".
+   If Flow fails or refuses in any other way, try once more; if it fails
+   again, note the name and Flow's message and go on. If Flow Connector says the allowance
    is used up, stop and say how many are done: running /make-pictures
    again later carries on.
    Every 25 pictures, say how many are done.
