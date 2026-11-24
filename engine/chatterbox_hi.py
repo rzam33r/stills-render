@@ -22,9 +22,8 @@ import shutil
 import numpy as np
 import soundfile as sf
 import torch
-from huggingface_hub import hf_hub_download, list_repo_files
-
 import align_hi
+import hf
 from voice_parts import RATE, pieces, split, trim_to_words
 
 MAIN = 'ResembleAI/chatterbox'
@@ -53,7 +52,7 @@ def load_model(revs):
     ck.mkdir(parents=True, exist_ok=True)
 
     def put(repo, name, as_name=None):
-        src = hf_hub_download(repo, name, revision=revs.get(repo))
+        src = hf.download(repo, name, revs.get(repo))
         dst = ck / (as_name or name)
         if dst.exists():
             dst.chmod(0o644)
@@ -62,7 +61,9 @@ def load_model(revs):
 
     for f in ('ve.pt', 'conds.pt', 's3gen.pt', 'grapheme_mtl_merged_expanded_v1.json', 'Cangjie5_TC.json'):
         put(MAIN, f)
-    files = list_repo_files(HINDI, revision=revs.get(HINDI))
+    # From the cache when the model is there: asking Hugging Face for the
+    # list on every part of every film got GitHub turned away (hf.py).
+    files = hf.repo_files(HINDI, revs.get(HINDI), lambda f: f.startswith('t3') and f.endswith('.safetensors'))
     t3 = next(f for f in files if f.startswith('t3') and f.endswith('.safetensors'))
     put(HINDI, t3)
     if 'grapheme_mtl_merged_expanded_v1.json' in files:
@@ -72,7 +73,7 @@ def load_model(revs):
     if s3:
         # The Hindi edition's decoder lacks two buffers the code computes
         # itself (the tokenizer's mel filters and window).
-        state = torch.load(hf_hub_download(HINDI, s3[0], revision=revs.get(HINDI)), map_location='cpu', weights_only=True)
+        state = torch.load(hf.download(HINDI, s3[0], revs.get(HINDI)), map_location='cpu', weights_only=True)
         res = model.s3gen.load_state_dict(state, strict=False)
         print(f'Chatterbox Hindi: {t3} with {s3[0]} (computed, not loaded: {res.missing_keys})', flush=True)
     return model

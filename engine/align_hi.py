@@ -23,6 +23,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 MODELS = ('Harveenchadha/vakyansh-wav2vec2-hindi-him-4200', 'skylord/wav2vec2-large-xlsr-hindi')
 from hindi import ANUSVARA, CHANDRABINDU, cer, norm  # noqa: E402,F401
+import hf  # noqa: E402
 
 
 class Aligner:
@@ -33,8 +34,10 @@ class Aligner:
             try:
                 # Wav2Vec2Processor, not AutoProcessor: Vakyansh also ships a
                 # language model add-on that needs another library.
-                self.proc = Wav2Vec2Processor.from_pretrained(repo, revision=revisions.get(repo))
-                self.model = Wav2Vec2ForCTC.from_pretrained(repo, revision=revisions.get(repo)).eval()
+                # From the cache first; a busy Hugging Face is waited for
+                # (hf.py) instead of dropping to the backup model.
+                self.proc = hf.load(Wav2Vec2Processor, repo, revisions.get(repo))
+                self.model = hf.load(Wav2Vec2ForCTC, repo, revisions.get(repo)).eval()
                 self.name = repo
                 break
             except Exception as e:  # noqa: BLE001
