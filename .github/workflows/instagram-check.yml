@@ -1,0 +1,23 @@
+name: Check the Instagram key
+
+# Run by hand after adding (or renewing) the Instagram secrets
+# (docs/INSTAGRAM-SETUP.md). It signs in and checks the key belongs to the
+# account in INSTAGRAM_ACCOUNT. It posts nothing.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Sign in and name the account
+        env:
+          INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
+          INSTAGRAM_ACCOUNT: ${{ secrets.INSTAGRAM_ACCOUNT }}
+        run: python3 engine/instagram.py check

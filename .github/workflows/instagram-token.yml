@@ -1,0 +1,41 @@
+name: Renew the Instagram key
+
+# Instagram's key lasts 60 days. Every week this renews it for another 60,
+# and when Instagram hands back a new key it saves it as the INSTAGRAM_TOKEN
+# secret, with a GitHub key that may change this repository's secrets
+# (GH_SECRETS_TOKEN). docs/INSTAGRAM-SETUP.md sets both up once.
+
+on:
+  schedule:
+    - cron: '37 2 * * 3'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  renew:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Renew it, and save it if Instagram gave a new one
+        env:
+          INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
+          GH_SECRETS_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -z "$INSTAGRAM_TOKEN" ]; then echo "Instagram is not set up yet; nothing to renew"; exit 0; fi
+          umask 077
+          rm -f /tmp/instagram-token
+          python3 engine/instagram.py refresh --out /tmp/instagram-token
+          if [ -s /tmp/instagram-token ]; then
+            if [ -z "$GH_SECRETS_TOKEN" ]; then
+              rm -f /tmp/instagram-token
+              echo "::error::Instagram gave a new key but GitHub cannot save it: add GH_SECRETS_TOKEN (docs/INSTAGRAM-SETUP.md, step 5)"
+              exit 1
+            fi
+            GH_TOKEN="$GH_SECRETS_TOKEN" gh secret set INSTAGRAM_TOKEN --repo "$REPO" < /tmp/instagram-token
+            rm -f /tmp/instagram-token
+            echo "the new key is saved"
+          fi
