@@ -58,7 +58,7 @@ on = mf.get('on', mf.get(True))
 inputs = set(on['workflow_dispatch']['inputs'])
 page = {'slug', 'build', 'deliver', 'frame', 'ignore_plan_errors', 'logo', 'keep_pictures'}
 # Inputs the page never sends; each must have a default so the page never needs it.
-tests_only = {"voice_parts", "voice", "youtube", "ending"}
+tests_only = {"voice_parts", "voice", "youtube", "ending", "instagram"}
 spec = on['workflow_dispatch']['inputs']
 say(inputs == page | tests_only and all('default' in spec[k] for k in tests_only),
     'make-film accepts the inputs the upload page sends, plus test-only inputs that have defaults')
@@ -90,6 +90,24 @@ leaks = [f'{n}:{k}' for n, t in texts.items() for k, line in enumerate(t.splitli
 say(not leaks, 'no workflow prints a secret' + ('' if not leaks else f': {leaks}'))
 say(not any('secrets.YOUTUBE' in str(s.get('env', '')) for s in yt.get('steps') or [] if s is not post),
     'only the post step sees the YouTube key')
+
+# --- Instagram: the key reaches only the post step; the public copy goes ---
+ig = mf['jobs'].get('instagram') or {}
+ig_steps = ig.get('steps') or []
+full_key = [s for s in ig_steps if '${{ secrets.INSTAGRAM_TOKEN }}' in str(s.get('env', ''))]
+say(len(full_key) == 1 and 'instagram.py post' in str(full_key[0].get('run', ''))
+    and 'secrets.INSTAGRAM_ACCOUNT' in str(full_key[0].get('env', '')),
+    'only the Instagram post step sees the Instagram key, with the account it must belong to')
+gone = [s for s in ig_steps if 'gh release delete' in str(s.get('run', ''))]
+say(gone and 'always()' in str(gone[0].get('if', '')), 'Instagram\'s public copy is deleted whatever happens')
+say('inputs.deliver' in str(ig.get('if', '')) and 'inputs.instagram' in str(ig.get('if', ''))
+    and 'deliver' in (ig.get('needs') or []), 'a film goes to Instagram only when it is delivered, after the Drive copy')
+renew = flows.get('instagram-token.yml') or {}
+renew_text = texts.get('instagram-token.yml', '')
+say('schedule' in (renew.get(True) or renew.get('on') or {}) and 'gh secret set INSTAGRAM_TOKEN' in renew_text
+    and 'secrets.GH_SECRETS_TOKEN' in renew_text
+    and not any('GH_SECRETS_TOKEN' in t for n, t in texts.items() if n != 'instagram-token.yml'),
+    'the Instagram key is renewed weekly; the GitHub key that saves it is used there and nowhere else')
 
 commits = [n for n, t in texts.items() if re.search(r'git add [^\n]*(\.mp4|\.png|\.jpg|\.zip|story/|output/)', t)]
 say(not commits, 'no workflow commits pictures, ZIPs or films')

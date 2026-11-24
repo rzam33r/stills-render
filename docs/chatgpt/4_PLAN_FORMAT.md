@@ -141,6 +141,9 @@ as soon as it is made. These are its words:
   write them.
 - `category`: leave out (Entertainment), or `"education"`.
 
+An upright film also goes on Instagram as a Reel with the same caption,
+question and hashtags (without `#Shorts`).
+
 The engine keeps YouTube's rules itself (at most 100 characters, at most 6
 hashtags, the hashtags on the description's last line, not made for kids)
 and the plan check says what it changed.

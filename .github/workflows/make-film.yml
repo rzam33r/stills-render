@@ -11,6 +11,8 @@ name: Make a film
 #   5. posts it, publicly, on the Bittu Ki Riya YouTube channel with the
 #      plan's "youtube" words (engine/youtube.py; set up once by
 #      docs/YOUTUBE-SETUP.md, and skipped until then)
+#   6. posts an upright film on Instagram as a Reel (engine/instagram.py;
+#      set up once by docs/INSTAGRAM-SETUP.md, and skipped until then)
 #
 # The upload page attaches the ZIP to a release tagged story-<slug> and runs
 # this. Nothing is committed: pictures and films live in releases and
@@ -58,6 +60,11 @@ on:
         default: false
       ending:
         description: 'End the film with the Bittu Ki Riya ending (Like, Follow, Subscribe)'
+        type: boolean
+        required: false
+        default: true
+      instagram:
+        description: 'Also post an upright film on Instagram as a Reel'
         type: boolean
         required: false
         default: true
@@ -477,3 +484,84 @@ jobs:
             sleep $((try * 5))
           done
           echo "the film is on YouTube; only the pointer file could not be saved"
+
+  instagram:
+    needs: [render, deliver]
+    # Like "youtube": after the Drive copy, whatever happened to it.
+    if: ${{ !cancelled() && needs.render.result == 'success' && (needs.deliver.result == 'success' || needs.deliver.result == 'failure') && inputs.deliver && inputs.instagram }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
+        with:
+          name: story-${{ inputs.slug }}
+          path: story
+      - uses: actions/download-artifact@v7
+        with:
+          name: video-${{ inputs.slug }}
+          path: output
+      - name: Upright, set up, and not posted yet by this run?
+        id: go
+        env:
+          SLUG: ${{ inputs.slug }}
+          # Only whether the key exists; its value stays with the post step.
+          INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN != '' && 'set' || '' }}
+        run: |
+          mkdir -p instagram
+          git fetch -q origin main && git show "origin/main:instagram/$SLUG.json" > "instagram/$SLUG.json" 2>/dev/null \
+            || rm -f "instagram/$SLUG.json"
+          python3 engine/instagram.py should "output/$SLUG.mp4" --record "instagram/$SLUG.json" --run "$GITHUB_RUN_ID"
+      - name: Make Instagram's copy (sound at 128 kbps, no edit lists)
+        if: steps.go.outputs.go == 'yes'
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: mkdir -p insta && python3 engine/instagram.py prepare "output/$SLUG.mp4" "insta/$SLUG.mp4"
+      - name: Put the copy where Instagram can fetch it, for a few minutes
+        # Instagram fetches a Reel from a public link; this repository's
+        # releases are public. The copy is deleted in the step after posting.
+        if: steps.go.outputs.go == 'yes'
+        id: link
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLUG: ${{ inputs.slug }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release view "film-$SLUG" >/dev/null 2>&1 || \
+            gh release create "film-$SLUG" --title "film-$SLUG" --notes "Instagram's copy, deleted once posted." --prerelease
+          gh release upload "film-$SLUG" "insta/$SLUG.mp4" --clobber
+          echo "url=https://github.com/$REPO/releases/download/film-$SLUG/$SLUG.mp4" >> "$GITHUB_OUTPUT"
+      - name: Post it on Instagram
+        if: steps.go.outputs.go == 'yes'
+        env:
+          SLUG: ${{ inputs.slug }}
+          URL: ${{ steps.link.outputs.url }}
+          INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
+          INSTAGRAM_ACCOUNT: ${{ secrets.INSTAGRAM_ACCOUNT }}
+        run: python3 engine/instagram.py post story/plan.json "insta/$SLUG.mp4" --url "$URL" --record "instagram/$SLUG.json" --run "$GITHUB_RUN_ID"
+      - name: Delete the public copy
+        if: always() && steps.go.outputs.go == 'yes'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLUG: ${{ inputs.slug }}
+        run: gh release delete "film-$SLUG" --yes --cleanup-tag || true
+      - name: Record the Instagram link
+        if: success() && steps.go.outputs.go == 'yes' && hashFiles(format('instagram/{0}.json', inputs.slug)) != ''
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          cp "instagram/$SLUG.json" /tmp/instagram.json
+          git fetch origin main
+          git checkout -B instagram-note origin/main
+          mkdir -p instagram && cp -f /tmp/instagram.json "instagram/$SLUG.json"
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
+          git add "instagram/$SLUG.json"
+          git diff --cached --quiet && echo "unchanged" && exit 0
+          git commit -m "on Instagram: $SLUG"
+          for try in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git fetch origin main && git rebase --autostash origin/main || git rebase --abort
+            sleep $((try * 5))
+          done
+          echo "the film is on Instagram; only the pointer file could not be saved"
