@@ -52,8 +52,6 @@ jobs:
         run: python3 tests/test_hf.py
       - name: Every film ends with the Bittu Ki Riya ending, upright or wide
         run: python3 tests/test_ending.py
-      - name: Upright films go to Instagram as Reels, to the right account only
-        run: python3 tests/test_instagram.py
       - name: Hindi narration stays clear (with espeak, as the voice uses it)
         env:
           REQUIRE_ESPEAK: '1'

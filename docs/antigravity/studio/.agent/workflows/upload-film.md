@@ -60,8 +60,7 @@ For the film I name, or the one being worked on.
 
 7. **YouTube.** A Bittu & Riya film is also posted on the Bittu Ki Riya
    YouTube channel, publicly, a few minutes after it reaches Drive, with
-   the plan's "youtube" words, and an upright film on Instagram as a Reel
-   with the same caption. Tell me to check them in YouTube Studio
+   the plan's "youtube" words. Tell me to check it in YouTube Studio
    (https://studio.youtube.com/channel/UCBJBFuwimmZdoB5DXbRT7kg/content)
-   and in the Instagram app, and delete anything wrong there. Never open
-   YouTube Studio or Instagram, or change anything on them, yourself.
+   and delete it there if anything is wrong. Never open YouTube Studio or
+   change anything on YouTube yourself.
