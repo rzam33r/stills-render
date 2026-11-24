@@ -58,7 +58,7 @@ on = mf.get('on', mf.get(True))
 inputs = set(on['workflow_dispatch']['inputs'])
 page = {'slug', 'build', 'deliver', 'frame', 'ignore_plan_errors', 'logo', 'keep_pictures'}
 # Inputs the page never sends; each must have a default so the page never needs it.
-tests_only = {"voice_parts", "voice", "youtube"}
+tests_only = {"voice_parts", "voice", "youtube", "ending"}
 spec = on['workflow_dispatch']['inputs']
 say(inputs == page | tests_only and all('default' in spec[k] for k in tests_only),
     'make-film accepts the inputs the upload page sends, plus test-only inputs that have defaults')
@@ -66,6 +66,14 @@ deliver = mf['jobs']['deliver']
 say(deliver.get('uses') == './.github/workflows/final-video-delivery.yml'
     and set(deliver.get('secrets', {})) == {'UPLOAD_TOKEN', 'DRIVE_ENDPOINT_URL'},
     'the delivery gets the two Drive secrets')
+
+# --- every film ends with the Bittu Ki Riya ending ------------------------
+steps = [str(s.get('name', '')) + ' ' + str(s.get('run', '')) + ' ' + str(s.get('uses', ''))
+         for s in mf['jobs']['render']['steps']]
+at = lambda word: next((i for i, s in enumerate(steps) if word in s), -1)  # noqa: E731
+say(0 <= at('check_sync.py') < at('engine/ending.py') < at('actions/upload-artifact'),
+    'the ending is added after the timing check and before the film is stored for Drive and YouTube')
+say((ROOT / 'brand' / 'ending-upright.mp4').exists(), 'the ending video is in brand/')
 
 # --- YouTube: the key reaches only the post step, and only one channel ------
 yt = mf['jobs'].get('youtube') or {}

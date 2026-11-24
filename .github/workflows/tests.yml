@@ -50,6 +50,8 @@ jobs:
         run: python3 tests/test_youtube.py
       - name: A busy Hugging Face is waited for; a cached model asks it nothing
         run: python3 tests/test_hf.py
+      - name: Every film ends with the Bittu Ki Riya ending, upright or wide
+        run: python3 tests/test_ending.py
       - name: Hindi narration stays clear (with espeak, as the voice uses it)
         env:
           REQUIRE_ESPEAK: '1'
@@ -76,7 +78,7 @@ jobs:
           if [ -n "$before" ] && [ "$before" != 0000000000000000000000000000000000000000 ] && \
              git fetch -q --depth=1 origin "$before" 2>/dev/null; then range="$before HEAD"; fi
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || ! git rev-parse -q --verify HEAD~1 >/dev/null || \
-             git diff --name-only $range 2>/dev/null | grep -qE '^(engine/(voice|voice_parts|voices|hindi|timing|render|frames|typeset|check_sync|graphics|icons)\.py|engine/icons\.json|locks/voice\.txt|examples/|brand/|fonts/|\.github/workflows/tests\.yml)'; then
+             git diff --name-only $range 2>/dev/null | grep -qE '^(engine/(voice|voice_parts|voices|hindi|timing|render|frames|typeset|check_sync|graphics|icons|ending)\.py|engine/icons\.json|locks/voice\.txt|examples/|brand/|fonts/|\.github/workflows/tests\.yml)'; then
             echo run=yes >> "$GITHUB_OUTPUT"
           else
             echo "voice untouched; skipping"; echo run=no >> "$GITHUB_OUTPUT"
@@ -114,6 +116,9 @@ jobs:
             python3 engine/render.py "examples/$name-plan.json" "example/pictures-$name" "example/voice-$name" "example/$name.mp4" \
               --icons icons --logo brand/watermark.png --music "$(python3 engine/pick_music.py "examples/$name-plan.json" "$GITHUB_RUN_ID")"
             python3 engine/check_sync.py "example/$name.mp4"
+            # The ending joins a real film without re-encoding it (engine/ending.py).
+            python3 engine/ending.py "example/$name.mp4" | tee /tmp/ending.txt
+            grep -q 'without re-encoding' /tmp/ending.txt
           done
           python3 - <<'PY'
           import json

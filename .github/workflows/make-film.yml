@@ -7,6 +7,7 @@ name: Make a film
 #      lays the music under the voice, and checks every cut in the film
 #   4. sends the film to the Drive folder (or, when not delivering, keeps it
 #      for 7 days on the story's film-<slug> release)
+#      Every film ends with brand/ending-upright.mp4 (engine/ending.py).
 #   5. posts it, publicly, on the Bittu Ki Riya YouTube channel with the
 #      plan's "youtube" words (engine/youtube.py; set up once by
 #      docs/YOUTUBE-SETUP.md, and skipped until then)
@@ -55,6 +56,11 @@ on:
         type: boolean
         required: false
         default: false
+      ending:
+        description: 'End the film with the Bittu Ki Riya ending (Like, Follow, Subscribe)'
+        type: boolean
+        required: false
+        default: true
       youtube:
         description: 'Also post the film on the Bittu Ki Riya YouTube channel (public)'
         type: boolean
@@ -367,6 +373,15 @@ jobs:
         run: |
           python3 engine/check_sync.py "output/$SLUG.mp4" | tee /tmp/sync.txt
           { echo '## Picture timing'; echo '```'; cat /tmp/sync.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Add the Bittu Ki Riya ending (Like, Follow, Subscribe)
+        # After the timing check, which knows nothing of the ending, and
+        # before the film is stored: Drive and YouTube get it with the ending.
+        if: inputs.ending
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          python3 engine/ending.py "output/$SLUG.mp4" | tee /tmp/ending.txt
+          { echo '## Ending'; cat /tmp/ending.txt; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v6
         with:
           name: video-${{ inputs.slug }}

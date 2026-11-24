@@ -73,7 +73,9 @@ Save to `films/<story name>/script.md`.
   upon a time".
 - **Shape:** hook → who and where, quickly → the plan or wish → it goes
   wrong → bigger trouble → the twist → the payoff. End on a punchline or a
-  warm line the viewer will repeat, then stop.
+  warm line the viewer will repeat, then stop. Never ask to like or
+  subscribe: GitHub adds the Bittu Ki Riya ending (Like, Follow,
+  Subscribe) after every film.
 - **One narrator**, third person, the same tense throughout. Bittu's and
   Riya's lines are told by the narrator ("Riya rolled her eyes: Bittu,
   that is a mammoth."), short and in character (`bittu.json`,
