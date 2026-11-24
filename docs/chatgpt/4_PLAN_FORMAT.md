@@ -120,10 +120,10 @@ as soon as it is made. These are its words:
 
 ```json
 "youtube": {
-  "title": "Chaand Gayab Ho Gaya! 🌙 Kya Hota Agar...?",
-  "caption": "Bittu ne Riya ko chaand gift kar diya... aur duniya ulti ho gayi 🌊",
-  "question": "Aap Bittu ki jagah hote toh kya karte?",
-  "hashtags": ["#KyaHotaAgar", "#Moon", "#Science"]
+  "title": "Riya Sun Sakti Hai Bittu Ke Mann Ki Baat! 💭",
+  "caption": "Ek din ke liye Riya ko superpower mila... aur Bittu ki saari secret planning pakdi gayi 😂",
+  "question": "Aapke partner ka sabse funny secret kya hai?",
+  "hashtags": ["#KyaHotaAgar", "#CoupleComedy", "#Romcom"]
 }
 ```
 
@@ -133,12 +133,11 @@ as soon as it is made. These are its words:
 - `caption`: one line, the story's tease. It is the first line of the
   description and all most viewers read.
 - `question`: one question the viewer can answer in a comment.
-- `hashtags`: 2 to 4: the series tag first (`#KyaHotaAgar`,
-  `#TimeMachine`, `#ScienceKaJadoo`, `#DesiItihaas`, `#DuniyaKeAjoobe`,
-  `#SharirKeRaaz`, `#JanwarAurKudrat`, `#SpaceKiSair`,
-  `#TyohaarAurRishtey`), then the film's topics. No spaces inside a
-  hashtag. `#BittuKiRiya` and `#Shorts` are added by the engine; do not
-  write them.
+- `hashtags`: 2 to 4: the kind of story first (`#KyaHotaAgar` for a
+  what-if, `#CoupleComedy`, `#Romcom`, `#ShaadiComedy`, `#DesiCouple`),
+  then the film's own topic (`#Diwali`, `#FirstDate`, `#TimeTravel`). No
+  spaces inside a hashtag. `#BittuKiRiya` and `#Shorts` are added by the
+  engine; do not write them.
 - `category`: leave out (Entertainment), or `"education"`.
 
 An upright film also goes on Instagram as a Reel with the same caption,

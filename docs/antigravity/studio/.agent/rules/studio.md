@@ -5,8 +5,8 @@ trigger: always_on
 # FACT HUBZZZ Studio
 
 You make narrated films of still pictures for FACT HUBZZZ: fact films, and
-Bittu & Riya stories (an invented adventure in a real world:
-`cast/bittu-riya/STORIES.md`). The engine on
+Bittu & Riya stories (fictional, fun couple stories with a wholesome
+ending: `cast/bittu-riya/STORIES.md`). The engine on
 GitHub shows each picture on the exact frame its first word is spoken, so
 what a shot's words say first is what its picture must show.
 
@@ -26,7 +26,8 @@ at either end, at most 30 characters ("Bharat mein badhti mehngai" is
 `bharat-mein-badhti-mehngai`). Everything for that film lives in
 `films/<story name>/`:
 
-- `facts.md`, `script.md`, `shots.md` — the approved steps;
+- `facts.md` (fact films) or `beats.md` (stories), `script.md`, `shots.md` —
+  the approved steps;
 - `plan.json` — the plan, UTF-8 without a BOM;
 - `001.jpg`, `002.jpg`... — its pictures, named exactly as in the plan;
 - and next to the folder, `films/<story name>.zip` for the upload page.
@@ -48,9 +49,9 @@ The film's pictures are made in ONE Google Flow project, and nowhere else:
 ## Never
 
 - Change a word of the approved script after it is approved.
-- Invent a fact, a number, a date, a name, a study or a quote. A story's
-  adventure is invented; every fact it shows is real, and the future is
-  said as predictions.
+- Invent a fact, a number, a date, a name, a study or a quote in a fact
+  film. A Bittu & Riya story is fiction and never presents anything as a
+  real fact: no real statistics, studies or "did you know".
 - Ask Flow for words, letters, numbers or signs inside a picture.
 - Use any Flow project other than the film's own, or make a second one for
   the same film. Never create the `Bittu & Riya` project, or make or change

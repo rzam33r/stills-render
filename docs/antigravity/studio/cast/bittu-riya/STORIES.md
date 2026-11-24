@@ -1,12 +1,21 @@
 # Bittu & Riya stories
 
-A story is an **invented adventure in a real world**: romcom, couple drama,
-comedy, sci-fi, time travel, fantasy, in any mix that makes it gripping.
-The adventure is made up; everything it shows about the real world is true.
-Bittu among stone-age people sees how they really made fire and tools; in
-the year 2600, what Bittu and Riya see is what scientists actually predict,
-said as a prediction. The viewer laughs and learns one true thing after
-another.
+A story is a **fictional, fun couple story** (Roshan's choice, 24 Nov 2026;
+no longer built on real facts). Mix, as the one-liner suggests:
+
+- **What if…?** One impossible question turned into a day in their life:
+  what if Riya could hear Bittu's thoughts, what if Bittu forgot their
+  anniversary in every timeline.
+- **Everyday couple life:** dates, fights over nothing, in-laws, jealousy,
+  surprises gone wrong, festivals, a road trip, cooking for her parents.
+- **Fantasy twists:** a time machine, a superpower, a talking pet, a robot
+  helper, a magic wish, when the twist makes it funnier.
+- **Romcom** throughout, and **always a wholesome ending**: they end up
+  closer than they started, and the viewer smiles.
+
+It is fiction and looks it. It teaches nothing and claims nothing about the
+real world: no real statistics, studies, dates or "did you know"; a number
+in a story is a joke and plainly one (Riya's anger at 110%).
 
 Each film stands alone, like a sitcom: nothing carries over from another
 film, and nobody needs to have seen one before. Bittu, Riya, both, or
@@ -47,19 +56,18 @@ Three different stories from my one-liner, each in a few lines:
 - cast: Bittu, Riya or both, and any one-off people;
 - genre mix;
 - the setup in one line, what goes wrong, the twist, the ending;
-- the 2 to 4 real facts it shows (or predictions, for the future).
+- the funniest moment, and the wholesome ending in one line.
 
 Make the three differ in genre mix and twist, not just in details. Wait for
 my choice. I may mix them.
 
-## 3. Facts
+## 3. Beats
 
-The real-world facts the story shows: at least 3, about one a minute (for 6
-minutes and more, listed per act). Check every one with a web search and
-give how sure it is (well established / widely believed / debated) and one
-source link. Anything about the future is a prediction: say who predicts it
-and give the source. Drop what you cannot source. Save to
-`films/<story name>/facts.md`. Wait for my OK.
+The story in beats, one line each: the hook, the wish or "what if", what
+goes wrong, the bigger trouble, the twist, the wholesome ending. Under each,
+the joke in it, and where the joke graphics go (about one a minute, below).
+For 6 minutes and more, the beats per act. Save to
+`films/<story name>/beats.md`. Wait for my OK.
 
 ## 4. Script
 
@@ -80,14 +88,15 @@ Save to `films/<story name>/script.md`.
   Riya's lines are told by the narrator ("Riya rolled her eyes: Bittu,
   that is a mammoth."), short and in character (`bittu.json`,
   `riya.json`).
-- **Facts live inside the action:** Bittu tries to light a fire with a
-  lighter that does not exist yet, then watches how it is really done.
-  One fact at a time, never a lecture. Future facts are said as
-  predictions ("scientists expect…").
+- **Fun first:** no lessons and no facts; the story never stops to
+  explain the real world.
 - **Laugh often:** a funny moment every 20 to 30 seconds: exaggerated
-  reactions, misunderstandings, modern Bittu against the era.
+  reactions, misunderstandings, Bittu's big plans going wrong, Riya's
+  one-line comebacks.
 - **Heart:** when both are in it, one warm moment between them. Teasing and
   jealousy stay playful, never cruel.
+- **Wholesome ending, always:** the trouble is solved by being kind,
+  honest or brave for each other; they end closer than they started.
 - **Family-friendly:** romance is looks, hugs and holding hands; no gore,
   no swearing, no drinking or smoking.
 - Hindi: `guide/7_HINDI_VOICE.md`. Their names are बिट्टू and रिया.
@@ -96,9 +105,12 @@ Save to `films/<story name>/script.md`.
 
 Split the approved script by `guide/2_SHOT_LIST.md` without changing a
 word: 6 to 12 words a shot under 3 minutes, 8 to 14 from 3 minutes on
-(fast pace: `guide/5_SHORTS.md`). About once a minute, a fact's number,
-share, journey, place or list is an animated graphic instead of a picture
-(`guide/8_GRAPHICS.md`); no cards. Show a numbered table: number, words
+(fast pace: `guide/5_SHORTS.md`). About once a minute, a **joke graphic**
+is an animated graphic instead of a picture (`guide/8_GRAPHICS.md`): a
+"love meter" gauge, "Riya's anger" pie, a "days since our last fight"
+counter, the road of Bittu's disastrous date, a map pin on "the one shop
+open at midnight", icons of the gifts he forgot. The narration says what it
+shows; its numbers are plainly jokes. No cards. Show a numbered table: number, words
 spoken, picture or graphic, who is in it (Bittu, Riya, one-off people), what
 it shows. Save to `films/<story name>/shots.md`. Wait for my OK.
 

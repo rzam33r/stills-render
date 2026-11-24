@@ -22,6 +22,11 @@ card is a graphic now.
 - **A place**: "here, in India…" → a map with a pin.
 - **Things listed**: "apples, bananas, carrots" → icons.
 
+**In a Bittu & Riya story** (fiction) the graphics are jokes: a "love
+meter" gauge, "Riya's anger" pie, a "days since our last fight" counter,
+the road of Bittu's disastrous date, icons of the gifts he forgot. The
+narration says it as a joke; nothing in a story is a real statistic.
+
 About one a minute: a 90-second film has 1 or 2, a 15-minute film about 15.
 Never two in a row, and never the first shot (the first shot is a picture).
 The shot's words must say what the graphic shows, as it appears.

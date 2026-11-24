@@ -118,8 +118,9 @@ say(all(f'| {n} |' in stories for n in ('90 seconds', '3 minutes', '6 minutes', 
     'stories come in 90 s, 3, 6, 9, 12 and 15 minutes')
 link = 'https://flow.google.com/project/983f2d4b-d432-439c-8283-587e8c9865c9'
 say(link in cast_md and link in mp and 'from\n     its link' in mp and 'sign in' in mp, '/make-pictures has Roshan open the Bittu & Riya project from its link in Chrome')
-say('invented adventure in a real world' in stories and 'every fact it shows is real' in rule,
-    'a story is invented, the facts in it are real')
+say('fictional, fun couple story' in stories and 'wholesome ending' in stories and '## 3. Facts' not in stories
+    and 'beats.md' in stories and 'never presents anything as a\n  real fact' in rule,
+    'a story is fiction with a wholesome ending, and never presents anything as a real fact (24 Nov 2026)')
 say('medium shot or close-up' in mp and 'Judge them only in medium shots and close-ups' in cast_md,
     'earrings, pendant and watch are judged only in medium shots and close-ups')
 for lang, per_min in (('en', 165), ('hi', 200)):
