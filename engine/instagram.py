@@ -22,6 +22,7 @@ What is posted:
   hashtags (#BittuKiRiya first, no #Shorts), within Instagram's 2,200
   characters and 30 hashtags;
 - shown in the feed as well as in Reels (share_to_feed);
+- marked with Instagram's "AI info" label (is_ai_generated);
 - only to the account named in INSTAGRAM_ACCOUNT, checked before anything
   is sent.
 
@@ -220,7 +221,7 @@ def container(user_id, url, text, sleep=time.sleep):
     """A Reel container for the film at `url`, once Instagram has fetched it.
     Returns (container id, '') or (None, why it failed)."""
     status, _, body = post_form(f'{user_id}/media', media_type='REELS', video_url=url, caption=text,
-                                share_to_feed='true')
+                                share_to_feed='true', is_ai_generated='true')
     if status != 200 or not body.get('id'):
         raise Refused(explain('Starting the Reel', body))
     cid = body['id']
