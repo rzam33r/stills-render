@@ -28,6 +28,15 @@ on:
         required: false
         default: false
         type: boolean
+      folder:
+        # A Drive folder by NAME, from the receiver's own list (Apps Script
+        # "Video Upload Receiver", FOLDERS): bittu-ki-riya. Empty means the
+        # receiver's default, the pink "Explainer Videos" folder. The receiver
+        # refuses any other name, so no folder id ever travels from here.
+        description: Named Drive folder (empty for the pink Explainer Videos folder)
+        required: false
+        default: ''
+        type: string
     secrets:
       UPLOAD_TOKEN:
         required: true
@@ -62,6 +71,11 @@ on:
         description: >-
           Optional. story-render run id whose video artifact holds the MP4.
           Use this when the video was never committed to the repository.
+        required: false
+        default: ''
+        type: string
+      folder:
+        description: Named Drive folder (bittu-ki-riya), or empty for the pink Explainer Videos folder
         required: false
         default: ''
         type: string
@@ -122,12 +136,18 @@ jobs:
           DRIVE_ENDPOINT_URL: ${{ secrets.DRIVE_ENDPOINT_URL }}
           RUN_ID: ${{ github.run_id }}
           ATTEMPT: ${{ github.run_attempt }}
+          FOLDER: ${{ inputs.folder }}
         run: |
           python3 - <<'PY'
           import os,re,json,hashlib,pathlib,subprocess,urllib.request,urllib.error
           from datetime import datetime,timezone
-          receipt={'state':'FAILED','destination_folder':'1w2wHd9vhqw1QvWdpyjdF-75xJLO3D6_R'}
+          # Mirrors the receiver's FOLDERS list: for the receipt only. The receiver
+          # decides the folder itself and checks it again when the upload ends.
+          FOLDERS={'':'1w2wHd9vhqw1QvWdpyjdF-75xJLO3D6_R','bittu-ki-riya':'1ROo4OE7LMBJLa_w-mUemySi3yshF9yX6'}
+          folder=os.environ.get('FOLDER','').strip()
+          receipt={'state':'FAILED','destination_folder':FOLDERS.get(folder,'unknown'),'folder_name':folder or 'Explainer Videos'}
           try:
+            if folder not in FOLDERS: raise ValueError('unknown Drive folder name; nothing uploaded')
             root=pathlib.Path.cwd().resolve(); p=(root/os.environ['VIDEO']).resolve()
             if root not in p.parents or p.suffix.lower()!='.mp4' or not p.is_file(): raise ValueError('MP4 must be an existing repository file')
             project=os.environ['PROJECT']
@@ -186,7 +206,7 @@ jobs:
                 with urllib.request.urlopen(req,timeout=120) as r: obj=json.loads(r.read())
                 if not obj.get('ok'): raise ValueError('receiver control rejected; no automatic re-init')
                 return obj
-              start=control(dict(op='start',key=key,name=name,size=len(data),sha256=sha,md5=md5))
+              start=control(dict(op='start',key=key,name=name,size=len(data),sha256=sha,md5=md5,**({'folder':folder} if folder else {})))
               if start['state']=='VERIFIED': result=start['file']
               else:
                 session=start['url']
@@ -222,7 +242,7 @@ jobs:
                 if not result or not result.get('id'): raise ValueError('completion id absent; inspect same session')
               final=control(dict(op='finish',key=key,id=result['id']))['file']
               receipt.update(state='DESTINATION_SHA256_VERIFIED',drive_id=final['id'],receiver_bytes=int(final['size']),destination_sha256=final['sha256Checksum'],destination_sha256_verified=True,web_view_link=final.get('webViewLink'),resume_status_probes=probes if 'probes' in locals() else 0)
-              print('Resumable upload complete; fixed parent, original size, MD5 and SHA256 verified by Drive metadata.')
+              print(f"Resumable upload complete into {receipt['folder_name']}; fixed parent, original size, MD5 and SHA256 verified by Drive metadata.")
             else:
               # Fixed destination is configured in the existing receiver, never an input.
               import base64

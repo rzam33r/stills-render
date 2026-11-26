@@ -66,6 +66,12 @@ deliver = mf['jobs']['deliver']
 say(deliver.get('uses') == './.github/workflows/final-video-delivery.yml'
     and set(deliver.get('secrets', {})) == {'UPLOAD_TOKEN', 'DRIVE_ENDPOINT_URL'},
     'the delivery gets the two Drive secrets')
+say((deliver.get('with') or {}).get('folder') == 'bittu-ki-riya',
+    'Bittu Ki Riya films go to their own Drive folder, by name, not the pink one')
+fvd = texts.get('final-video-delivery.yml', '')
+say("'bittu-ki-riya':'1ROo4OE7LMBJLa_w-mUemySi3yshF9yX6'" in fvd and "**({'folder':folder} if folder else {})" in fvd
+    and 'unknown Drive folder name' in fvd,
+    'the delivery asks the receiver for a folder by name only, and stops on a name it does not know')
 
 # --- every film ends with the Bittu Ki Riya ending ------------------------
 steps = [str(s.get('name', '')) + ' ' + str(s.get('run', '')) + ' ' + str(s.get('uses', ''))

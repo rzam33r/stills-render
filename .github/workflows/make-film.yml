@@ -5,7 +5,7 @@ name: Make a film
 #   2. speaks the narration and records when every word is said
 #   3. shows each shot's picture from the frame its first word is spoken,
 #      lays the music under the voice, and checks every cut in the film
-#   4. sends the film to the Drive folder (or, when not delivering, keeps it
+#   4. sends the film to the Bittu Ki Riya Drive folder (or, when not delivering, keeps it
 #      for 7 days on the story's film-<slug> release)
 #      Every film ends with brand/ending-upright.mp4 (engine/ending.py).
 #   5. posts it, publicly, on the Bittu Ki Riya YouTube channel with the
@@ -423,6 +423,8 @@ jobs:
       project: ${{ inputs.slug }}
       qa_approved: true
       artifact_run_id: ${{ github.run_id }}
+      # Bittu Ki Riya films go to their own Drive folder, not the pink one.
+      folder: bittu-ki-riya
     secrets:
       UPLOAD_TOKEN: ${{ secrets.UPLOAD_TOKEN }}
       DRIVE_ENDPOINT_URL: ${{ secrets.DRIVE_ENDPOINT_URL }}
