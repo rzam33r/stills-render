@@ -13,6 +13,9 @@ name: Make a film
 #      docs/YOUTUBE-SETUP.md, and skipped until then)
 #   6. posts an upright film on Instagram as a Reel (engine/instagram.py;
 #      set up once by docs/INSTAGRAM-SETUP.md, and skipped until then)
+#   7. posts an upright film on the Bittu Ki Riya Facebook Page, as a Reel
+#      when it is 90 s or less (engine/facebook.py; set up once by
+#      docs/FACEBOOK-SETUP.md, and skipped until then)
 #
 # The upload page attaches the ZIP to a release tagged story-<slug> and runs
 # this. Nothing is committed: pictures and films live in releases and
@@ -65,6 +68,11 @@ on:
         default: true
       instagram:
         description: 'Also post an upright film on Instagram as a Reel'
+        type: boolean
+        required: false
+        default: true
+      facebook:
+        description: 'Also post an upright film on the Bittu Ki Riya Facebook Page'
         type: boolean
         required: false
         default: true
@@ -566,3 +574,63 @@ jobs:
             sleep $((try * 5))
           done
           echo "the film is on Instagram; only the pointer file could not be saved"
+
+  facebook:
+    needs: [render, deliver]
+    # Like "instagram": after the Drive copy, whatever happened to it.
+    if: ${{ !cancelled() && needs.render.result == 'success' && (needs.deliver.result == 'success' || needs.deliver.result == 'failure') && inputs.deliver && inputs.facebook }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
+        with:
+          name: story-${{ inputs.slug }}
+          path: story
+      - uses: actions/download-artifact@v7
+        with:
+          name: video-${{ inputs.slug }}
+          path: output
+      - name: Upright, set up, and not posted yet by this run?
+        id: go
+        env:
+          SLUG: ${{ inputs.slug }}
+          # Only whether the key exists; its value stays with the post step.
+          FACEBOOK_TOKEN: ${{ secrets.FACEBOOK_TOKEN != '' && 'set' || '' }}
+        run: |
+          mkdir -p facebook
+          git fetch -q origin main && git show "origin/main:facebook/$SLUG.json" > "facebook/$SLUG.json" 2>/dev/null \
+            || rm -f "facebook/$SLUG.json"
+          python3 engine/facebook.py should "output/$SLUG.mp4" --record "facebook/$SLUG.json" --run "$GITHUB_RUN_ID"
+      - name: Make Facebook's copy (as Instagram's, sound at 128 kbps, no edit lists)
+        if: steps.go.outputs.go == 'yes'
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: mkdir -p fb && python3 engine/instagram.py prepare "output/$SLUG.mp4" "fb/$SLUG.mp4"
+      - name: Post it on the Facebook Page
+        if: steps.go.outputs.go == 'yes'
+        env:
+          SLUG: ${{ inputs.slug }}
+          FACEBOOK_TOKEN: ${{ secrets.FACEBOOK_TOKEN }}
+          FACEBOOK_PAGE_ID: '61596905883436'   # the Bittu Ki Riya Page
+        run: python3 engine/facebook.py post story/plan.json "fb/$SLUG.mp4" --record "facebook/$SLUG.json" --run "$GITHUB_RUN_ID"
+      - name: Record the Facebook link
+        if: success() && steps.go.outputs.go == 'yes' && hashFiles(format('facebook/{0}.json', inputs.slug)) != ''
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          cp "facebook/$SLUG.json" /tmp/facebook.json
+          git fetch origin main
+          git checkout -B facebook-note origin/main
+          mkdir -p facebook && cp -f /tmp/facebook.json "facebook/$SLUG.json"
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
+          git add "facebook/$SLUG.json"
+          git diff --cached --quiet && echo "unchanged" && exit 0
+          git commit -m "on Facebook: $SLUG"
+          for try in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git fetch origin main && git rebase --autostash origin/main || git rebase --abort
+            sleep $((try * 5))
+          done
+          echo "the film is on Facebook; only the pointer file could not be saved"

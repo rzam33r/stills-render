@@ -58,7 +58,7 @@ on = mf.get('on', mf.get(True))
 inputs = set(on['workflow_dispatch']['inputs'])
 page = {'slug', 'build', 'deliver', 'frame', 'ignore_plan_errors', 'logo', 'keep_pictures'}
 # Inputs the page never sends; each must have a default so the page never needs it.
-tests_only = {"voice_parts", "voice", "youtube", "ending", "instagram"}
+tests_only = {"voice_parts", "voice", "youtube", "ending", "instagram", "facebook"}
 spec = on['workflow_dispatch']['inputs']
 say(inputs == page | tests_only and all('default' in spec[k] for k in tests_only),
     'make-film accepts the inputs the upload page sends, plus test-only inputs that have defaults')
@@ -102,6 +102,14 @@ gone = [s for s in ig_steps if 'gh release delete' in str(s.get('run', ''))]
 say(gone and 'always()' in str(gone[0].get('if', '')), 'Instagram\'s public copy is deleted whatever happens')
 say('inputs.deliver' in str(ig.get('if', '')) and 'inputs.instagram' in str(ig.get('if', ''))
     and 'deliver' in (ig.get('needs') or []), 'a film goes to Instagram only when it is delivered, after the Drive copy')
+fb = mf['jobs'].get('facebook') or {}
+fb_steps = fb.get('steps') or []
+fb_key = [st for st in fb_steps if '${{ secrets.FACEBOOK_TOKEN }}' in str(st.get('env', ''))]
+say(len(fb_key) == 1 and 'facebook.py post' in str(fb_key[0].get('run', ''))
+    and str((fb_key[0].get('env') or {}).get('FACEBOOK_PAGE_ID')) == '61596905883436',
+    'only the Facebook post step sees the Facebook key, and it posts to the Bittu Ki Riya Page only')
+say('inputs.deliver' in str(fb.get('if', '')) and 'inputs.facebook' in str(fb.get('if', ''))
+    and 'deliver' in (fb.get('needs') or []), 'a film goes to Facebook only when it is delivered, after the Drive copy')
 renew = flows.get('instagram-token.yml') or {}
 renew_text = texts.get('instagram-token.yml', '')
 say('schedule' in (renew.get(True) or renew.get('on') or {}) and 'gh secret set INSTAGRAM_TOKEN' in renew_text
