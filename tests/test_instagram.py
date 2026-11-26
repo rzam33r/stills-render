@@ -12,6 +12,10 @@
   fetch GitHub's link, the link it redirects to is tried. A key for another
   account posts nothing; a dead key says what to do; the weekly renewal
   writes the key out only when Instagram gives a new one.
+- A Facebook-kind key (Unified login, starts "EA") goes to the Facebook
+  host, finds the account by INSTAGRAM_USER_ID (not "me"), posts the same
+  way, never needs renewing when it never expires, and fails the weekly
+  job 14 days before one that does expires.
 - The key never appears in anything printed.
 """
 import contextlib
@@ -127,7 +131,15 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(400, {'error': {'code': 190, 'message': 'Error validating access token.'}})
         if path == '/v26.0/me':
             Fake.order.append('me')
+            if Fake.token.startswith('EA'):     # a Facebook-kind key's "me" is a system user
+                return self.reply(200, {'id': '999', 'name': 'uploader system user'})
             return self.reply(200, {'user_id': '1784', 'username': Fake.username})
+        if path == '/v26.0/1784' and q.get('fields') == 'id,username':
+            Fake.order.append('me')
+            return self.reply(200, {'id': '1784', 'username': Fake.username})
+        if path == '/v26.0/debug_token' and q.get('input_token') == Fake.token:
+            return self.reply(200, {'data': {'is_valid': True, 'expires_at': Fake.expires,
+                                             'data_access_expires_at': 0}})
         if path == '/v26.0/C1':
             Fake.polls += 1
             Fake.order.append('poll')
@@ -171,7 +183,8 @@ def run(*args):
     with contextlib.redirect_stdout(out):
         code = instagram.main(list(args))
     said = out.getvalue()
-    say(Fake.token not in said and 'IG-new-token' not in said, 'nothing printed holds the key')
+    say(Fake.token not in said and 'IG-new-token' not in said and 'EA-secret-token' not in said,
+        'nothing printed holds the key')
     return code, said
 
 
@@ -216,7 +229,43 @@ Fake.new_token = 'IG-new-token'
 code, said = run('refresh', '--out', str(out_file))
 say(code == 0 and out_file.read_text() == 'IG-new-token' and oct(out_file.stat().st_mode & 0o777) == '0o600',
     'renewing gives a new key: written to a private file for the workflow to save')
+
+# --- the Facebook-kind key (Unified login) -----------------------------------
+import time  # noqa: E402
+Fake.token, Fake.expires, Fake.order = 'EA-secret-token', 0, []
+os.environ['INSTAGRAM_TOKEN'] = Fake.token
+os.environ.pop('INSTAGRAM_USER_ID', None)
+code, said = run('post', str(work / 'plan.json'), str(film), '--url', public, '--record', str(record), '--run', '10')
+say(code == 1 and 'start' not in Fake.order and 'INSTAGRAM_USER_ID' in said,
+    'a Facebook-kind key with no account number posts nothing, and says what is missing')
+os.environ['INSTAGRAM_USER_ID'] = '1784'
+Fake.order, Fake.fetchable = [], {public}
+record.unlink(missing_ok=True)
+code, said = run('post', str(work / 'plan.json'), str(film), '--url', public, '--record', str(record), '--run', '11')
+say(code == 0 and Fake.order[:2] == ['me', 'start'] and Fake.published and Fake.sent.get('media_type') == 'REELS',
+    f'a Facebook-kind key finds the account by its number, checks it, then posts the Reel: {Fake.order}')
+code, said = run('check')
+say(code == 0 and '@bittukiriya' in said and 'never expires' in said, 'its key check says it never expires')
+out_file.unlink(missing_ok=True)
+code, said = run('refresh', '--out', str(out_file))
+say(code == 0 and not out_file.exists() and 'nothing to renew' in said,
+    'the weekly job renews nothing for a key that never expires, and needs no GitHub key to save one')
+Fake.expires = int(time.time()) + 5 * 86400 + 3600
+code, said = run('refresh', '--out', str(out_file))
+say(code == 1 and 'runs out in 5 days' in said and 'INSTAGRAM-SETUP' in said and not out_file.exists(),
+    'one that expires fails the weekly job 14 days ahead, saying how to make a new one')
+Fake.expires = 0
+os.environ['INSTAGRAM_TOKEN'] = 'EA-dead-token'
+code, said = run('check')
+say(code == 1 and 'no longer works' in said and 'EA-dead-token' not in said, 'a dead Facebook-kind key says how to make a new one')
 server.shutdown()
+
+test_server = os.environ.pop('INSTAGRAM_TEST_SERVER')
+os.environ['INSTAGRAM_TOKEN'] = 'EA-x'
+fb = instagram.api()
+os.environ['INSTAGRAM_TOKEN'] = 'IG-x'
+say(fb == 'https://graph.facebook.com' and instagram.api() == 'https://graph.instagram.com',
+    'a Facebook-kind key goes to graph.facebook.com, an Instagram-kind one to graph.instagram.com')
 
 guide = (ROOT / 'docs' / 'INSTAGRAM-SETUP.md').read_text()
 import re  # noqa: E402
@@ -224,7 +273,8 @@ steps = re.findall(r'^## (\d)\. ', guide, re.M)
 said_steps = set(re.findall(r'steps? (\d)', pathlib.Path(instagram.__file__).read_text()))
 say(steps == ['1', '2', '3', '4', '5', '6'] and said_steps <= set(steps), f'the messages point at real setup steps: {sorted(said_steps)}')
 say(all(k in guide for k in ('INSTAGRAM_TOKEN', 'INSTAGRAM_ACCOUNT', 'GH_SECRETS_TOKEN', 'instagram-check.yml',
-                              'instagram_business_content_publish')), 'the guide names the secrets, the permission and the key check')
+                              'instagram_content_publish', 'Unified login', 'INSTAGRAM_USER_ID')),
+    'the guide names the secrets, the permission, the Unified-login route and the key check')
 
 print('\nall good' if not bad else f'\n{bad} failing')
 sys.exit(1 if bad else 0)

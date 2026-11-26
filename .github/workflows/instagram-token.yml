@@ -1,9 +1,14 @@
 name: Renew the Instagram key
 
-# Instagram's key lasts 60 days. Every week this renews it for another 60,
-# and when Instagram hands back a new key it saves it as the INSTAGRAM_TOKEN
-# secret, with a GitHub key that may change this repository's secrets
-# (GH_SECRETS_TOKEN). docs/INSTAGRAM-SETUP.md sets both up once.
+# Every week:
+# - a Facebook-kind key (Unified login, the one Meta gives new apps) is only
+#   checked: it never expires, so there is nothing to renew and no GitHub
+#   key is needed. If Meta ever gives one that expires, this fails 14 days
+#   before, and GitHub emails Roshan to make a new one.
+# - an Instagram-kind key (older Instagram login) lasts 60 days: this renews
+#   it, and when Instagram hands back a new key saves it as INSTAGRAM_TOKEN
+#   with a GitHub key that may change this repository's secrets
+#   (GH_SECRETS_TOKEN). docs/INSTAGRAM-SETUP.md, step 5.
 
 on:
   schedule:
@@ -19,7 +24,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
-      - name: Renew it, and save it if Instagram gave a new one
+      - name: Check how long the key lasts; renew and save it if it is the Instagram kind
         env:
           INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
           GH_SECRETS_TOKEN: ${{ secrets.GH_SECRETS_TOKEN }}

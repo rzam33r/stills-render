@@ -1,16 +1,26 @@
 """Post a finished upright Bittu Ki Riya film on Instagram as a Reel.
 
-The route is Meta's "Instagram API with Instagram Login": it needs an
-Instagram professional account and no Facebook Page. Two things about it
-shape everything here:
+Meta gives two kinds of key, and this takes either:
+
+- a Facebook-kind key (it starts "EA"), from the app's "API setup with
+  Unified login" (the only setup Meta offers new apps since 2026). It is
+  used on graph.facebook.com with the account's number, INSTAGRAM_USER_ID,
+  and it never expires; the weekly job only warns if Meta ever gives one
+  that does;
+- an Instagram-kind key (it starts "IG"), from the older "API setup with
+  Instagram login". It is used on graph.instagram.com, lasts 60 days, and
+  the weekly job renews it.
+
+Either way, two things shape everything here:
 
 - Instagram does not take the film's bytes; it fetches the film from a
   public link. The workflow puts Instagram's copy on a short-lived GitHub
   release (film-<slug>) of this public repository, and deletes it as soon
   as the post is done.
-- The key (a long-lived Instagram token) lasts 60 days. A weekly workflow
-  (instagram-token.yml) renews it and, when Instagram hands back a new one,
-  saves it as the INSTAGRAM_TOKEN secret.
+- The key must keep working. A weekly workflow (instagram-token.yml)
+  renews an Instagram-kind key and saves a new one as the INSTAGRAM_TOKEN
+  secret; for a Facebook-kind key it only checks how long the key has
+  left, and fails (so GitHub emails Roshan) 14 days before it runs out.
 
 What is posted:
 
@@ -61,20 +71,31 @@ class Refused(Exception):
     """Instagram said no; the message says what to do about it."""
 
 
+_masked = set()
+
+
+def token():
+    t = os.environ.get('INSTAGRAM_TOKEN', '').strip()
+    if t and os.environ.get('GITHUB_ACTIONS') and t not in _masked:
+        print('::add-mask::' + t)
+        _masked.add(t)
+    return t
+
+
+def kind():
+    """'instagram' for a key from Instagram Login (it starts "IG"); 'facebook'
+    for one from Unified or Facebook Login (it starts "EA"). They live on
+    different hosts and find the account differently."""
+    return 'instagram' if token().startswith('IG') else 'facebook'
+
+
 def api():
     test = os.environ.get('INSTAGRAM_TEST_SERVER', '')
     if test:
         if not re.fullmatch(r'http://127\.0\.0\.1:\d+', test):
             raise Refused('INSTAGRAM_TEST_SERVER may only point at this computer')
         return test
-    return 'https://graph.instagram.com'
-
-
-def token():
-    t = os.environ.get('INSTAGRAM_TOKEN', '').strip()
-    if t and os.environ.get('GITHUB_ACTIONS'):
-        print('::add-mask::' + t)
-    return t
+    return 'https://graph.instagram.com' if kind() == 'instagram' else 'https://graph.facebook.com'
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -123,8 +144,12 @@ def explain(what, body):
         return (f'{what}: the Instagram key no longer works (it expired or was withdrawn). Make a new one: '
                 f'{SETUP}, steps 3 and 4.')
     if code in (10, 200, 3) or 'permission' in msg.lower():
-        return (f'{what}: the key lacks a permission. Make it again with instagram_business_basic and '
-                f'instagram_business_content_publish: {SETUP}, step 3.')
+        perms = ('instagram_business_basic and instagram_business_content_publish' if kind() == 'instagram'
+                 else 'instagram_basic and instagram_content_publish')
+        return f'{what}: the key lacks a permission. Make it again with {perms}: {SETUP}, step 3.'
+    if code == 100 and sub == 33:
+        return (f'{what}: this key cannot see Instagram account {os.environ.get("INSTAGRAM_USER_ID", "")}. '
+                f'Check INSTAGRAM_USER_ID, or make the key again for that account: {SETUP}, step 3.')
     if code in (4, 9, 17, 32, 613) or sub == 2207042:
         return f'{what}: Instagram\'s posting limit for today is reached. Re-run this job tomorrow.'
     return f'{what} was refused (code {code}{"/" + str(sub) if sub else ""}). Instagram says: {msg or "nothing"}'
@@ -187,10 +212,45 @@ def caption(plan):
 # --- posting -----------------------------------------------------------------
 
 def account():
-    status, _, body = get('me', fields='user_id,username')
-    if status != 200 or not body.get('user_id'):
+    """(the account's number, its username), read with the key."""
+    if kind() == 'instagram':
+        status, _, body = get('me', fields='user_id,username')
+        if status != 200 or not body.get('user_id'):
+            raise Refused(explain('Signing in to Instagram', body))
+        return str(body['user_id']), body.get('username', '?')
+    # A Facebook-kind key may belong to a "system user", not to the Instagram
+    # account, so "me" is not the account: it is named by its number.
+    uid = os.environ.get('INSTAGRAM_USER_ID', '').strip()
+    if not uid.isdigit():
+        raise Refused(f'INSTAGRAM_USER_ID is not set, so the Instagram account cannot be found; nothing was '
+                      f'posted ({SETUP}, step 4)')
+    status, _, body = get(uid, fields='id,username')
+    if status != 200 or not body.get('username'):
         raise Refused(explain('Signing in to Instagram', body))
-    return str(body['user_id']), body.get('username', '?')
+    return uid, body['username']
+
+
+def key_life():
+    """Days a Facebook-kind key has left: None for never, -1 when Meta will not say."""
+    t = token()
+    q = urllib.parse.urlencode({'input_token': t, 'access_token': t})
+    status, _, body = call('GET', f'{api()}/{VERSION}/debug_token?{q}')
+    data = body.get('data') if isinstance(body, dict) else None
+    if status != 200 or not isinstance(data, dict) or not data.get('is_valid'):
+        return -1
+    ends = [int(data.get(k) or 0) for k in ('expires_at', 'data_access_expires_at')]
+    ends = [e for e in ends if e > 0]
+    if not ends:
+        return None
+    return max(0, int((min(ends) - time.time()) // 86400))
+
+
+def life_words(days):
+    if days is None:
+        return 'it never expires'
+    if days == -1:
+        return 'Meta did not say when it expires'
+    return f'it is good for {days} more days'
 
 
 def check_account(username):
@@ -272,12 +332,23 @@ def post(plan, film, url, record=None, run='', sleep=time.sleep):
     return out
 
 
+WARN_DAYS = 14
+
+
 def refresh(out_file):
-    """Renew the key for 60 more days. Writes the key to out_file only when
-    Instagram hands back a different one (the workflow then saves it)."""
+    """Instagram-kind key: renew it for 60 more days, and write it to out_file
+    only when Instagram hands back a different one (the workflow then saves
+    it). Facebook-kind key: it cannot be renewed this way, so only say how
+    long it has left, and refuse (failing the job) when that is under 14 days."""
     old = token()
     if not old:
         raise Refused(f'INSTAGRAM_TOKEN is not set ({SETUP}, step 4)')
+    if kind() == 'facebook':
+        days = key_life()
+        if days is not None and 0 <= days < WARN_DAYS:
+            raise Refused(f'the Instagram key runs out in {days} days and this kind is not renewed '
+                          f'automatically. Make a new one: {SETUP}, steps 3 and 4.')
+        return f'nothing to renew: this is the Facebook kind of key, and {life_words(days)}'
     q = urllib.parse.urlencode({'grant_type': 'ig_refresh_token', 'access_token': old})
     status, _, body = call('GET', f'{api()}/refresh_access_token?{q}')
     new = body.get('access_token')
@@ -322,8 +393,9 @@ def main(argv):
         if mode == 'check':
             _, username = account()
             check_account(username)
-            print(f'The Instagram key works and belongs to @{username}. Upright films will be posted there.')
-            youtube.summary(f'## Instagram key works\n\nIt belongs to @{username}.\n')
+            life = f'; {life_words(key_life())}' if kind() == 'facebook' else ''
+            print(f'The Instagram key works and belongs to @{username}{life}. Upright films will be posted there.')
+            youtube.summary(f'## Instagram key works\n\nIt belongs to @{username}{life}.\n')
             return 0
         if mode == 'refresh':
             print(refresh(opt(argv, '--out', '/tmp/instagram-token')))

@@ -538,6 +538,7 @@ jobs:
           URL: ${{ steps.link.outputs.url }}
           INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
           INSTAGRAM_ACCOUNT: ${{ secrets.INSTAGRAM_ACCOUNT }}
+          INSTAGRAM_USER_ID: '17841436806102076'   # @bittu.ki.riya's number at Meta
         run: python3 engine/instagram.py post story/plan.json "insta/$SLUG.mp4" --url "$URL" --record "instagram/$SLUG.json" --run "$GITHUB_RUN_ID"
       - name: Delete the public copy
         if: always() && steps.go.outputs.go == 'yes'

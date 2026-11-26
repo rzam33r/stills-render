@@ -1,47 +1,60 @@
 # Give GitHub a key to the Bittu Ki Riya Instagram
 
-Done once, by Roshan, in about 20 minutes, on a computer. After it, every
+Done once, by Roshan, on a computer (done 26 Nov 2026). After it, every
 **upright** Bittu Ki Riya film is posted on Instagram as a Reel, with the
 plan's caption and hashtags, right after its Drive copy. Wide films stay on
 YouTube only.
 
 The keys go straight into GitHub's secret settings and nowhere else: never
-into a chat, an email, a note you share or a file in this repository.
+into a chat, an email, a note you share or a file in this repository. You
+type every login and password yourself, on Meta's or Instagram's own page.
+
+Since 2026 Meta gives new apps **"API setup with Unified login"** only (the
+page says "API setup with Instagram login is not available for newer
+apps"). That route needs a Facebook login and a business portfolio, but no
+Facebook Page, and its key never expires. These steps follow it.
 
 ## 1. Instagram is a professional account
 
 Your Instagram is already a Creator or Business account (24 Nov 2026), and
 it needs no Facebook Page. Nothing to do.
 
-## 2. A Meta app
+## 2. A Meta app and a business portfolio
 
-1. Open https://developers.facebook.com and log in. Meta asks for a
-   Facebook login here; your personal Facebook profile is fine. No Page is
-   needed.
-2. Press **My Apps** → **Create app**.
-3. App name: `Bittu Ki Riya uploader`. Your email. **Next**.
-4. Use case: **Manage messaging & content on Instagram**. **Next**.
-5. If asked about a business portfolio, choose not to connect one now.
-   **Next** until **Create app**, then confirm with your Facebook password
-   if asked (on Meta's own page; never anywhere else).
+1. Open https://developers.facebook.com and log in with your **personal**
+   Facebook profile (a work-platform account cannot create apps). If Meta
+   says the account is "too new to create a business", wait a day.
+2. **My Apps** → **Create app**. App name: `Bittu Ki Riya uploader`.
+3. Use case: **Manage messaging & content on Instagram**.
+4. When asked for a business portfolio, create one (`Bittu Ki Riya`);
+   "Verify later" is fine. **Create app**.
 
 ## 3. The Instagram key
 
-1. In the app, open the Instagram use case: **Use cases** → **Manage
-   messaging & content on Instagram** → **Customize** (or **API setup with
-   Instagram login**).
-2. Under **Permissions**, make sure these two are added:
-   `instagram_business_basic` and `instagram_business_content_publish`.
-3. Under **Generate access tokens**, press **Add account** and log in to
-   Instagram as the **Bittu Ki Riya** account. Allow what it asks.
-4. Press **Generate token** next to that account, tick the box, and copy
-   the token. It is good for 60 days; GitHub renews it from then on
-   (step 5).
+1. In the app: **Use cases** → Instagram API → **Customize** → **API setup
+   with Unified login**.
+2. **Permissions and features:** add `instagram_basic` and
+   `instagram_content_publish` (Meta's own template also adds others; they
+   are not used).
+3. **App roles** → **Roles** → add the Instagram account as an **Instagram
+   Tester**; then, in Instagram (Settings → Website permissions → Apps and
+   websites → Tester invites, or instagram.com/accounts/manage_access),
+   accept the invite.
+4. Back in **API setup with Unified login**:
+   - Section **1. Configure your app** → **Create new configuration** →
+     **Create from template** ("System-user access token", "Token will
+     never expire").
+   - Section **2. Generate access tokens** → the account is listed (else
+     **Add account**) → **Generate token**. A pop-up opens: log in as the
+     Bittu Ki Riya account if asked, choose it, and allow. You may untick
+     "Allow access to messages"; posting does not need it.
+   - Tick **I understand**, press **Copy**. Meta shows it only once; if it
+     is lost, press Generate token again.
 
-The app stays in "Development" mode: that is fine for posting to your own
-account. If Instagram ever says the app is not allowed to post, tell Claude.
+The key starts with "EA". The app stays in "Development" mode, and "Complete
+App Review" can be ignored: a tester account may post to itself.
 
-## 4. The key and the account name into GitHub
+## 4. The key and the account into GitHub
 
 1. Open https://github.com/rzam33r/stills-render/settings/secrets/actions
    (in the browser; the GitHub phone app cannot do this).
@@ -49,44 +62,49 @@ account. If Instagram ever says the app is not allowed to post, tell Claude.
 
    | Name | Secret |
    |---|---|
-   | `INSTAGRAM_TOKEN` | the token from step 3 |
-   | `INSTAGRAM_ACCOUNT` | the Instagram username, for example `bittukiriya` |
+   | `INSTAGRAM_TOKEN` | the key from step 3 |
+   | `INSTAGRAM_ACCOUNT` | the Instagram username: `bittu.ki.riya` |
 
    GitHub refuses to post if the key belongs to any other account.
 
-## 5. Let GitHub renew the key by itself
+The account's number at Meta (`INSTAGRAM_USER_ID`, 17841436806102076 for
+@bittu.ki.riya) is already written into the workflows; it is shown under the
+account's name in step 3's list. Only a different account would need it
+changed.
 
-Instagram's key stops after 60 days. Every Wednesday GitHub renews it, and
-when Instagram hands back a new one GitHub saves it over the old
-`INSTAGRAM_TOKEN`. For that it needs a GitHub key that may change this
-repository's secrets, and nothing else:
+## 5. Renewing the key: nothing to do
 
-1. Open https://github.com/settings/personal-access-tokens/new (signed in as
-   **rzam33r**).
-2. Token name: `Instagram key renewal`. Expiration: the longest offered.
-3. Repository access: **Only select repositories** → **stills-render**.
-4. Permissions → **Repository permissions** → **Secrets** → **Read and
-   write**. Leave everything else as it is.
-5. **Generate token**, copy it, and add it as one more repository secret
-   (step 4's page) named `GH_SECRETS_TOKEN`.
+This key never expires, so `GH_SECRETS_TOKEN` is **not** needed. Every
+Wednesday GitHub checks the key; if Meta ever gives one that expires, that
+check fails 14 days before the end, GitHub emails you, and you redo steps 3
+and 4.
 
-When that GitHub key nears its expiry date, GitHub emails you; make a new
-one the same way and replace `GH_SECRETS_TOKEN`.
+Only if you ever use the older Instagram-login key (it starts "IG" and
+lasts 60 days) does GitHub renew it by itself, and then it needs a GitHub
+key that may change this repository's secrets:
+
+1. https://github.com/settings/personal-access-tokens/new (as **rzam33r**).
+2. Name `Instagram key renewal`; longest expiration; **Only select
+   repositories** → **stills-render**; **Repository permissions** →
+   **Secrets** → **Read and write**; nothing else.
+3. **Generate token**, and add it as one more repository secret named
+   `GH_SECRETS_TOKEN`.
 
 ## 6. Check the key (posts nothing)
 
 1. Open https://github.com/rzam33r/stills-render/actions/workflows/instagram-check.yml
 2. **Run workflow** → **Run workflow**.
-3. Green, naming your account: done. Red: open the run; it says which step
-   above to redo.
+3. Green, naming your account and "it never expires": done. Red: open the
+   run; it says which step above to redo.
 
 ## Later
 
 - **Every upright film:** the GitHub run's summary shows the Reel's link,
   or "NOT POSTED" and what to do. To remove a Reel, delete it in the
   Instagram app.
-- **"The Instagram key no longer works":** redo steps 3 and 4 (a new token
-  into `INSTAGRAM_TOKEN`), then step 6.
+- **"The Instagram key no longer works":** redo steps 3 and 4 (a new key
+  into `INSTAGRAM_TOKEN`), then step 6. Removing the app from Instagram's
+  "Apps and websites", or the tester role, withdraws the key.
 - **Instagram's limit:** 50 posts a day through apps, far above one film a
   day.
 - **To stop posting:** delete the secret `INSTAGRAM_TOKEN`. Films then go to

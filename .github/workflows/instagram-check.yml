@@ -2,7 +2,8 @@ name: Check the Instagram key
 
 # Run by hand after adding (or renewing) the Instagram secrets
 # (docs/INSTAGRAM-SETUP.md). It signs in and checks the key belongs to the
-# account in INSTAGRAM_ACCOUNT. It posts nothing.
+# account in INSTAGRAM_ACCOUNT, and says how long the key lasts. It posts
+# nothing.
 
 on:
   workflow_dispatch:
@@ -20,4 +21,5 @@ jobs:
         env:
           INSTAGRAM_TOKEN: ${{ secrets.INSTAGRAM_TOKEN }}
           INSTAGRAM_ACCOUNT: ${{ secrets.INSTAGRAM_ACCOUNT }}
+          INSTAGRAM_USER_ID: '17841436806102076'   # @bittu.ki.riya's number at Meta
         run: python3 engine/instagram.py check
