@@ -612,7 +612,7 @@ jobs:
         env:
           SLUG: ${{ inputs.slug }}
           FACEBOOK_TOKEN: ${{ secrets.FACEBOOK_TOKEN }}
-          FACEBOOK_PAGE_ID: '61596905883436'   # the Bittu Ki Riya Page
+          FACEBOOK_PAGE_ID: '1387622147775717'   # the Bittu Ki Riya Page (its API number)
         run: python3 engine/facebook.py post story/plan.json "fb/$SLUG.mp4" --record "facebook/$SLUG.json" --run "$GITHUB_RUN_ID"
       - name: Record the Facebook link
         if: success() && steps.go.outputs.go == 'yes' && hashFiles(format('facebook/{0}.json', inputs.slug)) != ''

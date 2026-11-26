@@ -17,9 +17,10 @@ type every login and password yourself, on Meta's own page.
 ## 1. The Page
 
 The Page **Bittu Ki Riya** (category Digital creator) exists since 26 Nov
-2026: https://www.facebook.com/profile.php?id=61596905883436 . Its number,
-`61596905883436`, is written into the workflows as `FACEBOOK_PAGE_ID`.
-Add the same profile picture as Instagram, from the Facebook app.
+2026: https://www.facebook.com/profile.php?id=61596905883436 . Careful: the
+number in that address is the Page's *profile* number. Meta's API knows the
+Page by another, `1387622147775717` (Business settings → Pages shows it as
+"ID"), and that one is written into the workflows as `FACEBOOK_PAGE_ID`.
 
 ## 2. The app may post to Pages
 
@@ -33,14 +34,22 @@ Nov 2026).
 A system user is a robot account inside your business portfolio. It cannot
 log in, and its key never expires.
 
-1. Open https://business.facebook.com/settings (business portfolio **Bittu
-   Ki Riya**).
-2. **Accounts → Pages → Add → Add a Page** → `Bittu Ki Riya`.
+Done 26 Nov 2026: system user `Bittu Ki Riya uploader` (Employee) in the
+business portfolio **Bittu Ki Riya**, with the Page (Content) and the app
+(Develop app). To redo it:
+
+1. Open https://business.facebook.com/latest/settings signed in with your
+   **Facebook** profile (Rosh Zam), not with Instagram: only the Page's
+   owner may add the Page, and the portfolio **Bittu Ki Riya** shows only to
+   that login. If the top-right picture is the Instagram one, use "Log in
+   with another account" → Continue with Facebook.
+2. **Accounts → Pages → Add → Add an existing Facebook Page** →
+   `Bittu Ki Riya`; agree to Meta's terms.
 3. **Users → System users → Add**: name `Bittu Ki Riya uploader`, role
-   **Admin**.
-4. On that system user: **Assign assets** → **Pages** → Bittu Ki Riya →
-   **Content: Create content** (full control is not needed) → Save. Then
-   **Assign assets → Apps** → Bittu Ki Riya uploader → **Develop app**.
+   **Employee** (accept Meta's non-discrimination policy once).
+4. On that system user: **Assign assets** → **Facebook Pages** → Bittu Ki
+   Riya → **Content** only; **Apps** → Bittu Ki Riya uploader → **Develop
+   app** → **Assign assets**.
 5. **Generate new token** → app **Bittu Ki Riya uploader** → expiry
    **Never** → permissions `pages_show_list`, `pages_read_engagement`,
    `pages_manage_posts` → **Generate token**. Copy it: Meta shows it once.
@@ -64,7 +73,7 @@ log in, and its key never expires.
 - **Every upright film:** the GitHub run's summary shows the Facebook link
   and whether it went up as a Reel or a video, or "NOT POSTED" and what to
   do. To remove it, delete it on the Page.
-- **"The Facebook key no longer works":** redo steps 3.5 and 4, then 5.
+- **"The Facebook key no longer works":** redo step 3's last part (Generate token) and step 4, then 5.
   Removing the system user or its Page access withdraws the key.
 - **Facebook's limit:** 30 Reels a day through apps, far above one film a
   day.

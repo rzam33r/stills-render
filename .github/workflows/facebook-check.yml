@@ -19,5 +19,5 @@ jobs:
       - name: Sign in and name the Page
         env:
           FACEBOOK_TOKEN: ${{ secrets.FACEBOOK_TOKEN }}
-          FACEBOOK_PAGE_ID: '61596905883436'   # the Bittu Ki Riya Page
+          FACEBOOK_PAGE_ID: '1387622147775717'   # the Bittu Ki Riya Page (its API number)
         run: python3 engine/facebook.py check

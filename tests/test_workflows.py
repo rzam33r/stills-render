@@ -106,7 +106,7 @@ fb = mf['jobs'].get('facebook') or {}
 fb_steps = fb.get('steps') or []
 fb_key = [st for st in fb_steps if '${{ secrets.FACEBOOK_TOKEN }}' in str(st.get('env', ''))]
 say(len(fb_key) == 1 and 'facebook.py post' in str(fb_key[0].get('run', ''))
-    and str((fb_key[0].get('env') or {}).get('FACEBOOK_PAGE_ID')) == '61596905883436',
+    and str((fb_key[0].get('env') or {}).get('FACEBOOK_PAGE_ID')) == '1387622147775717',
     'only the Facebook post step sees the Facebook key, and it posts to the Bittu Ki Riya Page only')
 say('inputs.deliver' in str(fb.get('if', '')) and 'inputs.facebook' in str(fb.get('if', ''))
     and 'deliver' in (fb.get('needs') or []), 'a film goes to Facebook only when it is delivered, after the Drive copy')
